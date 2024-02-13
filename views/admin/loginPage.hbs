@@ -1,0 +1,36 @@
+
+ 
+ <div id="login">
+        <h3 class="text-center text-white pt-5">Login form</h3>
+       
+        <div class="container">
+          
+            <div id="login-row " class="row justify-content-center align-items-center " style="border-color: black;">
+                <div id="login-column" class="col-md-6">
+                    <div id="login-box" class="col-md-12">
+                        <form id="admin-form" class="form">
+                            <h3 class="text-center text-success">Admin Login</h3>
+                            <div class="form-group">
+                                <label for="email" class="text-success">Email:</label><br>
+                                <input type="text" name="email" id="adminEmail" class="form-control" >
+                            </div>
+                            <div class="form-group">
+                                <label for="password" class="text-success">Password:</label><br>
+                                <input type="password" name="password" id="adminPassword" class="form-control" >
+                            </div>
+                            <div class="form-group align-items-center">
+                                   {{!-- clientside error --}}
+                                    <div><h5
+                                 id='errorMessage'
+                                   style='color: red; text-align: center'
+                                   ></h5></div>
+                              
+                                <button id="adminLoginSubmit" class="btn btn-success btn-md " >Submit</button> 
+                            </div>
+                       
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>

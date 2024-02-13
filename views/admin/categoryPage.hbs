@@ -1,0 +1,207 @@
+<section class="content-main">
+            <div class="content-header">
+                <div>
+                    {{#if category}}
+                    <h2 class="content-title card-title">Edit Category</h2>
+                    {{else if categories}}
+                   <h2 class="content-title card-title">Categories</h2>
+                      {{else}}
+                      <h2 class="content-title card-title">Categories</h2>
+                   {{/if}}
+               
+                    
+                   
+                </div>
+                
+            </div>
+           
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <form id="cate-form">
+                                 <input type="hidden" name="category_id" value="{{category.[0].pkCategoryId}}">
+                               {{#if category}}
+                                <label class="form-label">Category Name</label>
+                               <input type="text" placeholder="Type here" class="form-control" name="category" value="{{category.[0].strCategoryName}}" />
+                               {{else}}
+                           <label class="form-label">Category Name</label>
+                          <input type="text" placeholder="Type here" class="form-control" name="category" />
+                               {{/if}}
+                           
+                         
+                        
+                               
+                               
+                                <div class="mb-4">
+                                  
+                                    <label class="form-label">Description</label>
+                             
+                                {{#if category}}    
+                                <textarea placeholder="Type here" class="form-control" name="description" >{{category.[0].strDescription}}</textarea>
+                            
+                                 
+                                 {{else}}
+                                 <textarea placeholder="Type here" class="form-control" name="description"></textarea>
+                                {{/if}}
+                                </div>
+                                  <div>
+                                    <h6
+                                 id='errorMessage'
+                                   style='color: red; text-align: center'
+                                   ></h6>
+                                   </div>
+                                <div class="d-grid">
+                                   
+                                 {{#if category}}    
+                                 <button id="cate-submit" class="btn btn-primary">Update category</button>
+                                
+                                 {{else}}
+                                 <button id="cate-submit" class="btn btn-primary">Create category</button>
+                                 {{/if}}
+                                </div>
+                            </form>
+                        </div>
+                     
+                        <div class="col-md-9">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        {{#if category}}
+                                        {{else}}
+                                        <tr>
+                                           
+                                            <th>Sl.No</th>
+                                            <th>Category</th>
+                                            <th>Description</th>
+                                            <th  class="text-center">Status</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                        {{/if}}
+                                    </thead>
+                                    <tbody>
+                                         {{#if categories}}
+                                         {{#each categories}}
+                                        <tr>
+                                           
+                                            <td>{{index}}</td>
+                                            <td><b>{{strCategoryName}}</b></td>
+                                            <td>{{strDescription}}</td>
+                                            <td  class="text-center"><span class="badge rounded-pill  {{#eq strStatus 'Blocked'}}alert-warning{{else}}{{#eq strStatus 'Active'}}alert-success{{else}}{{/eq}}{{/eq}}">{{strStatus}}</span></td>
+                                            
+                                            <td class="text-center">
+                                                
+                                                 
+                                                 <a href="/admin/getCategoryEdit?pkCategoryId={{pkCategoryId}}" class="btn btn-md rounded font-sm " ><i class="fas fa-edit"></i>Edit</a>
+                                                      <a href="#" onclick="handleBlock('{{pkCategoryId}}','{{strStatus}}','category')"class="btn btn-md rounded font-sm "style="width: 94px;" ><i class="{{#eq strStatus 'Blocked'}}fas fa-check-circle{{else}}fas fa-ban{{/eq}}"></i>{{#eq strStatus 'Blocked'}}Unblock{{else}}Block{{/eq}}</a>
+                                                  <a href="#" onclick="handleDelete('{{pkCategoryId}}', 'category')" class="btn btn-md rounded font-sm"><i class="fas fa-trash-alt" ></i>Delete</a>
+                                            </td>
+                                        </tr>
+                                        {{/each}}
+                                        {{/if}}
+                                     
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div> 
+                       
+                       
+                        <!-- .col// -->
+                    </div> <!-- .row // -->
+                </div> <!-- card body .// -->
+            </div> <!-- card .// -->
+            
+        </section>
+        <section class="content-main">
+            <div class="content-header">
+                <div>
+                    <h2 class="content-title card-title">Categories </h2>
+                    <p>Add, edit or delete a category</p>
+                </div>
+                <div>
+                    <input type="text" placeholder="Search Categories" class="form-control bg-white">
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <form>
+                                <div class="mb-4">
+                                    <label for="product_name" class="form-label">Name</label>
+                                    <input type="text" placeholder="Type here" class="form-control" id="product_name" />
+                                </div>
+                                <div class="mb-4">
+                                    <label for="product_slug" class="form-label">Slug</label>
+                                    <input type="text" placeholder="Type here" class="form-control" id="product_slug" />
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Parent</label>
+                                    <select class="form-select">
+                                        <option>Clothes</option>
+                                        <option>T-Shirts</option>
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label">Description</label>
+                                    <textarea placeholder="Type here" class="form-control"></textarea>
+                                </div>
+                                <div class="d-grid">
+                                    <button class="btn btn-primary">Create category</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-9">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="" />
+                                                </div>
+                                            </th>
+                                            <th>ID</th>
+                                            <th>Name</th>
+                                            <th>Description</th>
+                                            <th>Slug</th>
+                                            <th>Order</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    {{!-- <tbody>
+                                        <tr>
+                                            <td class="text-center">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="" />
+                                                </div>
+                                            </td>
+                                            <td>21</td>
+                                            <td><b>Men clothes</b></td>
+                                            <td>Men clothes</td>
+                                            <td>/men</td>
+                                            <td>1</td>
+                                            <td class="text-end">
+                                                <div class="dropdown">
+                                                    <a href="#" data-bs-toggle="dropdown" class="btn btn-light rounded btn-sm font-sm"> <i class="material-icons md-more_horiz"></i> </a>
+                                                    <div class="dropdown-menu">
+                                                        <a class="dropdown-item" href="#">View detail</a>
+                                                        <a class="dropdown-item" href="#">Edit info</a>
+                                                        <a class="dropdown-item text-danger" href="#">Delete</a>
+                                                    </div>
+                                                </div> <!-- dropdown //end -->
+                                            </td>
+                                        </tr>
+                                    
+                                    </tbody> --}}
+                                </table>
+                            </div>
+                        </div> <!-- .col// -->
+                    </div> <!-- .row // -->
+                </div> <!-- card body .// -->
+            </div> <!-- card .// -->
+        </section>
+        <style>
+            .form-control.error:not(#search-form-control){
+        border-color: red;}
+        </style>

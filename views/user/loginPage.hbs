@@ -1,0 +1,38 @@
+
+ 
+ <div id="login">
+        <h3 class="text-center text-white pt-5">Login form</h3>
+       
+        <div class="container">
+          
+            <div id="login-row " class="row justify-content-center align-items-center " style="border-color: black;">
+                <div id="login-column" class="col-md-6">
+                    <div id="login-box" class="col-md-12">
+                        <form id="login-form" class="form">
+                            <h3 class="text-center text-info">User Login</h3>
+                            <div class="form-group">
+                                <label for="email" class="text-info">Email:</label><br>
+                                <input type="text" name="email" id="loginEmail" class="form-control" >
+                            </div>
+                            <div class="form-group">
+                                <label for="password" class="text-info">Password:</label><br>
+                                <input type="password" name="password" id="loginPassword" class="form-control" >
+                            </div>
+                            <div class="form-group align-items-center">
+                                   {{!-- clientside error --}}
+                                    <div><h5
+                                 id='errorMessage'
+                                   style='color: red; text-align: center'
+                                   ></h5></div>
+                              
+                                <button id="loginSubmitBtn" class="btn btn-info btn-md " >Submit</button> 
+                            </div>
+                        <p class='text-center text-muted mt-5 mb-0'>Dont have an
+                  account?
+                  <a href='/signUp' class='fw-bold text-body'><u>Sign Up</u></a></p>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>

@@ -1,0 +1,97 @@
+
+
+   
+        <section class="content-main">
+            <div class="content-header">
+                <div>
+                    <h2 class="content-title card-title">User List</h2>
+                  
+                </div>
+                <div>
+                   
+                    {{!-- <a href="#" class="btn btn-primary btn-sm rounded">Create new</a> --}}
+                </div>
+            </div>
+          
+          {{#if users}}
+            <div class="card mb-4">
+                <header class="card-header">
+                    <div class="row align-items-center">
+                       
+                        {{!-- <div class="col-md-3 col-12 me-auto mb-md-0 mb-3">
+                            <select class="form-select">
+                                <option selected>All category</option>
+                                <option>Electronics</option>
+                                <option>Clothes</option>
+                                <option>Automobile</option>
+                            </select>
+                        </div> --}}
+                        <div class="col-md-2 col-6 me-auto">
+                            <input type="date" value="02.05.2021" class="form-control">
+                        </div>
+                        <div class="col-md-2 col-6">
+                            <select class="form-select">
+                                <option selected>Status</option>
+                                <option>Active</option>
+                                <option>Disabled</option>
+                                <option>Show all</option>
+                            </select>
+                        </div>
+                    </div>
+                </header> 
+                 
+                 <div class="card-body">
+                    <div class="table-responsive">
+                        
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>SL.No</th>
+                                    <th scope="col">Name</th>
+                                    <th scope="col" >Email</th>
+                                  
+                                    <th scope="col">Status</th>
+                                    <th scope="col" class="text-center" >Date</th>
+                                    <th scope="col" class="text-center"> Action </th>
+                                </tr>
+                            </thead>
+                            {{#each users}}
+                            <tbody>
+                                <tr>
+                                    <td>{{pkUserId}}</td>
+                                    <td><b>{{strUserName}}</b></td>
+                                    <td>{{strEmail}}</td>
+                                   
+                                    <td><span class="badge rounded-pill  {{#eq strStatus 'Blocked'}}alert-warning{{else}}{{#eq strStatus 'Active'}}alert-success{{else}}{{/eq}}{{/eq}}">{{strStatus}}</span></td>
+                                    
+                                    <td class="text-center" >{{createdDate}}</td>
+                                    <td  class="text-center" >
+                                        <a href="#" onclick="handleDelete('{{pkUserId}}')" class="btn btn-md rounded font-sm"><i class="fas fa-trash-alt" ></i>Delete</a>
+                                      
+                                      <a href="#" onclick="handleBlock('{{pkUserId}}','{{strStatus}}','user')"class="btn btn-md rounded font-sm "style="width: 120px;" ><i class="{{#eq strStatus 'Blocked'}}fas fa-check-circle{{else}}fas fa-ban{{/eq}}"></i>{{#eq strStatus 'Blocked'}}Unblock{{else}}Block{{/eq}}</a>
+                                      </td>
+                                </tr>
+                               </tbody>
+                                {{/each}}
+                        </table>
+                        
+                    </div> <!-- table-responsive //end -->
+                </div> 
+             </div> 
+            
+            <div class="pagination-area mt-30 mb-50">
+                <nav aria-label="Page navigation example">
+                    <ul class="pagination justify-content-start">
+                        <li class="page-item active"><a class="page-link" href="#">01</a></li>
+                        <li class="page-item"><a class="page-link" href="#">02</a></li>
+                        <li class="page-item"><a class="page-link" href="#">03</a></li>
+                        <li class="page-item"><a class="page-link dot" href="#">...</a></li>
+                        <li class="page-item"><a class="page-link" href="#">16</a></li>
+                        <li class="page-item"><a class="page-link" href="#"><i class="material-icons md-chevron_right"></i></a></li>
+                    </ul>
+                </nav>
+            </div>
+             {{/if}}
+        </section> 
+     
+ 
