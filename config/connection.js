@@ -5,7 +5,7 @@ let state={
 
 
 const connectDb=()=>{
-MongoClient.connect("mongodb+srv://vishnu:12345@vishnu.on0y3.mongodb.net/Evara_ecommerce?retryWrites=true&w=majority").then(async(client)=>{
+MongoClient.connect(process.env.MONGO_URI).then(async(client)=>{
    console.log("DB successfully connected".bgGreen);
    state.db=client.db()
   

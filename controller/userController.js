@@ -1,14 +1,17 @@
 const db = require('../config/connection');
 const bcrypt = require('bcrypt');
-const products = require('../public/data/products');
+const {USER_COLLECTION, PRODUCTS_COLLECTION} =require("../config/collections")
 const { ObjectId } = require('mongodb');
+const router = require('../routes/userRoutes');
 // get signup page
 const getSignUp = (req, res) => {
-  if (req.session.user) {
+ 
+  if (req.session.user || req.session.passport) {
+   
     res.redirect('/');
   } else {
-    
-    res.render('user/signUp');
+    req.session.destroy();
+    res.render('user/signupPage',{layout:"user_layout"});
   }
 };
 
@@ -17,22 +20,28 @@ const signUp = async (req, res) => {
   try {
     let { username, email, password } = req.body;
 
-    let emailExist = await db.get().collection('cln_users').findOne({ email });
+    let emailExist = await db.get().collection(USER_COLLECTION).findOne({ strEmail:email,strStatus:{$ne:"Deleted"} });
 
     if (!emailExist) {
       const hashedPassword = await bcrypt.hash(password, 10);
       let userData = {
-        username,
-        email,
-        password: hashedPassword,
+        pkUserId:new ObjectId(),
+        strUserName:username,
+        strEmail:email,
+        strPassword: hashedPassword,
+        strProfileImg:null,
+        strStatus:"Active",
         createdDate: new Date(),
         updatedDate: null,
       };
-      let result = await db.get().collection('cln_users').insertOne(userData);
+      let result = await db.get().collection(USER_COLLECTION).insertOne(userData);
 
       req.session.loggedIn = true;
       req.session.user = userData;
+     
       res.json({ success: true, message: 'Form submitted successfully!' });
+      
+     
     } else {
       res.json({ success: false, message: 'Email already exists' });
     }
@@ -44,29 +53,39 @@ const signUp = async (req, res) => {
 
 //get home page
 const getHome = async (req, res) => {
-  const objectIdToFind = new ObjectId(req.session.user._id);
+  
+  if(req.session.passport){
+    console.log(req.session.passport);
+    console.log("passporttt");
+   return  res.render('user/homePage', {layout:"user_layout",user:true});
+  }
+  
+ const objectIdToFind = new ObjectId(req.session.user.pkUserId);
   let userExist = await db
     .get()
-    .collection('cln_users')
-    .find({ _id: objectIdToFind })
+    .collection(USER_COLLECTION)
+    .find({pkUserId: objectIdToFind ,strStatus:"Active"})
     .toArray();
 
   if (userExist && userExist.length > 0) {
-    res.render('user/homePage', { products });
+    res.render('user/homePage', {layout:"user_layout",user:true});
   } else {
     req.session.destroy();
-    res.render('user/loginPage');
+    res.clearCookie('passport')
+    res.render('user/loginPage',{layout:"user_layout"});
   }
 };
 
+
+
 //post login
-const login = async (req, res) => {
+const login = async(req,res) => {
   try {
     let { email, password } = req.body;
 
-    let user = await db.get().collection('cln_users').findOne({ email });
+    let user = await db.get().collection(USER_COLLECTION).findOne({ strEmail:email ,strStatus:"Active"});
     if (user) {
-      let result = await bcrypt.compare(password, user.password);
+      let result = await bcrypt.compare(password, user.strPassword);
       if (result) {
         req.session.loggedIn = true;
         req.session.user = user;
@@ -86,7 +105,8 @@ const login = async (req, res) => {
 
 //logout
 const logout = (req, res) => {
-  req.session.destroy();
+  res.clearCookie('ckCookie', { domain: 'localhost', path: '/' })
+req.session.destroy();
   res.redirect('/');
 };
 

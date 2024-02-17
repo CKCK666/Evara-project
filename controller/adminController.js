@@ -1,45 +1,48 @@
 const db=require("../config/connection")
 const bcrypt=require("bcrypt")
+const jwt =require("jsonwebtoken")
 const { ObjectId, ReturnDocument } = require('mongodb');
-const {USER_COLLECTION,ADMIN_COLLECTION, CATEGORY_COLLECTION}=require("../config/collections")
+const {USER_COLLECTION,ADMIN_COLLECTION, CATEGORY_COLLECTION, PRODUCTS_COLLECTION}=require("../config/collections");
+const { log, logger } = require("handlebars");
 //post login
 const adminLogin=async(req,res)=>{
+   
+  try {
+    let {email,password} =req.body
     
-    try {
-      let {email,password} =req.body
+    
+    let user= await db.get().collection(ADMIN_COLLECTION).findOne({strEmail:email})
+   
+    if(user){
+     
+      let result= await bcrypt.compare(password,user.strPassword)
       
-      let user= await db.get().collection("cln_admin").findOne({email})
-      if(user){
-        let result= await bcrypt.compare(password,user.password)
-        if(result){
-          req.session.loggedIn = true;
-          req.session.user = user;
-         
-          res.json({success:true,message: 'Form submitted successfully!'})
-         
-        }
-        else{
-          res.json({success:false,message: 'Invaild email or password!'})
-        }
+      if(result){
+        req.session.loggedIn = true;
+        req.session.user = user;
+      
+        res.json({success:true,message: 'Form submitted successfully!'})
+       
       }
       else{
         res.json({success:false,message: 'Invaild email or password!'})
       }
-    } catch (error) {
-      console.log(error.message);
-      res.json({success:false,message: error.message})
     }
-  
-    
+    else{
+      res.json({success:false,message: 'Invaild email or password!'})
+    }
+  } catch (error) {
+    console.log(error.message);
+    res.json({success:false,message: error.message})
   }
 
-  //get admin home page
+  
+}
+
+//get admin home page
 const getAdminHome=async(req,res)=>{
- 
-      res.render("admin/homePage",{layout:"admin_layout"})
-  
-  }
-  
+res.render("admin/homePage",{layout:"admin_layout"})
+}
   
   //get user list
   const getUserList=async(req,res)=>{
@@ -122,8 +125,8 @@ const getAdminHome=async(req,res)=>{
         updatedDate:null
       }
       
-      // const existingCategory= await db.get().collection(CATEGORY_COLLECTION).findOne({strCategoryName,$ne:{strStatus:"Deleted"}})
-      if(existingCategory=false){
+       const existingCategory= await db.get().collection(CATEGORY_COLLECTION).findOne({strCategoryName:req.body.category,strStatus:{$ne:"Deleted"}})
+      if(existingCategory){
         return res.json({success:false,message:"category already exist"})
       }
     let result = await db.get().collection(CATEGORY_COLLECTION).insertOne(dataToAdd)
@@ -280,26 +283,269 @@ if(req.body.description){
 
 //product list page
 const getProductList=async(req,res)=>{
-  try {
-    let count =await db.get().collection("cln_users").count()
+   try {
+    let count=await db.get().collection(PRODUCTS_COLLECTION).countDocuments()
     if(count>0){
-      let result=await db.get().collection(USER_COLLECTION).find({strStatus:{$ne:"Deleted"}}).toArray()
-      let users=await result.map((user,index)=>({...user,index:index+1}))
-      res.render("admin/listUsers",{layout:"admin_layout",users,count})
-    }
+      let result =await db.get().collection(PRODUCTS_COLLECTION).find({strStatus:{$ne:"Deleted"}}).toArray()
+      let products=await result.map((product,index)=>{
+        const isoDate = product.createdDate;
+        const date = new Date(isoDate);
+        const formattedDate = date.toString().substring(0, 15) + date.getFullYear()
+        return {
+          ...product,
+          index:index+1,
+          createdDate: formattedDate
+         }
+        
+        })
+     
+        res.render("admin/listProducts",{layout:"admin_layout",products})
+      }
     else{
-      res.render("admin/listUsers",{layout:"admin_layout",count})
+      res.render("admin/listProducts",{layout:"admin_layout"}) 
     }
+  
+    
+   } catch (error) {
+    res.json({success:true,message:error.message})
+   }
  
-   
+  
+  }
+
+  //create product page
+const getProductAdd=async(req,res)=>{
+  try {
+    let categories=await db.get().collection(CATEGORY_COLLECTION).find({strStatus:{$ne:"Deleted"}}).toArray()
+    if(req.query.pkProductId){
+     
+      const pkProductId = new ObjectId(req.query.pkProductId);
+     
+      let product=await db.get().collection(PRODUCTS_COLLECTION).find({pkProductId:pkProductId,strStatus:{$ne:"Deleted"}}).toArray()
+    
+      if (product.length) {
+        
+        res.render("admin/addProduct",{layout:"admin_layout",product,categories})
+      } else {
+        res.render("admin/addProduct",{layout:"admin_layout"})
+      }
+     }
+    else{
+       res.render("admin/addProduct",{layout:"admin_layout",categories})
+    }
    
   } catch (error) {
-    res.json({success:false,message: error.message})
+    console.log(error);
+    res.status(200).json({success:false,message: error.message})
   }
   
-   
- }
+  
+  
+  }
 
+  //create product
+  const addProduct=async(req,res)=>{
+  console.log(req.body);
+    try {
+      let files=req.files
+       console.log(req.files);
+     
+       let mainProductUrl=""
+       let arrayOtherImages
+     
+      let  mainProductImg=files.filter(item=>
+         item.fieldname==='mainProductImg'
+    )
+   
+   
+    if(mainProductImg){mainProductUrl=mainProductImg[0].path}
+    
+    let otherProductImgs=files.filter((item)=>{
+      if (item.fieldname==='otherProductImg1' || item.fieldname=== 'otherProductImg2') {
+        return item.path
+      }
+      
+     } )
+
+     if(otherProductImgs.length){
+     arrayOtherImages= otherProductImgs.map((item)=>{
+        return {
+         imageUrl:item.path
+
+        }
+      })
+      
+     }
+  
+    
+               
+  
+      let dataToAdd={
+        pkProductId:new ObjectId(),
+        strProductName:req.body.strProductName,
+        strDescription:req.body.strDescription,
+        fkcategoryId:new ObjectId(req.body.pkCategoryId),
+        intPrice:parseFloat(req.body.intPrice),
+        intStock:parseInt(req.body.intStock),
+        mainProductUrl,
+        arrayOtherImages,
+        strStatus:"Active",
+        createdDate:new Date(),
+        updatedDate:null
+      }
+      
+       const existingProduct= await db.get().collection(PRODUCTS_COLLECTION).find({strProductName:req.body.strProductName,strStatus:{$ne:"Deleted"}}).toArray()
+      if(existingProduct.length){
+        return res.json({success:false,message:"Product name already exist"})
+      }
+    let result = await db.get().collection(PRODUCTS_COLLECTION).insertOne(dataToAdd)
+   
+     if(result.insertedId){
+      
+      res.json({success:true,message:"successfully added product"})
+     }
+     else{
+      res.json({success:false,message:"fail to  add product"})
+     }
+   
+    } catch (error) {
+      res.json({success:false,message: error.message})
+    }
+    
+     
+   }
+
+    //edit product
+  const editProduct=async(req,res)=>{
+    console.log("edit product router");
+    try {
+      console.log(req.body.pkProductId);
+      if(req.body.pkProductId){
+        let pkProductId= new ObjectId(req.body.pkProductId);
+      let dataToUpdate={}
+      if(req.files){
+      
+      
+       let  mainProductImg=files.filter(item=>
+          item.fieldname==='mainProductImg'
+     )
+    
+    
+     if(mainProductImg.length){
+      dataToUpdate={
+      ...dataToUpdate,
+      mainProductUrl:mainProductImg[0].path
+      }
+
+    }
+     
+     let otherProductImgs=files.filter((item)=>{
+       if (item.fieldname==='otherProductImg1' || item.fieldname=== 'otherProductImg2') {
+         return item.path
+       }
+       
+      } )
+ 
+      if(otherProductImgs.length){
+      arrayOtherImages= otherProductImgs.map((item)=>{
+         return {
+          imageUrl:item.path
+ 
+         }
+       })
+       
+       dataToUpdate={
+        ...dataToUpdate,
+        arrayOtherImages
+       }
+      
+      }
+          
+     
+    }
+
+
+  
+      let dataToAdd={
+        ...dataToUpdate,
+        pkProductId:new ObjectId(), 
+        strProductName:req.body.strProductName,
+        strDescription:req.body.strDescription,
+        fkcategoryId:req.body.pkCategoryId,
+        intPrice:parseFloat(req.body.intPrice),
+        intStock:parseInt(req.body.intStock),
+        updatedDate:new Date()
+      }
+   
+       const existingProduct= await db.get().collection(PRODUCTS_COLLECTION).find({strProductName:req.body.strProductName,strStatus:{$ne:"Deleted"},pkProductId:{$ne:pkProductId}}).toArray()
+      if(existingProduct.length){
+        return res.json({success:false,message:"Product name already exist"})
+      }
+      console.log("hereeeeeeeeeeeeeeeeeee");
+    let result = await db.get().collection(PRODUCTS_COLLECTION).updateOne({pkProductId},{$set:dataToAdd})
+    console.log(result);
+     if(result.modifiedCount>0){
+      res.json({success:true,message:"successfully edited product"})
+     }
+     else{
+      res.json({success:false,message:"fail to  edit product"})
+     }
+    }
+    else{
+      res.json({success:false,message:"Product id not found"})
+    }
+    } catch (error) {
+      res.json({success:false,message: error.message})
+    }
+    
+     
+   }
+
+   // delete category
+   const deleteProduct=async(req,res)=>{
+    try {
+      let {id}=req.body
+      console.log(id);
+      const objectIdToUpdate = new ObjectId(id);
+      let result=await db.get().collection(PRODUCTS_COLLECTION).updateOne({pkProductId:objectIdToUpdate},{$set:{strStatus:"Deleted",updatedDate:new Date()}})
+        console.log(result);
+      if (result.modifiedCount>0) {
+       
+        res.json({success:true,message: 'successfully  deleted!',productDeleted:true})
+      }
+      else{
+        console.log("not deleted");
+        res.json({success:false,message: 'Product not deleted!'})
+      }
+      
+     } catch (error) {
+      console.log(error.message);
+        res.json({success:false,message: error.message})
+     }
+  }
+
+  //block category
+  const blockProduct=async(req,res)=>{
+    let {id,strStatus}=req.body
+     let status=strStatus=="Active"?"Blocked":"Active"
+   try {
+    const objectIdToUpdate = new ObjectId(id);
+    let result=await db.get().collection(PRODUCTS_COLLECTION).updateOne({pkProductId:objectIdToUpdate,strStatus},{$set:{strStatus:status,updatedDate:new Date()}})
+      console.log(result);
+    if (result.modifiedCount>0) {
+      console.log("blocked/unblock");
+      res.json({success:true,message: 'successfully  updated!',productBlocked:true})
+    }
+    else{
+      console.log("not deleted");
+      res.json({success:false,message: 'failed to update!'})
+    }
+    
+   } catch (error) {
+    console.log(error.message);
+      res.json({success:false,message: error.message})
+   }
+  }
 
   //logout 
 const logout=(req,res)=>{
@@ -307,4 +553,15 @@ const logout=(req,res)=>{
      res.redirect('/admin');
    }
    
-  module.exports={adminLogin,getAdminHome,logout,deleteUser,getUserList,blockUser,addCategory,getCategoryPage,deleteCategory,blockCategory,getEditCategory,editCategory}
+  module.exports={adminLogin,
+    getAdminHome,logout,
+    deleteUser,getUserList,
+    blockUser,addCategory,
+    getCategoryPage,deleteCategory,
+    blockCategory,getEditCategory,
+    editCategory,getProductList,
+    getProductAdd,
+    addProduct,editProduct,deleteProduct,
+    blockProduct
+  
+  }

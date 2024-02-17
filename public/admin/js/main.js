@@ -1,6 +1,9 @@
 !function(e){"use strict";if(e(".menu-item.has-submenu .menu-link").on("click",function(s){s.preventDefault(),e(this).next(".submenu").is(":hidden")&&e(this).parent(".has-submenu").siblings().find(".submenu").slideUp(200),e(this).next(".submenu").slideToggle(200)}),e("[data-trigger]").on("click",function(s){s.preventDefault(),s.stopPropagation();var n=e(this).attr("data-trigger");e(n).toggleClass("show"),e("body").toggleClass("offcanvas-active"),e(".screen-overlay").toggleClass("show")}),e(".screen-overlay, .btn-close").click(function(s){e(".screen-overlay").removeClass("show"),e(".mobile-offcanvas, .show").removeClass("show"),e("body").removeClass("offcanvas-active")}),e(".btn-aside-minimize").on("click",function(){window.innerWidth<768?(e("body").removeClass("aside-mini"),e(".screen-overlay").removeClass("show"),e(".navbar-aside").removeClass("show"),e("body").removeClass("offcanvas-active")):e("body").toggleClass("aside-mini")}),e(".select-nice").length&&e(".select-nice").select2(),e("#offcanvas_aside").length){const e=document.querySelector("#offcanvas_aside");new PerfectScrollbar(e)}e(".darkmode").on("click",function(){e("body").toggleClass("dark")})}(jQuery);
 
+
+
 $(document).ready(function () {
+
 
   $('.form-control').focus(function () {
       $(this).removeClass('error');
@@ -91,6 +94,164 @@ if (category_id) {
     
   });
 
+  // add product //edit product
+  $('#product-submit').click(function (e) {
+      e.preventDefault()
+      let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
+      let data = new FormData($('#product-form')[0]);
+
+      
+      let pkProductId=data.get("pkProductId")
+          console.log(pkProductId);
+      let strProductName=data.get("strProductName")
+      let strDescription=data.get("strDescription")
+      let intPrice=data.get("intPrice")
+      let intStock=data.get("intStock")
+      let mainProductImg=data.get("mainProductImg")
+      let otherProductImg1=data.get("otherProductImg1")
+      let otherProductImg2=data.get("otherProductImg2")
+     
+   
+    
+        if (strProductName === ''|| strDescription=='' || !mainProductImg || !intPrice || !intStock || !otherProductImg1 || !otherProductImg2) {
+      
+          $('#errorMessage').text('Please fill in all fields.');
+          $('.form-control').addClass('error') 
+
+          return false;
+      }
+       
+      
+      if(strProductName.length<4){
+          $('#errorMessage').text('Product name must be at least 4 characters long.');
+          $("input[name='strProductName']").addClass('error')   
+          return false;
+      }
+
+      if (!nameRegex.test(strProductName)) {
+        $('#errorMessage').text('Product name must contain at least three alphabetical character');
+        $("input[name='strProductName']").addClass('error');
+        return false;
+    }
+
+    if(strDescription.length<5){
+      $('#errorMessage').text('Description must be at least 5 characters long.');
+      $("textarea[name='strDescription']").addClass('error')   
+      return false;
+  }
+   
+  if (!nameRegex.test(strDescription)) {
+    $('#errorMessage').text('Description must contain at least three alphabetical character');
+    $("textarea[name='strDescription']").addClass('error');
+    return false;
+}
+let swalLoader = Swal.fire({
+  title: 'Loading...',
+  allowOutsideClick: false,
+  showConfirmButton: false,
+  onBeforeOpen: () => {
+      Swal.showLoading();
+  }
+});
+
+
+// $('#product-form').submit()
+$.ajax({
+  url: $('#product-form').attr('action'),
+  data:data,
+  type: "POST",
+  processData: false,
+  contentType: false,
+  success: function(response) {
+      if (response.success) {
+        swalLoader.close()
+          Swal.fire({
+              position: 'top-end',
+              icon: 'success',
+              title: 'successfully added a product',
+              showConfirmButton: false,
+              timer: 1500,
+              didClose:()=>{
+            window.location.href = '/admin/getAddProduct';
+              }
+            })
+          console.log('success:', response.message);
+      } else {
+        swalLoader.close()
+          $('#errorMessage').text(response.message)
+      }
+     
+  },
+  error: function(error) {
+    swalLoader.close()
+      console.error('Error:', error);
+  }
+});
+
+return false;
+ 
+
+    
+  });
+
+  $("#login-submit").click(async function(e){
+    e.preventDefault()
+   
+    let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
+    let data = new FormData($('#login-form')[0]);
+    
+    let email=data.get('email')
+    let password=data.get("password")
+     
+    console.log(email,password);
+
+    if ( email === '' || password==="") {
+    
+        $('#errorMessage').text('Please fill in all fields.');
+        $('.form-control').addClass('error') 
+
+        return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        $('#errorMessage').text('Invalid email format.');
+        $('input[name="email"]').addClass('error');
+        return;
+    }
+
+    $.ajax({
+      type: 'POST', 
+      url: '/admin/login',
+      data: $('#login-form').serialize(), 
+      success: function(response) {
+          if (response.success) {
+              Swal.fire({
+                  position: 'top-end',
+                  icon: 'success',
+                  title: 'Successfully logged in',
+                  showConfirmButton: false,
+                  timer: 1500,
+                  didClose:()=>{
+                window.location.href = '/admin';
+                  }
+                })
+              console.log('success:', response.message);
+          } else {
+              $('#errorMessage').text(response.message)
+          }
+         
+      },
+      error: function(error) {
+          
+          console.error('Error:', error);
+      }
+  });
+
+
+   
+   
+})
+
 
  
 });
@@ -100,8 +261,8 @@ if (category_id) {
 
 const handleDelete=(id,name)=>{
  console.log(id,name);
-  let item=name=="category"?"category":"user"
-  let url=name=="category"?"/admin/deleteCategory":"/admin/deleteUser"
+  let item=name=="category"?"category":name=="user"?"user":"product"
+  let url=name=="category"?"/admin/deleteCategory":name=="user"?"/admin/deleteUser":"/admin/deleteProduct"
     const swalWithBootstrapButtons = Swal.mixin({
         customClass: {
           confirmButton: 'btn btn-success',
@@ -139,6 +300,9 @@ const handleDelete=(id,name)=>{
                             if(response.userDeleted){
                               window.location.href = '/admin/listUsers';
                             }
+                            if(response.productDeleted){
+                              window.location.href='/admin/listProducts'
+                            }
                           })
                          
                         console.log('success:', response.message);
@@ -170,9 +334,11 @@ const handleDelete=(id,name)=>{
 
 
     const handleBlock=(id,strStatus,name)=>{
-       let item=name=="category"?"category":"user"
+      let item=name=="category"?"category":name=="user"?"user":"product"
+      let url=name=="category"?"/admin/blockCategory":name=="user"?"/admin/blockUser":"/admin/blockProduct"
+       
       let status=strStatus=="Active"?"block":"unblock"
-      let url=name=="category"?"/admin/blockCategory":"/admin/blockUser"
+      
         const swalWithBootstrapButtons = Swal.mixin({
             customClass: {
               confirmButton: 'btn btn-success',
@@ -211,7 +377,10 @@ const handleDelete=(id,name)=>{
                                 if(response.categoryBlocked){
                                   window.location.href = '/admin/getCategoryPage'
                                 }
-                                
+                                if(response.productBlocked){
+                               
+                                  window.location.href = '/admin/listProducts'
+                                }
                               })
                              
                             console.log('success:', response.message);

@@ -1,11 +1,42 @@
 const express = require('express');
-const { getAdminHome, adminLogin, logout, deleteUser, getUserList, blockUser, addCategory, getCategoryPage, deleteCategory, blockCategory, getEditCategory, editCategory } = require('../controller/adminController');
-
-const { isAdmin } = require('../middlewares/verification');
 const router =express.Router()
+const dotenv=require("dotenv")
+const {verifyLogin}=require("../middlewares/verifications")
+
+dotenv.config()
+const { getAdminHome, adminLogin, logout, deleteUser, getUserList, blockUser, addCategory, getCategoryPage, deleteCategory, blockCategory, getEditCategory, editCategory, getProductList, getProductAdd, addProduct, editProduct, deleteProduct, blockProduct } = require('../controller/adminController');
+
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
+
+// Configure Cloudinary
+// cloudinary.config({
+//     cloud_name:process.env.CLOUDINARY_NAME,
+//     api_key:process.env.CLOUDINARY_API_KEY,
+//     api_secret: process.env.CLOUDINARY_API_SECRET
+//   });
+  cloudinary.config({
+    cloud_name:"dtnpsbv9r",
+    api_key:"451459787528641",
+    api_secret:"guYk7b_6d6JW1edMkJtC5qxh32U"
+  });
+  
+  // Set up Multer storage using Cloudinary
+  const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: 'Evara project', // Optional folder in Cloudinary
+      allowed_formats: ['jpg', 'jpeg', 'png'], // Allowed file formats
+      // Optionally, you can specify transformations or other parameters here
+    }
+  });
+  const uploads = multer({ storage: storage });
+const { isAdmin } = require('../middlewares/verifications');
+
 
 //get home page
-router.get("/",getAdminHome)
+router.get("/",isAdmin,getAdminHome)
 
 //post login
 router.post("/login",adminLogin)
@@ -43,6 +74,29 @@ router.get("/getCategoryEdit",getEditCategory)
 //update category
 
 router.patch("/editCategory",editCategory)
+
+//get product list page
+router.get("/listProducts",getProductList)
+
+//get product create page
+router.get("/getAddProduct",getProductAdd)
+
+//create add product
+
+router.post("/addProduct",uploads.any(),addProduct)
+
+
+//get edit product page
+router.get("/getProductEdit",getProductAdd)
+
+//edit product
+router.post("/editProduct",editProduct)
+
+//delete product
+router.patch("/deleteProduct",deleteProduct)
+
+//block product
+router.patch("/blockProduct",blockProduct)
 
 
 module.exports=router
