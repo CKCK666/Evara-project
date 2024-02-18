@@ -1,77 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OTP Verification</title>
-    <style>
-        /* Add your CSS styles here */
-        #timer {
-            font-size: 18px;
-            color: blue;
-        }
-
-        #resendButton {
-            display: none; /* Hide resend button by default */
-        }
-    </style>
+    <title>Document</title>
 </head>
 <body>
-    <h1>OTP Verification</h1>
-    <div id="otpSection">
-        <p>An OTP has been sent to your phone. Please enter it below:</p>
-        <input type="text" id="otpInput" maxlength="6">
-        <button onclick="verifyOTP()">Verify OTP</button>
-        <p id="timer">Time remaining: <span id="countdown">10</span> seconds</p>
-    </div>
-    <button id="resendButton" onclick="resendOTP()">Resend OTP</button>
-
-    <script>
-        // Function to start countdown timer
-        function startTimer(duration, display) {
-            var timer = duration, seconds;
-            setInterval(function () {
-                seconds = parseInt(timer % 60, 10);
-
-                seconds = seconds < 10 ? "0" + seconds : seconds;
-
-                display.textContent = seconds;
-
-                if (--timer < 0) {
-                    timer = duration;
-                    document.getElementById('otpSection').style.display = 'none';
-                    document.getElementById('resendButton').style.display = 'block'; // Show resend button
-                }
-            }, 1000);
-        }
-
-        // Function to verify OTP
-        function verifyOTP() {
-            var otpInput = document.getElementById('otpInput').value;
-            // Perform OTP verification logic here
-            console.log("OTP entered:", otpInput);
-            // Redirect or perform further actions based on OTP verification
-        }
-
-        // Function to resend OTP
-        function resendOTP() {
-            // Perform OTP resend logic here
-            console.log("Resending OTP...");
-            // Hide resend button and show input field and verify button again
-            document.getElementById('resendButton').style.display = 'none';
-            document.getElementById('otpSection').style.display = 'block';
-            // Reset timer
-            var countdown = 10;
-            display = document.getElementById("countdown");
-            startTimer(countdown, display);
-        }
-
-        // Start timer when the page loads
-        window.onload = function () {
-            var countdown = 10;
-            display = document.getElementById("countdown");
-            startTimer(countdown, display);
-        };
-    </script>
+  <h1>fgffff</h1>  
 </body>
 </html>

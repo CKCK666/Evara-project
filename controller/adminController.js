@@ -41,7 +41,7 @@ const adminLogin=async(req,res)=>{
 
 //get admin home page
 const getAdminHome=async(req,res)=>{
-res.render("admin/homePage",{layout:"admin_layout"})
+res.render("admin/homePage",{layout:"admin_layout",admin:true})
 }
   
   //get user list
@@ -51,10 +51,10 @@ res.render("admin/homePage",{layout:"admin_layout"})
     if(count>0){
       let result=await db.get().collection(USER_COLLECTION).find({strStatus:{$ne:"Deleted"}}).toArray()
       let users=await result.map((user,index)=>({...user,index:index+1}))
-      res.render("admin/listUsers",{layout:"admin_layout",users,count})
+      res.render("admin/listUsers",{layout:"admin_layout",users,count,admin:true})
     }
     else{
-      res.render("admin/listUsers",{layout:"admin_layout",count})
+      res.render("admin/listUsers",{layout:"admin_layout",count,admin:true})
     }
  
    
@@ -152,7 +152,7 @@ res.render("admin/homePage",{layout:"admin_layout"})
       if(count>0){
         let result=await db.get().collection(CATEGORY_COLLECTION).find({strStatus:{$ne:"Deleted"}}).toArray()
         let categories=await result.map((category,index)=>({...category,index:index+1}))
-        res.render("admin/categoryPage",{layout:"admin_layout",count,categories})
+        res.render("admin/categoryPage",{layout:"admin_layout",count,categories,admin:true})
       }
       else{
 
@@ -216,7 +216,7 @@ res.render("admin/homePage",{layout:"admin_layout"})
         let category=await db.get().collection(CATEGORY_COLLECTION).find({pkCategoryId:objectIdToUpdate,strStatus:{$ne:"Deleted"}}).toArray()
          if(category.length>0){
         
-          res.render("admin/categoryPage",{layout:"admin_layout",category})
+          res.render("admin/categoryPage",{layout:"admin_layout",category,admin:true})
          }
         else{
           res.status(200).json({success:false,message: error.message})
@@ -299,10 +299,10 @@ const getProductList=async(req,res)=>{
         
         })
      
-        res.render("admin/listProducts",{layout:"admin_layout",products})
+        res.render("admin/listProducts",{layout:"admin_layout",products,admin:true})
       }
     else{
-      res.render("admin/listProducts",{layout:"admin_layout"}) 
+      res.render("admin/listProducts",{layout:"admin_layout",admin:true}) 
     }
   
     
@@ -325,13 +325,13 @@ const getProductAdd=async(req,res)=>{
     
       if (product.length) {
         
-        res.render("admin/addProduct",{layout:"admin_layout",product,categories})
+        res.render("admin/addProduct",{layout:"admin_layout",product,categories,admin:true})
       } else {
-        res.render("admin/addProduct",{layout:"admin_layout"})
+        res.render("admin/addProduct",{layout:"admin_layout",admin:true})
       }
      }
     else{
-       res.render("admin/addProduct",{layout:"admin_layout",categories})
+       res.render("admin/addProduct",{layout:"admin_layout",categories,admin:true})
     }
    
   } catch (error) {

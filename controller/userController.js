@@ -3,6 +3,14 @@ const bcrypt = require('bcrypt');
 const {USER_COLLECTION, PRODUCTS_COLLECTION} =require("../config/collections")
 const { ObjectId } = require('mongodb');
 const router = require('../routes/userRoutes');
+const otpGenerator = require('otp-generator');
+const twilio = require('twilio');
+
+// Initialize Twilio client with your credentials
+const accountSid = 'AC88cdced8f7ff9347a07b3bc1df9e6529';
+const authToken = '9559064bd51e04028c789dbf61c4f4f3';
+const twilioClient = twilio(accountSid, authToken);
+const otpStorage = new Map();
 // get signup page
 const getSignUp = (req, res) => {
  
@@ -57,7 +65,8 @@ const getHome = async (req, res) => {
   if(req.session.passport){
     console.log(req.session.passport);
     console.log("passporttt");
-   return  res.render('user/homePage', {layout:"user_layout",user:true});
+    let products =await db.get().collection(PRODUCTS_COLLECTION).find({strStatus:"Active"}).toArray()
+   return  res.render('user/homePage', {layout:"user_layout",user:true,products});
   }
   
  const objectIdToFind = new ObjectId(req.session.user.pkUserId);
@@ -68,7 +77,9 @@ const getHome = async (req, res) => {
     .toArray();
 
   if (userExist && userExist.length > 0) {
-    res.render('user/homePage', {layout:"user_layout",user:true});
+    let products =await db.get().collection(PRODUCTS_COLLECTION).find({strStatus:"Active"}).toArray()
+
+    res.render('user/homePage', {layout:"user_layout",user:true,products});
   } else {
     req.session.destroy();
     res.clearCookie('passport')
@@ -103,6 +114,65 @@ const login = async(req,res) => {
   }
 };
 
+
+// Route to generate and send OTP
+const generateOtp=(req, res) => {
+  const { phoneNumber } = req.body;
+  console.log(req.body);
+  const OTP = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false,lowerCaseAlphabets:false });
+
+ console.log({OTP});
+  // Save OTP in memory
+  otpStorage.set(phoneNumber,OTP);
+
+  // Send OTP via SMS using Twilio
+  twilioClient.messages
+      .create({
+          body: `Your OTP is: ${OTP}`,
+          from: '+14455449136',
+          to: phoneNumber
+      })
+      .then(() => {
+       res.json({success:true,message:'OTP sent successfully'})
+      })
+      .catch(error => {
+          console.error('Error sending OTP:', error);
+          res.status(500).send('Failed to send OTP');
+      });
+}
+
+const getOtpPage=(req,res)=>{
+
+    res.render("user/otpPage",{layout:"otp_layout"})
+ 
+}
+
+
+const getSingleProductPage=async(req,res)=>{
+  console.log(req.params);
+  try {
+    if(req.query.pkProductId){
+      let pkProductId=new ObjectId(req.query.pkProductId)
+     
+      let product =await db.get().collection(PRODUCTS_COLLECTION).find({pkProductId:pkProductId,strStatus:"Active"}).toArray()
+      console.log(product);
+        if(product.length){
+          
+        res.render("user/productSingle",{layout:"user_layout",user:true,product})
+        }
+        else{
+          res.json({success:false,message:"product  not found"})
+        }
+    }
+    else{
+      res.json({success:false,message:"product id not found"})
+    }
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
+}
+
+
 //logout
 const logout = (req, res) => {
   res.clearCookie('ckCookie', { domain: 'localhost', path: '/' })
@@ -110,4 +180,4 @@ req.session.destroy();
   res.redirect('/');
 };
 
-module.exports = { getSignUp, signUp, getHome, login, logout };
+module.exports = { getSignUp, signUp, getHome, login, logout ,generateOtp,getOtpPage,getSingleProductPage};

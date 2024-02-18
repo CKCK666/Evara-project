@@ -114,16 +114,25 @@ $.ajax({
   data: $('#signup-form').serialize(), 
   success: function(response) {
       if (response.success) {
-          Swal.fire({
-              position: 'top-end',
-              icon: 'success',
-              title: 'successfully created a account',
-              showConfirmButton: false,
-              timer: 1500,
-              didClose:()=>{
-            window.location.href = '/';
+       
+        $.ajax({
+          type: 'POST',
+          url: '/generateOTP', // Replace with the actual endpoint for generating OTP
+          data: { phoneNumber: '+917907497841' }, // Provide the user's phone number
+          success: function(otpResponse) {
+              if (otpResponse.success) {
+                 window.location.href="/getOTP"
+              } else {
+                  console.error('Error generating OTP:', otpResponse.message);
+                  // Handle error
               }
-            })
+          },
+          error: function(error) {
+              console.error('Error generating OTP:', error);
+              // Handle error
+          }
+      });
+         
           console.log('success:', response.message);
       } else {
           $('#errorMessage').text(response.message)

@@ -1,5 +1,5 @@
 const express = require('express');
-const { getSignUp, signUp, getHome, login,logout } = require('../controller/userController');
+const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, getSingleProductPage } = require('../controller/userController');
 const {verifyLogin}=require("../middlewares/verifications")
 const router =express.Router()
 const passport = require('passport');
@@ -35,6 +35,17 @@ router.get('/auth/google/callback',
         res.redirect('/');
     }
 );
+
+//generate otp
+router.post("/generateOTP",generateOtp)
+
+//get otp page
+router.get("/getOTP",verifyLogin,getOtpPage)
+
+router.get("/getProduct",verifyLogin,getSingleProductPage)
+
+
+
 
 //post logout
 router.get('/logout',logout)

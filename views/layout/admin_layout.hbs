@@ -23,9 +23,9 @@
 
 <body>
  
-  {{>admin_sidebar}}
-    <main class="main-wrap">
-       {{>admin_nav}}
+ {{#if admin}} {{>admin_sidebar}} {{/if}}
+    <main {{#if admin}} class="main-wrap" {{/if}}>
+    {{#if admin}}   {{>admin_nav}}  {{/if}}
               {{{body}}}
           {{>admin_footer}}
     </main>

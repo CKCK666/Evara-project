@@ -43,7 +43,7 @@ router.post("/login",adminLogin)
 
 
 //post logout
-router.post('/logout',logout)
+router.get('/logout',logout)
 
 //delete user
 router.patch("/deleteUser",deleteUser)
@@ -52,7 +52,7 @@ router.patch("/deleteUser",deleteUser)
 router.patch("/blockUser",blockUser)
 
 //get user list  page
-router.get("/listUsers",getUserList)
+router.get("/listUsers",isAdmin,getUserList)
 
 //add category
 
@@ -60,7 +60,7 @@ router.post("/addCategory",addCategory)
 
 //get category page
 
-router.get("/getCategoryPage",getCategoryPage)
+router.get("/getCategoryPage",isAdmin,getCategoryPage)
 
 //delete category
 router.patch("/deleteCategory",deleteCategory)
@@ -69,17 +69,17 @@ router.patch("/deleteCategory",deleteCategory)
 router.patch("/blockCategory",blockCategory)
 
 //get edit category page
-router.get("/getCategoryEdit",getEditCategory)
+router.get("/getCategoryEdit",isAdmin,getEditCategory)
 
 //update category
 
 router.patch("/editCategory",editCategory)
 
 //get product list page
-router.get("/listProducts",getProductList)
+router.get("/listProducts",isAdmin,getProductList)
 
 //get product create page
-router.get("/getAddProduct",getProductAdd)
+router.get("/getAddProduct",isAdmin,getProductAdd)
 
 //create add product
 
@@ -87,7 +87,7 @@ router.post("/addProduct",uploads.any(),addProduct)
 
 
 //get edit product page
-router.get("/getProductEdit",getProductAdd)
+router.get("/getProductEdit",isAdmin,getProductAdd)
 
 //edit product
 router.post("/editProduct",editProduct)
