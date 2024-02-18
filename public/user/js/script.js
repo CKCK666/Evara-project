@@ -25,6 +25,7 @@ inputs.forEach((input, index1) => {
 
     // if the backspace key is pressed
     if (e.key === "Backspace") {
+      $('#errorMessage').text('');
       // iterate over all inputs again
       inputs.forEach((input, index2) => {
         // if the index1 of the current input is less than or equal to the index2 of the input in the outer loop
@@ -81,3 +82,56 @@ function resendOTP() {
   // Restart timer
   setInterval(updateCountdown, 1000);
 }
+
+$(document).ready(function () {
+
+
+  $('.form-control').focus(function () {
+      $(this).removeClass('error');
+      $('#errorMessage').text('');
+  });
+
+$('#submit-otp').click(function (e) {
+  e.preventDefault()
+
+  // let data = new FormData($('#otp-form')[0]);
+  //  // Initialize an empty string to store the OTP
+   let otp = '';
+    
+   // Iterate over each input field within the form
+   $('#otp-form input[type="number"]').each(function() {
+       // Append the value of each input field to the OTP
+       otp += $(this).val();
+   });
+   
+   
+ 
+
+$.ajax({
+  type: 'POST', 
+  url: '/verifyOTP',
+  data: {
+    phoneNumber:"+917907497841",
+    otp
+  }, 
+  success: function(response) {
+      if (response.success) {
+        console.log('success:', response.message);
+        window.location.href="/"
+      } else {
+        console.log('falied:', response.message);
+          $('#errorMessage').text(response.message)
+      }
+     
+  },
+  error: function(error) {
+      
+      console.error('Error:', error.message);
+  }
+});
+  
+
+});
+
+ 
+});

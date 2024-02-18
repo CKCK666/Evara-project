@@ -7,8 +7,8 @@ const otpGenerator = require('otp-generator');
 const twilio = require('twilio');
 
 // Initialize Twilio client with your credentials
-const accountSid = 'AC88cdced8f7ff9347a07b3bc1df9e6529';
-const authToken = '9559064bd51e04028c789dbf61c4f4f3';
+const accountSid = process.env.TWILIO_SID;
+const authToken = process.env.TWILIO_TOKEN;
 const twilioClient = twilio(accountSid, authToken);
 const otpStorage = new Map();
 // get signup page
@@ -26,8 +26,9 @@ const getSignUp = (req, res) => {
 //post signup
 const signUp = async (req, res) => {
   try {
-    let { username, email, password } = req.body;
-
+    let { username, email, password ,phno} = req.body;
+     console.log("signup+++++",phno);
+      let strPhoneNumber="+91"+phno
     let emailExist = await db.get().collection(USER_COLLECTION).findOne({ strEmail:email,strStatus:{$ne:"Deleted"} });
 
     if (!emailExist) {
@@ -37,20 +38,27 @@ const signUp = async (req, res) => {
         strUserName:username,
         strEmail:email,
         strPassword: hashedPassword,
+        strPhoneNumber:strPhoneNumber,
         strProfileImg:null,
-        strStatus:"Active",
+       strStatus:"Pending",
         createdDate: new Date(),
         updatedDate: null,
       };
       let result = await db.get().collection(USER_COLLECTION).insertOne(userData);
+      console.log(result);
+      if(result.insertedId){
+        let _id=result.insertedId
+        let findUser=await db.get().collection(USER_COLLECTION).find({_id},{strPassword:-1,strProfileImg:-1}).toArray()
+        req.session.user = findUser[0];
+        console.log(req.session.user);
+        req.session.otpVerified=false
 
-      req.session.loggedIn = true;
-      req.session.user = userData;
-     
-      res.json({ success: true, message: 'Form submitted successfully!' });
-      
-     
-    } else {
+        res.json({ success:true, message: 'Form submitted successfully!' });
+      }else{
+        res.json({ success: false, message: 'Failed to submitted !' });
+      }
+
+        } else {
       res.json({ success: false, message: 'Email already exists' });
     }
   } catch (error) {
@@ -117,14 +125,14 @@ const login = async(req,res) => {
 
 // Route to generate and send OTP
 const generateOtp=(req, res) => {
-  const { phoneNumber } = req.body;
-  console.log(req.body);
+  const phoneNumber=req.session.user.strPhoneNumber
+    console.log("phno:",phoneNumber);
   const OTP = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false,lowerCaseAlphabets:false });
 
- console.log({OTP});
+ 
   // Save OTP in memory
   otpStorage.set(phoneNumber,OTP);
-
+console.log(otpStorage);
   // Send OTP via SMS using Twilio
   twilioClient.messages
       .create({
@@ -133,7 +141,8 @@ const generateOtp=(req, res) => {
           to: phoneNumber
       })
       .then(() => {
-       res.json({success:true,message:'OTP sent successfully'})
+        req.session.accessOtpPage=true
+       res.json({success:true,message:'OTP sent successfully',phoneNumber})
       })
       .catch(error => {
           console.error('Error sending OTP:', error);
@@ -142,9 +151,35 @@ const generateOtp=(req, res) => {
 }
 
 const getOtpPage=(req,res)=>{
+     if(req.session.accessOtpPage){
+      req.session.accessOtpPage=false
+      res.render("user/otpPage",{layout:"otp_layout"})
+     }else{
+      res.redirect("/")
+     }
+      
+  }
 
-    res.render("user/otpPage",{layout:"otp_layout"})
+const verifyOTP=async(req,res)=>{
  
+  const { otp } = req.body;
+  let phoneNumber=req.session.user.strPhoneNumber
+ 
+  const storedOTP = otpStorage.get(phoneNumber);
+   
+  if (!storedOTP || storedOTP !== otp) {
+      
+      
+      res.json({success:false,message:'Invalid OTP'});
+      return;
+  }
+  req.session.otpVerified=true
+  req.session.accessOtpPage=false
+  // Delete OTP from storage once verified
+  otpStorage.delete(phoneNumber);
+   
+  await db.get().collection(USER_COLLECTION).updateOne({strEmail:req.session.user.strEmail},{$set:{strStatus:"Active"}})
+  res.status(200).json({success:true,message:'OTP verified successfully'});
 }
 
 
@@ -180,4 +215,4 @@ req.session.destroy();
   res.redirect('/');
 };
 
-module.exports = { getSignUp, signUp, getHome, login, logout ,generateOtp,getOtpPage,getSingleProductPage};
+module.exports = { getSignUp, signUp, getHome, login, logout ,generateOtp,getOtpPage,getSingleProductPage,verifyOTP};

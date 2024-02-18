@@ -17,9 +17,9 @@ const cloudinary = require('cloudinary').v2;
 //     api_secret: process.env.CLOUDINARY_API_SECRET
 //   });
   cloudinary.config({
-    cloud_name:"dtnpsbv9r",
-    api_key:"451459787528641",
-    api_secret:"guYk7b_6d6JW1edMkJtC5qxh32U"
+    cloud_name:process.env.CLOUDINARY_NAME,
+    api_key:process.env.CLOUDINARY_API_KEY,
+    api_secret:process.env.CLOUDINARY_API_SECRET
   });
   
   // Set up Multer storage using Cloudinary

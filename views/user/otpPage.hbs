@@ -3,7 +3,7 @@
       <i class="bx bxs-check-shield"></i>
     </header>
     <h4>Enter OTP Code</h4>
-    <form action="#">
+    <form  id="otp-form">
       <div class="input-field">
         <input type="number" />
         <input type="number" disabled />
@@ -12,7 +12,9 @@
         <input type="number" disabled />
         <input type="number" disabled />
       </div>
-      <button>Verify OTP</button>
+      <h6 id='errorMessage' style='color: red; text-align: center;font-size:medium;font-weight:normal' ></h6>
+      <button id="submit-otp">Verify OTP</button>
+      
     </form>
     <p id="timer">Time remaining: <span id="countdown">10</span> seconds</p>
     <button id="resendButton" onclick="resendOTP()" style="display: none;">Resend OTP</button>

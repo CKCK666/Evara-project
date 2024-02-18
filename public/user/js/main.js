@@ -73,14 +73,16 @@ $(document).ready(function () {
  //user signUp
  $('#submit-signup').click(function (e) {
   e.preventDefault()
+  let nameRegex = /^(?=(.*[a-zA-Z]){3})[a-zA-Z0-9\s\-\_.]+$/;
 
   let data = new FormData($('#signup-form')[0]);
     let email=data.get('email')
     let username=data.get("username")
     let password=data.get("password")
     let Cpassword=data.get("Cpassword")
+    let phoneNumber=data.get("phno")
       console.log(username,email,password,Cpassword);
-  if (username === ''|| email === '' || password==="") {
+  if (username === ''|| email === '' || password==="" ||phoneNumber==="" ||Cpassword==="") {
   
       $('#errorMessage').text('Please fill in all fields.');
       $('.form-control').addClass('error') 
@@ -89,22 +91,34 @@ $(document).ready(function () {
   }
   if(username.length<=3){
       $('#errorMessage').text('Name must be at least 4 characters long.');
-      $('#username').addClass('error')   
+      $("input[name='username']").addClass('error');  
       return;
   }
+  if (!nameRegex.test(username)) {
+    $('#errorMessage').text('Username must contain at least three alphabetical character');
+    $("input[name='username']").addClass('error');
+    return;
+}
+
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
       $('#errorMessage').text('Invalid email format.');
-      $('#email').addClass('error');
+      $("input[name='email']").addClass('error');
       return;
   }
   if(password.length<8){
      
       $('#errorMessage').text('Password must be at least 8 characters long.'); 
-      $('#password').addClass('error') 
+      $("input[name='password']").addClass('error');
       return;
   }
-
+  
+  if(password!=Cpassword){
+    $('#errorMessage').text('Passwords do not match.'); 
+    $("input[name='password']").addClass('error');
+    $("input[name='Cpassword']").addClass('error');
+    return
+  }
 
  
 
@@ -118,7 +132,7 @@ $.ajax({
         $.ajax({
           type: 'POST',
           url: '/generateOTP', // Replace with the actual endpoint for generating OTP
-          data: { phoneNumber: '+917907497841' }, // Provide the user's phone number
+                                 // Provide the user's phone number
           success: function(otpResponse) {
               if (otpResponse.success) {
                  window.location.href="/getOTP"

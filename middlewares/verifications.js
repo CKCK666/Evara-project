@@ -5,7 +5,7 @@ const { ObjectId } = require('mongodb');
 const { required } = require("nodemon/lib/config");
 const verifyLogin=async(req,res,next)=>{
     
-    if((req.session.user && !req.session.user.isAdmin) || req.session.passport){
+    if(req.session.loggedIn || req.session.otpVerified || req.session.passport){
        
      
      next()
