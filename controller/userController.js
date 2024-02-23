@@ -1,6 +1,6 @@
 const db = require('../config/connection');
 const bcrypt = require('bcrypt');
-const {USER_COLLECTION, PRODUCTS_COLLECTION} =require("../config/collections")
+const {USER_COLLECTION, PRODUCTS_COLLECTION, CATEGORY_COLLECTION, CART_COLLECTION} =require("../config/collections")
 const { ObjectId } = require('mongodb');
 const router = require('../routes/userRoutes');
 const otpGenerator = require('otp-generator');
@@ -35,6 +35,7 @@ const signUp = async (req, res) => {
       const hashedPassword = await bcrypt.hash(password, 10);
       let userData = {
         pkUserId:new ObjectId(),
+        arrAddress:[],
         strUserName:username,
         strEmail:email,
         strPassword: hashedPassword,
@@ -86,8 +87,29 @@ const getHome = async (req, res) => {
 
   if (userExist && userExist.length > 0) {
     let products =await db.get().collection(PRODUCTS_COLLECTION).find({strStatus:"Active"}).toArray()
-
-    res.render('user/homePage', {layout:"user_layout",user:true,products});
+    let categories =await db.get().collection(CATEGORY_COLLECTION).find({strStatus:"Active"}).toArray()
+    let userCart=await db.get().collection(CART_COLLECTION).find({pkUserId:objectIdToFind}).toArray()
+    let cartCount=0
+    if(userCart && userCart.length){
+      let totalQuantity=await db.get().collection(CART_COLLECTION).aggregate([
+       {
+         $match:{
+           pkUserId:objectIdToFind 
+         }
+       },
+       {
+         $unwind: "$arrProducts" // Unwind the arrProducts array to deconstruct the array
+       },
+       {
+         $group: {
+           _id: null,
+           totalItems: { $sum: "$arrProducts.intQuantity" }
+         }
+       }
+     ]).toArray()
+     cartCount=totalQuantity[0].totalItems
+    }
+    res.render('user/homePage', {layout:"user_layout",user:true,products,categories,pkUserId:req.session.user.pkUserId,cartCount});
   } else {
     req.session.destroy();
     res.clearCookie('passport')
@@ -188,12 +210,33 @@ const getSingleProductPage=async(req,res)=>{
   try {
     if(req.query.pkProductId){
       let pkProductId=new ObjectId(req.query.pkProductId)
-     
+      let cartCount=0
+       let userId=req.session.user.pkUserId
+       let userCart=await db.get().collection(CART_COLLECTION).find({pkUserId:new ObjectId(userId)}).toArray()
+       if(userCart && userCart.length){
+         let totalQuantity=await db.get().collection(CART_COLLECTION).aggregate([
+          {
+            $match:{
+              pkUserId:new ObjectId(userId)
+            }
+          },
+          {
+            $unwind: "$arrProducts" // Unwind the arrProducts array to deconstruct the array
+          },
+          {
+            $group: {
+              _id: null,
+              totalItems: { $sum: "$arrProducts.intQuantity" }
+            }
+          }
+        ]).toArray()
+        cartCount=totalQuantity[0].totalItems
+       }
       let product =await db.get().collection(PRODUCTS_COLLECTION).find({pkProductId:pkProductId,strStatus:"Active"}).toArray()
       console.log(product);
         if(product.length){
           
-        res.render("user/productSingle",{layout:"user_layout",user:true,product})
+        res.render("user/productSingle",{layout:"user_layout",user:true,product,userId,cartCount})
         }
         else{
           res.json({success:false,message:"product  not found"})
@@ -206,7 +249,376 @@ const getSingleProductPage=async(req,res)=>{
     res.json({success:false,message:error.message})
   }
 }
+//get usersettings page
+const getUserSetting=async(req,res)=>{
+ 
+  try {
+   
+    if(req.query.pkUserId){
+      let cartCount=0
+      let match={
+        $match:{
+          pkUserId:new ObjectId(req.query.pkUserId),
+          strStatus:"Active"
+        }
+      }
+      let project={
+        $project:{
+          arrAddress:1,
+          pkUserId:1
+        }
+      }
+      let arrAddress= await db.get().collection(USER_COLLECTION).aggregate([match,project]).toArray()
+      let userCart=await db.get().collection(CART_COLLECTION).find({pkUserId:new ObjectId(req.query.pkUserId)}).toArray()
+      if(userCart && userCart.length){
+        let totalQuantity=await db.get().collection(CART_COLLECTION).aggregate([
+         {
+           $match:{
+             pkUserId:new ObjectId(req.query.pkUserId)
+           }
+         },
+         {
+           $unwind: "$arrProducts" // Unwind the arrProducts array to deconstruct the array
+         },
+         {
+           $group: {
+             _id: null,
+             totalItems: { $sum: "$arrProducts.intQuantity" }
+           }
+         }
+       ]).toArray()
+       cartCount=totalQuantity[0].totalItems
+      }
+      console.log(arrAddress);
+      if(arrAddress && arrAddress.length ){
+      
+        res.render("user/userSettings",{layout:"user_layout",user:true,arrAddress,pkUserId:req.query.pkUserId,cartCount})
+      }
+     
+    }else{
+      res.json({success:false,message:"User id not found"})
+    }
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
 
+}
+
+//get add address page
+const getAddressPage=async(req,res)=>{
+  try {
+   let pkUserId=req.query.pkUserId
+    let user=await db.get().collection(USER_COLLECTION).find({pkUserId:new ObjectId(pkUserId)}).toArray()
+    let addressCount=false
+     if(user[0].arrAddress.length>0){
+       addressCount=true
+     }
+
+    res.render("user/addAddress",{layout:"user_layout",pkUserId,addressCount})
+  } catch (error) {
+    res.json({success:false,message:"fail to render add  address page"})
+  }
+}
+
+//add address
+const addNewAddress=async(req,res)=>{
+  console.log(req.body);
+  try {
+     if(req.body.pkUserId){
+       let matchQuery={
+       
+          pkUserId:new ObjectId(req.body.pkUserId),
+          strStatus:"Active",
+        
+        
+       } 
+        let isDefaultAddress=false
+        if(req.body.addressCheckBox){
+          isDefaultAddress=true
+          let arrAddressExist=await db.get().collection(USER_COLLECTION).find(matchQuery,{arrAddress:1}).toArray()
+          console.log(arrAddressExist);
+           if(arrAddressExist.length>0){
+            let matchQuery2={
+              pkUserId:new ObjectId(req.body.pkUserId),
+              strStatus:"Active",
+              "arrAddress.isDefaultAddress":true
+            }
+            await db.get().collection(USER_COLLECTION).updateOne(matchQuery2,{ $set: { "arrAddress.$.isDefaultAddress": false }})
+           }
+         
+        }
+       let dataToAdd={
+        $addToSet:{
+          arrAddress:{
+            pkUserId:new ObjectId(req.body.pkUserId),
+            pkAddressId:new ObjectId(),
+           strFullName:req.body.fname,
+           strPhoneNo:req.body.phno,
+           strArea:req.body.area || null,
+           intPinCode:req.body.pinCode,
+           strCity:req.body.city,
+           strState:req.body.state,
+           isDefaultAddress
+          }
+         }
+    }
+        let result=await db.get().collection(USER_COLLECTION).updateOne(matchQuery,dataToAdd)
+        
+        res.json({success:true,message:"successfully add address",pkUserId:req.body.pkUserId})
+     }else{
+      res.json({success:false,message:"User id not found"})
+     }
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
+
+}
+
+//delete address
+const deleteAddress=async(req,res)=>{
+ 
+  try {
+    if(req.body.pkUserId){
+      if(req.body.pkAddressId){
+        let pkUserId=new ObjectId(req.body.pkUserId)
+        let pkAddressId=new ObjectId(req.body.pkAddressId)
+        const result = await db.get().collection(USER_COLLECTION).updateOne(
+          { pkUserId ,strStatus:"Active"},
+          { $pull: { arrAddress: {pkAddressId } } }
+        );
+       
+      if (result.modifiedCount===1) {
+       
+        res.json({success:true,message: 'successfully  deleted!',pkUserId:req.body.pkUserId})
+      }
+      else{
+        console.log("not user deleted");
+        res.json({success:false,message: 'User not deleted!'})
+      }
+      
+
+      }else{
+        res.json({success:false,message:"Address id not found"})
+      }
+    }else{
+      res.json({success:false,message:"User id id not found"})
+    }
+    
+   
+ 
+   } catch (error) {
+    console.log(error.message);
+      res.json({success:false,message: error.message})
+   }
+}
+
+const addToCart=async(req,res)=>{
+  try {
+      if(req.body.pkUserId){
+        let pkUserId =new ObjectId(req.body.pkUserId)
+      let product=await db.get().collection(PRODUCTS_COLLECTION).find({pkProductId:new ObjectId(req.body.pkProductId),strStatus:"Active"}).toArray()
+       if(product && product.length){
+         let pkProductId=new ObjectId(product[0].pkProductId)
+         let userCart= await db.get().collection(CART_COLLECTION).find({pkUserId}).toArray()
+           
+         if(userCart && userCart.length){
+          let productInCart=await db.get().collection(CART_COLLECTION).find({pkUserId,"arrProducts.pkProductId":pkProductId}).toArray()
+          
+          if(productInCart.length){
+            const update = {
+              $inc: { "arrProducts.$.intQuantity": 1 },
+           
+            };
+            const result = await db.get().collection(CART_COLLECTION).updateOne({pkUserId,"arrProducts.pkProductId":pkProductId}, update);
+        
+            
+          let aggregatePipeline = [
+              {
+                $match: { pkUserId } // Match documents with the specified pkUserId
+              },
+              {
+                $unwind: "$arrProducts" // Deconstruct the arrProducts array
+              },
+              {
+                $group: {
+                  _id: null,
+                  total_cart_price: {
+                    $sum: { $multiply: ["$arrProducts.intQuantity", "$arrProducts.intPrice"] }
+                  }
+                }
+              }
+            ];
+            
+            let totalPriceResult = await db.get().collection(CART_COLLECTION).aggregate(aggregatePipeline).toArray();
+            
+            // Update total_cart_price for the cart
+            let updatedTotalPriceResult = await db.get().collection(CART_COLLECTION).updateOne(
+              { pkUserId },
+              { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
+            );
+            
+            console.log(updatedTotalPriceResult);
+
+
+
+            res.json({success:true,message:"cart updated-1"})
+
+
+
+
+
+
+
+        
+          }else{
+            let matchQuery = {
+              pkUserId: new ObjectId(req.body.pkUserId),
+             
+            };
+           
+            let dataToAdd = {
+              $addToSet: {
+                arrProducts: {
+                  pkUserId: pkUserId,
+                  ...product[0],
+                  intQuantity: 1,
+                  
+                }
+              }
+            };
+            
+            let result = await db.get().collection(CART_COLLECTION).updateOne(matchQuery, dataToAdd);
+            console.log(result);
+            
+            // Calculate total_cart_price using aggregation framework
+            let aggregatePipeline = [
+              {
+                $match: {
+                  pkUserId: new ObjectId(req.body.pkUserId), // Match documents with the specified user ID
+                
+                }
+              },
+              {
+                $unwind: "$arrProducts" // Deconstruct the arrProducts array
+              },
+              {
+                $group: {
+                  _id: null,
+                  total_cart_price: {
+                    $sum: { $multiply: ["$arrProducts.intQuantity", "$arrProducts.intPrice"] }
+                  }
+                }
+              }
+            ];
+            
+            let totalPriceResult = await db.get().collection(CART_COLLECTION).aggregate(aggregatePipeline).toArray();
+            
+            // Update total_cart_price for the cart
+            let updatedTotalPriceResult = await db.get().collection(CART_COLLECTION).updateOne(matchQuery, { $set: { total_cart_price: totalPriceResult[0].total_cart_price } });
+            
+            console.log(result);
+            console.log(updatedTotalPriceResult);
+            
+          
+        res.json({success:true,message:"cart updated-2"})
+            }
+
+         }else{
+         
+        
+          
+          product[0].intQuantity=1
+          
+          let dataToAdd={
+            pkUserId,
+            arrProducts:[
+              ...product,
+              
+            ],
+            total_cart_price:product[0].intPrice,
+            updatedDate:null,
+            createDate:new Date()
+          }
+          let result=await db.get().collection(CART_COLLECTION).insertOne(dataToAdd)
+          res.json({success:true,message:"new cart added-3"})
+        }
+        
+       }
+       else{
+        res.json({success:true,message:"Product not found"})
+       }
+
+      }else{
+        res.json({success:true,message:"user id not found"})
+      }
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
+}
+
+//get cart page
+const getCartPage=async(req,res)=>{
+ try {
+  let pkUserId =req.session.user.pkUserId
+  console.log(pkUserId);
+  let cartCount=0
+ let cartDetails=await db.get().collection(CART_COLLECTION).find({pkUserId:new ObjectId(pkUserId)}).toArray()
+ console.log(cartDetails);
+ if (cartDetails && cartDetails.length) {
+
+    let totalQuantity=await db.get().collection(CART_COLLECTION).aggregate([
+     {
+       $match:{
+         pkUserId:new ObjectId(pkUserId)
+       }
+     },
+     {
+       $unwind: "$arrProducts" // Unwind the arrProducts array to deconstruct the array
+     },
+     {
+       $group: {
+         _id: null,
+         totalItems: { $sum: "$arrProducts.intQuantity" }
+       }
+     }
+   ]).toArray()
+   cartCount=totalQuantity[0].totalItems
+  
+
+  let cartProducts=cartDetails[0].arrProducts.map(obj=>{
+    let intTotalPrice=obj.intQuantity*obj.intPrice
+    return {...obj,intTotalPrice:intTotalPrice}
+  })
+   res.render("user/cartPage",{layout:"user_layout",success:true,cartDetails,cartProducts,pkUserId,message:"successfully loaded cart page",user:true,cartCount})
+ } else {
+  res.render("user/cartPage",{layout:"user_layout",success:true,user:true,pkUserId,cartCount})
+ }
+ } catch (error) {
+  res.json({success:true,message:error.message})
+ }
+}
+
+const getCheckoutPage=async(req,res)=>{
+  try {
+    let pkUserId =new ObjectId(req.session.user.pkUserId)
+    let userAddress=await db.get().collection(USER_COLLECTION).find({pkUserId:pkUserId},{ projection: { "arrAddress": 1, "_id": 0 }}).toArray()
+    let cartDetails=await db.get().collection(CART_COLLECTION).find({pkUserId}).toArray()
+    if (cartDetails && cartDetails.length) {
+      let cartProducts=cartDetails[0].arrProducts.map(obj=>{
+        let intTotalPrice=obj.intQuantity*obj.intPrice
+        return {...obj,intTotalPrice:intTotalPrice}
+      })
+      
+       res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,pkUserId,cartDetails,message:"successfully loaded cart page",user:true})
+     } else {
+      res.render("user/checkoutPage",{layout:"user_layout",success:true,user:true,pkUserId})
+     }
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
+   
+  
+}
 
 //logout
 const logout = (req, res) => {
@@ -215,4 +627,4 @@ req.session.destroy();
   res.redirect('/');
 };
 
-module.exports = { getSignUp, signUp, getHome, login, logout ,generateOtp,getOtpPage,getSingleProductPage,verifyOTP};
+module.exports = { getSignUp, signUp, getHome, login, logout ,generateOtp,getOtpPage,getSingleProductPage,verifyOTP,addNewAddress,getUserSetting,deleteAddress,getAddressPage,addToCart,getCartPage,getCheckoutPage};

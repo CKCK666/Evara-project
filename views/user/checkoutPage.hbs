@@ -1,0 +1,108 @@
+ <div class="page-header breadcrumb-wrap">
+            <div class="container">
+                <div class="breadcrumb">
+                    <a href="index.html" rel="nofollow">Home</a>
+                    <span></span> Shop
+                    <span></span> Checkout
+                </div>
+            </div>
+        </div>
+        <section class="mt-50 mb-50">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-6 mb-sm-15">
+                       {{#if userAddress}}
+                       {{#each userAddress.[0].arrAddress}}
+                          <div class="card-header">
+                                                        <h5 class="mb-0">Billing Address:{{#if isDefaultAddress}}Default{{/if}}</h5> 
+                                                    </div>
+                        <div class='card-body'>
+                        <address>{{strFullName}}<br />
+                          {{strPhoneNo}},<br />
+                          {{strCity}}.
+                          <br />{{intPinCode}}</address>
+                        <p>{{strState}}</p>
+                        <p>India</p>
+                        <a href='#' class='btn-small'>Edit</a>
+                        <a href="#" onclick="deleteAddress('{{pkAddressId}}','{{pkUserId}}')" class='btn-small ml-5'>Remove</a>
+                      
+                        {{#if isDefaultAddress}}  {{else}} <a href='#' class='btn-small ml-5'>Set as default</a>{{/if}}
+                      </div>
+                      {{/each}}
+                    {{/if}}
+                    <a href="#" class="btn btn-primary btn-sm rounded">Add new address</a>
+                    </div>
+
+
+                     <div class="col-md-6">
+                        <div class="order_review">
+                            <div class="mb-20">
+                                <h4>Your Orders</h4>
+                            </div>
+                            <div class="table-responsive order_table text-center">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th colspan="2">Product</th>
+                                            <th>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{#if cartProducts}}
+                                        {{#each cartProducts}}
+                                        <tr>
+                                            <td class="image product-thumbnail"><img src={{mainProductUrl}} alt="#"></td>
+                                            <td>
+                                                <h5><a href="shop-product-full.html">{{strDescription}}</a></h5> <span class="product-qty">x {{intQuantity}}</span>
+                                            </td>
+                                            <td>{{intTotalPrice}}</td>
+                                        </tr>
+                                        {{/each}}
+                                        {{/if}}
+
+                                        {{#if cartDetails}}
+                                        {{#each cartDetails}}
+                                        <tr>
+                                            <th>SubTotal</th>
+                                            <td class="product-subtotal" colspan="2">₹{{total_cart_price}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Shipping</th>
+                                            <td colspan="2"><em>Free Shipping</em></td>
+                                        </tr>
+                                        <tr>
+                                            <th>Total</th>
+                                            <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">₹{{total_cart_price}}</span></td>
+                                        </tr>
+                                        {{/each}}
+                                        {{/if}}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="bt-1 border-color-1 mt-30 mb-30"></div>
+                            <div class="payment_method">
+                                <div class="mb-25">
+                                    <h5>Payment</h5>
+                                </div>
+                                <div class="payment_option">
+                                    <div class="custome-radio">
+                                        <input class="form-check-input" required="" type="radio" name="payment_option" id="exampleRadios3" checked="">
+                                        <label class="form-check-label" for="exampleRadios3" data-bs-toggle="collapse" data-target="#bankTranfer" aria-controls="bankTranfer">COD</label>
+                                        <div class="form-group collapse in" id="bankTranfer">
+                                            <p class="text-muted mt-5">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration. </p>
+                                        </div>
+                                    </div>
+                                   
+                                </div>
+                            </div>
+                            <a href="#" class="btn btn-fill-out btn-block mt-30">Place Order</a>
+                        </div>
+                    </div>
+                    
+                </div>
+              
+            
+                   
+                
+            </div>
+        </section>

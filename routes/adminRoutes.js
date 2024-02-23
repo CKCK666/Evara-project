@@ -4,7 +4,7 @@ const dotenv=require("dotenv")
 const {verifyLogin}=require("../middlewares/verifications")
 
 dotenv.config()
-const { getAdminHome, adminLogin, logout, deleteUser, getUserList, blockUser, addCategory, getCategoryPage, deleteCategory, blockCategory, getEditCategory, editCategory, getProductList, getProductAdd, addProduct, editProduct, deleteProduct, blockProduct } = require('../controller/adminController');
+const { getAdminHome, adminLogin, logout, deleteUser, getUserList, blockUser, addCategory, getCategoryPage, deleteCategory, blockCategory, getEditCategory, editCategory, getProductList, getProductAdd, addProduct, editProduct, deleteProduct, blockProduct, getProductEdit } = require('../controller/adminController');
 
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -87,7 +87,7 @@ router.post("/addProduct",uploads.any(),addProduct)
 
 
 //get edit product page
-router.get("/getProductEdit",isAdmin,getProductAdd)
+router.get("/getProductEdit",isAdmin,getProductEdit)
 
 //edit product
 router.post("/editProduct",editProduct)

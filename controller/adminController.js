@@ -1,7 +1,7 @@
 const db=require("../config/connection")
 const bcrypt=require("bcrypt")
 const jwt =require("jsonwebtoken")
-const { ObjectId, ReturnDocument } = require('mongodb');
+const { ObjectId} = require('mongodb');
 const {USER_COLLECTION,ADMIN_COLLECTION, CATEGORY_COLLECTION, PRODUCTS_COLLECTION}=require("../config/collections");
 const { log, logger } = require("handlebars");
 //post login
@@ -49,8 +49,20 @@ res.render("admin/homePage",{layout:"admin_layout",admin:true})
   try {
     let count =await db.get().collection("cln_users").count()
     if(count>0){
-      let result=await db.get().collection(USER_COLLECTION).find({strStatus:{$ne:"Deleted"}}).toArray()
-      let users=await result.map((user,index)=>({...user,index:index+1}))
+      let result=await db.get().collection(USER_COLLECTION).find({strStatus:{$nin:["Deleted","Pending"]}}).toArray()
+      // let users=await result.map((user,index)=>({...user,index:index+1}))
+      let users=await result.map((user,index)=>{
+        const isoDate = user.createdDate;
+        const date = new Date(isoDate);
+        const formattedDate = date.toString().substring(0, 15) + date.getFullYear()
+        return {
+          ...user,
+          index:index+1,
+          createdDate: formattedDate
+         }
+        
+        })
+      
       res.render("admin/listUsers",{layout:"admin_layout",users,count,admin:true})
     }
     else{
@@ -70,7 +82,10 @@ res.render("admin/homePage",{layout:"admin_layout",admin:true})
   const deleteUser=async(req,res)=>{
     try {
       let {id}=req.body
+      
       const objectIdToUpdate = new ObjectId(id);
+  
+      console.log();
       let result=await db.get().collection(USER_COLLECTION).updateOne({pkUserId:objectIdToUpdate},{$set:{strStatus:"Deleted",updatedDate:new Date()}})
         console.log(result);
       if (result.modifiedCount>0) {
@@ -415,6 +430,39 @@ const getProductAdd=async(req,res)=>{
      
    }
 
+  //edit product page
+  const getProductEdit=async(req,res)=>{
+    try {
+      let categories=await db.get().collection(CATEGORY_COLLECTION).find({strStatus:{$ne:"Deleted"}}).toArray()
+      if(req.query.pkProductId){
+       
+        const pkProductId = new ObjectId(req.query.pkProductId);
+       
+        let product=await db.get().collection(PRODUCTS_COLLECTION).find({pkProductId:pkProductId,strStatus:{$ne:"Deleted"}}).toArray()
+      
+        if (product.length) {
+          
+          res.render("admin/editProduct",{layout:"admin_layout",product,categories,admin:true})
+        } else {
+          res.redirect("/admin/listProduct",{layout:"admin_layout",admin:true})
+        }
+       }
+      else{
+         res.red("/admin/listProduct",{layout:"admin_layout",admin:true})
+      }
+     
+    } catch (error) {
+      console.log(error);
+      res.status(200).json({success:false,message: error.message})
+    }
+    
+    
+    
+    }
+  
+
+
+
     //edit product
   const editProduct=async(req,res)=>{
     console.log("edit product router");
@@ -562,6 +610,7 @@ const logout=(req,res)=>{
     editCategory,getProductList,
     getProductAdd,
     addProduct,editProduct,deleteProduct,
-    blockProduct
+    blockProduct,
+    getProductEdit
   
   }

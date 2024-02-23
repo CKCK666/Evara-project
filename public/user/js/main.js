@@ -162,10 +162,192 @@ $.ajax({
 
 });
 
+ //user add address
+ $('#add-address-submit').click(function (e) {
+    e.preventDefault()
+    let nameRegex = /^(?=(.*[a-zA-Z]){3})[a-zA-Z0-9\s\-\_.]+$/;
+    let pincodeRegex = /^[1-9][0-9]{5}$/;
+    let data = new FormData($('#add-address-form')[0]);
+    let hasCheckbox = $("#add-address-form input[type='checkbox']").length > 0;
+
+    // Serialize the form data
+    let formData; // Declare formData variable
+
+    if (hasCheckbox) {
+        formData = $("#add-address-form").serializeArray(); // If checkbox exists, use serializeArray()
+        var checkboxName = $("#add-address-form input[type='checkbox']").attr("name");
+        var checkboxValue = $("#add-address-form input[type='checkbox']").is(":checked") ? "checked" : "unchecked";
+        formData.push({ name: checkboxName, value: checkboxValue });
+    } 
+      
+
+      let fullName=data.get("fname")
+      let pinCode=data.get("pincode")
+      let city=data.get("city")
+      let phoneNumber=data.get("phno")
+      let state=data.get("state")
+      let area=data.get("area")
+      
+    if (fullName === ''|| pinCode === '' || city==="" ||phoneNumber==="" || state==="") {
+    
+        $('#errorMessage').text('Please fill in all fields.');
+        $('.form-control').addClass('error') 
+  
+        return;
+    }
+    if(fullName.length<=3){
+        $('#errorMessage').text('Full name must be at least 4 characters long.');
+        $("input[name='fname']").addClass('error');  
+        return;
+    }
+  //   if (!pincodeRegex.test(pinCode)) {
+  //     $('#errorMessage').text('Invalid Indian PIN code.');
+  //     $("input[name='username']").addClass('error');
+  //     return;
+  // }
+  if (!nameRegex.test(fullName)) {
+    $('#errorMessage').text('Full name must contain at least three alphabetical character');
+    $("input[name='fname']").addClass('error');
+    return;
+}
+  if(phoneNumber.legnth<10 || phoneNumber<0 || phoneNumber.length>10){
+    $('#errorMessage').text('City name must 3 characters long.'); 
+    $("input[name='city']").addClass('error');
+ 
+    return
+  }
+    
+    if(city.legnth){
+      $('#errorMessage').text('City name must 3 characters long.'); 
+      $("input[name='city']").addClass('error');
+   
+      return
+    }
+  
+   
+  
+  $.ajax({
+    type: 'POST', 
+    url: '/addAddress',
+    data:  $("#add-address-form").serialize(), 
+    success: function(response) {
+        if (response.success) {
+          console.log(response.pkUserId);
+        //  window.location.href=`/userSettings?pkUserId=${response.pkUserId}`
+          
+        } else {
+            $('#errorMessage').text(response.message)
+        }
+       
+    },
+    error: function(error) {
+        
+        console.error('Error:', error);
+    }
+  });
+    
+  
+  });
+
+ 
+
+
+
  
 });
 
+const deleteAddress=(addressId,userId)=>{
 
+  console.log("hereee",addressId,userId);
+
+  const swalWithBootstrapButtons = Swal.mixin({
+      customClass: {
+        confirmButton: 'btn btn-danger',
+        cancelButton: 'btn btn-danger'
+      },
+      buttonsStyling: false
+    })
+    
+    swalWithBootstrapButtons.fire({
+      title: `Want to delete this address`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'No, cancel!',
+      reverseButtons: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+          $.ajax({
+              type: 'POST', 
+              url: "/deleteAddress",
+              data: {
+                pkAddressId:addressId,
+                pkUserId:userId
+              }, 
+              success: function(response) {
+                  if (response.success) {
+                      swalWithBootstrapButtons.fire(
+                          'Deleted!',
+                          'Your file has been deleted.',
+                          'success'
+                        ).then(()=>{
+                           window.location.href=`/userSettings?pkUserId=${response.pkUserId}`
+                        })
+                       
+                      console.log('success:', response.message);
+                  } else {
+                    console.log('success:', response.message);
+                      swalWithBootstrapButtons.fire(
+                          'Cancelled',
+                          
+                        )
+                  }
+                 
+              },
+              error: function(error) {
+                  
+                  console.error('Error:', error);
+              }
+          });
+        
+      } else if (
+        /* Read more about handling dismissals below */
+        result.dismiss === Swal.DismissReason.cancel
+      ) {
+        swalWithBootstrapButtons.fire(
+          'Cancelled',
+          
+        )
+      }
+    })
+  }
+
+  const handleAddToCart=(pkProductId,pkUserId)=>{
+    console.log(pkProductId,pkUserId);
+    $.ajax({
+      type: 'POST', 
+      url: '/addToCart',
+      data: {
+        pkProductId,
+        pkUserId
+    
+      }, 
+      success: function(response) {
+          if (response.success) {
+          let cartCount=document.getElementById("cartCount").innerText
+          document.getElementById("cartCount").innerText=parseInt(cartCount)+1
+            
+          } else {
+              $('#errorMessage').text(response.message)
+          }
+         
+      },
+      error: function(error) {
+          
+          console.error('Error:', error);
+      }
+    });
+  }
 
 
 

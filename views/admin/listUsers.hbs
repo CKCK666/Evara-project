@@ -66,7 +66,7 @@
                                     
                                     <td class="text-center" >{{createdDate}}</td>
                                     <td  class="text-center" >
-                                        <a href="#" onclick="handleDelete('{{pkUserId}}')" class="btn btn-md rounded font-sm"><i class="fas fa-trash-alt" ></i>Delete</a>
+                                        <a href="#" onclick="handleDelete('{{pkUserId}}','user')" class="btn btn-md rounded font-sm"><i class="fas fa-trash-alt" ></i>Delete</a>
                                       
                                       <a href="#" onclick="handleBlock('{{pkUserId}}','{{strStatus}}','user')"class="btn btn-md rounded font-sm "style="width: 120px;" ><i class="{{#eq strStatus 'Blocked'}}fas fa-check-circle{{else}}fas fa-ban{{/eq}}"></i>{{#eq strStatus 'Blocked'}}Unblock{{else}}Block{{/eq}}</a>
                                       </td>

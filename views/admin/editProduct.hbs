@@ -1,0 +1,189 @@
+ <section class="content-main">
+            <div class="row">
+                <div class="col-6">
+                    <div class="content-header">
+                        <h2 class="content-title">Edit Product</h2>
+                        <div>
+                            
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <form action="#" method="POST" enctype="multipart/form-data" id="product-form">
+                            
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <h6>1. General info</h6>
+                                </div>
+                                <div class="col-md-9">
+                              
+                                    <div class="mb-4">
+                                        
+                                        <label class="form-label">Product Title</label>
+                                        <input name="strProductName" type="text" placeholder="Type here" class="form-control" value="{{product.[0].strProductName}}">
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="form-label">Description</label>
+                                        <textarea name="strDescription" placeholder="Type here" class="form-control" rows="4">{{product.[0].strDescription}}</textarea>
+                                    </div>
+                                 
+                                </div> <!-- col.// -->
+                            </div> <!-- row.// -->
+                            <hr class="mb-4 mt-0">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <h6>2. Pricing</h6>
+                                </div>
+                                <div class="col-md-9">
+                                   
+                                        <label class="form-label">Cost in INR</label>
+                                        <input name="intPrice" type="number" placeholder="00.0" class="form-control" value={{product.[0].intPrice}} >
+                                    
+                                </div> <!-- col.// -->
+                            </div> <!-- row.// -->
+                            <hr class="mb-4 mt-3">
+                             <div class="row">
+                                <div class="col-md-3">
+                                    <h6>3. Stock</h6>
+                                </div>
+                                <div class="col-md-9">
+                                   
+                                        <label class="form-label">Stock</label>
+                                        <input name="intStock" type="number" placeholder="0" class="form-control" value={{product.[0].intStock}}>
+                                    
+                                </div> <!-- col.// -->
+                            </div>
+                              <hr class="mb-4 mt-3">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <h6>4. Category</h6>
+                                </div>
+                                  
+                                          <div class="col-md-5">
+                                        <select class="form-select" name="pkCategoryId">
+                                         {{#if categories}} {{#each categories}}<option value="{{pkCategoryId}}">{{strCategoryName}}</option>{{/each}}{{/if}}
+                                           
+                                        </select>
+                                    </div>
+                                 <!-- col.// -->
+                            </div> <!-- row.// -->
+                            <hr class="mb-4 mt-3">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <h6>5. Media</h6>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="mb-4">
+                                        <label class="form-label">Main Image</label>
+                                        <input name="mainProductImg" class="form-control" type="file" onchange="displaySelectedImage(this)">
+                                    </div>
+                                </div>
+                                 <!-- col.// -->
+                            </div> <!-- .row end// -->
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <h6></h6>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="mb-4">
+                                        <label class="form-label">Images</label>
+                                        <input name="otherProductImg1" class="form-control" type="file" onchange="displaySelectedImage(this)">
+                                    </div>
+                                </div>
+                                 <!-- col.// -->
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <h6></h6>
+                                </div>
+                                <div class="col-md-9">
+                                    <div class="mb-4">
+                                        <label class="form-label">Images</label>
+                                        <input name="otherProductImg2" class="form-control" type="file" onchange="displaySelectedImage(this)">
+                                    </div>
+                                </div>
+                                 <!-- col.// -->
+                            </div>
+                             <div class="row">
+                                <div class="col-md-9">
+                                    <h6></h6>
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    
+                                         <button id="product-submit" type="submit" class="btn btn-md rounded font-sm hover-up">Publish</button>
+                                    
+                                </div>
+                                 <!-- col.// -->
+                            </div>
+                             <div>
+                                    <h6
+                                 id='errorMessage'
+                                   style='color: red; text-align: center'
+                                   ></h6>
+                                   </div>
+                           </form>
+                          
+                        </div>
+                       
+                    </div>
+                    
+                </div>
+               <div class="col-lg-6">
+           <div id="imagePreview">
+        <!-- Image previews will be displayed here -->
+          </div>
+          </div> 
+    <!-- Image preview will be displayed here -->
+            </div>
+            </div>
+            </div>
+        </section>
+
+          <style>
+            .form-control.error:not(#search-form-control){
+        border-color: red;}
+
+          #imagePreview {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%; /* Ensure the container fills its parent's height */
+    }
+
+    .image-preview {
+        max-width: 100%; /* Ensure the image doesn't exceed the container width */
+        max-height: 100%; /* Ensure the image doesn't exceed the container height */
+    }
+
+    
+        </style>
+
+        <script>
+function displaySelectedImage(input) {
+    const imagePreview = document.getElementById('imagePreview');
+
+    // Clear previous image preview
+    imagePreview.innerHTML = '';
+
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+
+        reader.onload = function(e) {
+            const image = document.createElement('img');
+            image.src = e.target.result;
+            image.classList.add('img-fluid');
+          
+           
+              imagePreview.appendChild(image);
+        };
+
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>

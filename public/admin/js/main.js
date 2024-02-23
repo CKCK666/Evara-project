@@ -94,7 +94,7 @@ if (category_id) {
     
   });
 
-  // add product //edit product
+  // add product 
   $('#product-submit').click(function (e) {
       e.preventDefault()
       let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
@@ -251,6 +251,105 @@ return false;
    
    
 })
+
+$('#product-submit').click(function (e) {
+  e.preventDefault()
+  let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
+  let data = new FormData($('#product-form')[0]);
+
+  
+  let pkProductId=data.get("pkProductId")
+      console.log(pkProductId);
+  let strProductName=data.get("strProductName")
+  let strDescription=data.get("strDescription")
+  let intPrice=data.get("intPrice")
+  let intStock=data.get("intStock")
+  let mainProductImg=data.get("mainProductImg")
+  let otherProductImg1=data.get("otherProductImg1")
+  let otherProductImg2=data.get("otherProductImg2")
+ 
+
+
+    if (strProductName === ''|| strDescription=='' || !mainProductImg || !intPrice || !intStock || !otherProductImg1 || !otherProductImg2) {
+  
+      $('#errorMessage').text('Please fill in all fields.');
+      $('.form-control').addClass('error') 
+
+      return false;
+  }
+   
+  
+  if(strProductName.length<4){
+      $('#errorMessage').text('Product name must be at least 4 characters long.');
+      $("input[name='strProductName']").addClass('error')   
+      return false;
+  }
+
+  if (!nameRegex.test(strProductName)) {
+    $('#errorMessage').text('Product name must contain at least three alphabetical character');
+    $("input[name='strProductName']").addClass('error');
+    return false;
+}
+
+if(strDescription.length<5){
+  $('#errorMessage').text('Description must be at least 5 characters long.');
+  $("textarea[name='strDescription']").addClass('error')   
+  return false;
+}
+
+if (!nameRegex.test(strDescription)) {
+$('#errorMessage').text('Description must contain at least three alphabetical character');
+$("textarea[name='strDescription']").addClass('error');
+return false;
+}
+let swalLoader = Swal.fire({
+title: 'Loading...',
+allowOutsideClick: false,
+showConfirmButton: false,
+onBeforeOpen: () => {
+  Swal.showLoading();
+}
+});
+
+
+// $('#product-form').submit()
+$.ajax({
+url: $('#edit-product-form').attr('action'),
+data:data,
+type: "POST",
+processData: false,
+contentType: false,
+success: function(response) {
+  if (response.success) {
+    swalLoader.close()
+      Swal.fire({
+          position: 'top-end',
+          icon: 'success',
+          title: 'successfully added a product',
+          showConfirmButton: false,
+          timer: 1500,
+          didClose:()=>{
+        window.location.href = '/admin/getAddProduct';
+          }
+        })
+      console.log('success:', response.message);
+  } else {
+    swalLoader.close()
+      $('#errorMessage').text(response.message)
+  }
+ 
+},
+error: function(error) {
+swalLoader.close()
+  console.error('Error:', error);
+}
+});
+
+return false;
+
+
+
+});
 
 
  

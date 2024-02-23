@@ -1,5 +1,5 @@
 const express = require('express');
-const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, getSingleProductPage, verifyOTP } = require('../controller/userController');
+const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, getSingleProductPage, verifyOTP, addNewAddress, getUserSetting, deleteAddress, getAddressPage, addToCart, getCartPage, getCheckoutPage } = require('../controller/userController');
 const {verifyLogin}=require("../middlewares/verifications")
 const router =express.Router()
 const passport = require('passport');
@@ -46,8 +46,34 @@ router.post("/verifyOTP",verifyOTP)
 
 router.get("/getProduct",verifyLogin,getSingleProductPage)
 
+//get user settings page
+router.get("/userSettings",getUserSetting)
 
+//get address
+router.get("/getAddAddress",getAddressPage)
 
+//add address
+router.post("/addAddress",addNewAddress)
+
+//delete address
+router.post("/deleteAddress",deleteAddress)
+
+//get edit address page
+router.get("/editAddress",(req,res)=>{
+  
+})
+
+//addToCart
+
+router.post("/addToCart",addToCart)
+
+//get Cart page
+
+router.get("/getCartPage",getCartPage)
+
+//get checkout page
+
+router.get("/getCheckoutPage",getCheckoutPage)
 
 //post logout
 router.get('/logout',logout)
