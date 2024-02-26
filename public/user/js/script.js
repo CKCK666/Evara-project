@@ -111,7 +111,6 @@ $.ajax({
   type: 'POST', 
   url: '/verifyOTP',
   data: {
-    phoneNumber:"+917907497841",
     otp
   }, 
   success: function(response) {

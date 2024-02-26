@@ -63,21 +63,115 @@
             });
         });
         //Qty Up-Down
-        $('.detail-qty').each(function () {
-            var qtyval = parseInt($(this).find('.qty-val').text(), 10);
-            $('.qty-up').on('click', function (event) {
+        // $('.detail-qty').each(function () {
+        //     var qtyval = parseInt($(this).find('.qty-val').text(), 10);
+        //     $('.qty-up').on('click', function (event) {
+        //         event.preventDefault();
+        //         qtyval = qtyval + 1;
+        //         $(this).prev().text(qtyval);
+        //     });
+
+
+        //     $('.qty-down').on('click', function (event) {
+        //         event.preventDefault();
+        //         qtyval = qtyval - 1;
+        //         if (qtyval > 1) {
+        //             $(this).next().text(qtyval);
+        //         } else {
+        //             qtyval = 1;
+        //             $(this).next().text(qtyval);
+        //         }
+        //     });
+        // });
+
+        let cartSubTotalAmtText = $('#cart_subtotal').text();
+        let cartSubTotalAmtValue = parseInt(cartSubTotalAmtText, 10);
+
+        let cartTotalAmtText = $('#totalPrice').text();
+        let cartTotalAmtValue = parseInt(cartTotalAmtText, 10);
+
+        let cartCountText = $('#cartCount').text();
+        let cartCountValue = parseInt(cartCountText, 10);
+        
+        
+
+        $('.cart-product-details').each(function () {
+            let qtyval = parseInt($(this).find('.qty-val').text(), 10);
+            let productAmt=parseInt($(this).find('.price').text(),10)
+            let productTotalAmt=parseInt($(this).find('.product-total-amount').text(),10)
+            let pkProductId=$(this).find("#pkProductId").val()
+           
+            if (isNaN(productAmt) || isNaN(productTotalAmt)) {
+                console.error("Product amount is not a valid number:", productAmt);
+                return; // Exit the loop if productAmt is NaN
+            }
+            $('.qty-up', this).on('click', function (event) {
                 event.preventDefault();
-                qtyval = qtyval + 1;
-                $(this).prev().text(qtyval);
+                if (qtyval < 10) {
+                    qtyval = qtyval + 1;
+                    $(this).prev().text(qtyval);
+                    productTotalAmt=productAmt*qtyval
+                    $(this).closest('.cart-product-details').find('.product-total-amount').text(productTotalAmt);
+                    cartSubTotalAmtValue=cartSubTotalAmtValue+productAmt
+                    cartTotalAmtValue=cartTotalAmtValue+productAmt
+                    cartCountValue++
+
+                    $('#cartCount').text(cartCountValue)
+                    $('#cart_subtotal').text(cartSubTotalAmtValue)
+                    $('#totalPrice').text(cartTotalAmtValue)
+
+                    $.ajax({
+                        type: 'POST',
+                        url: '/changeQuantity',
+                        data: {quantity:1,pkProductId },
+                        success: function(response) {
+                            if(response.success){
+                             console.log("successfully update quantity");
+                              
+                            }
+                        },
+                        error: function(error) {
+                            console.log(error.message);
+                        }
+                      });
+
+                }
             });
-            $('.qty-down').on('click', function (event) {
+        
+            $('.qty-down', this).on('click', function (event) {
                 event.preventDefault();
-                qtyval = qtyval - 1;
                 if (qtyval > 1) {
+                    qtyval = qtyval - 1;
                     $(this).next().text(qtyval);
-                } else {
-                    qtyval = 1;
-                    $(this).next().text(qtyval);
+                    productTotalAmt=productAmt*qtyval
+                   
+                    $(this).closest('.cart-product-details').find('.product-total-amount').text(productTotalAmt);
+                    cartSubTotalAmtValue=cartSubTotalAmtValue-productAmt
+                    cartTotalAmtValue=cartTotalAmtValue-productAmt
+                    cartCountValue--
+
+                    $('#cartCount').text(cartCountValue)
+
+                    $('#cart_subtotal').text(cartSubTotalAmtValue)
+                    $('#totalPrice').text(cartTotalAmtValue)
+                    $.ajax({
+                        type: 'POST',
+                        url: '/changeQuantity',
+                        data: {quantity:-1,pkProductId },
+                        success: function(response) {
+                            if(response.success){
+                             console.log("successfully update quantity");
+                              
+                            }
+                        },
+                        error: function(error) {
+                            console.log(error.message);
+                        }
+                      });
+
+
+
+
                 }
             });
         });

@@ -81,6 +81,8 @@ $(document).ready(function () {
     let password=data.get("password")
     let Cpassword=data.get("Cpassword")
     let phoneNumber=data.get("phno")
+ 
+  
       console.log(username,email,password,Cpassword);
   if (username === ''|| email === '' || password==="" ||phoneNumber==="" ||Cpassword==="") {
   
@@ -99,6 +101,13 @@ $(document).ready(function () {
     $("input[name='username']").addClass('error');
     return;
 }
+if(phoneNumber.length<10 || phoneNumber.length>10){
+  
+  $('#errorMessage').text('Invalid phone number');
+  $("input[name='phno']").addClass('error');  
+  return;
+}
+
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
@@ -249,7 +258,122 @@ $.ajax({
   
   });
 
+
+  // user profile edit
+  $("#user-profile-edit-btn").click(async function(e){
+    e.preventDefault()
+   console.log("calll");
+    let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
+    let data = new FormData($('#user-profile-form')[0]);
+    
+    let email=data.get('email')
+    let password=data.get("password")
+    let npassword=data.get("npassword")
+    let cpassword=data.get("cpassword")
+    let username =data.get("name")
+    
+     
+    
+
+    if ( email === '' || username==="") {
+    
+        $('#errorMessage').text('Please fill in all fields.');
+        $('input[name="email"]').addClass('error');
+        $('input[name="name"]').addClass('error');
+
+        return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        $('#errorMessage').text('Invalid email format.');
+        $('input[name="email"]').addClass('error');
+        return;
+    }
+    if(password.length){
+      if(cpassword=="" || npassword ==""){
+        $('#errorMessage').text('Fill the password');
+        $('input[name="cpassword"]').addClass('error');
+        $('input[name="npassword"]').addClass('error');
+        return
+      }
+      if(cpassword!=npassword){
+        $('#errorMessage').text('Passwords doesn"t match');
+        $('input[name="cpassword"]').addClass('error');
+        $('input[name="npassword"]').addClass('error');
+        return
+      }
+    
+    }
+
+
+    $.ajax({
+      type: 'POST', 
+      url: '/userEdit',
+      data: $('#user-profile-form').serialize(), 
+      success: function(response) {
+          if (response.success) {
+              Swal.fire({
+                  position: 'top-end',
+                  icon: 'success',
+                  title: 'Successfully updated user',
+                  showConfirmButton: false,
+                  timer: 1500,
+                  didClose:()=>{
+                window.location.href = `/userSetting?pkUserId=${response.pkUserId}`;
+                  }
+                })
+              console.log('success:', response.message);
+          } else {
+              $('#errorMessage').text(response.message)
+          }
+         
+      },
+      error: function(error) {
+          
+          console.error('Error:', error);
+      }
+  });
+
+
+   
+   
+})
+
+$("#place-order-btn").click(async function(e){
+  e.preventDefault()
+ $.ajax({
+    type: 'POST', 
+    url: '/checkOut',
+    success: function(response) {
+        if (response.success) {
+            Swal.fire({
+                position: 'top-end',
+                icon: 'success',
+                title: 'Successfully ordered',
+                showConfirmButton: false,
+                timer: 1500,
+                didClose:()=>{
+              window.location.href = '/';
+                }
+              })
+            console.log('success:', response.message);
+        } else {
+            $('#errorMessage').text(response.message)
+        }
+       
+    },
+    error: function(error) {
+        
+        console.error('Error:', error);
+    }
+});
+
+
  
+ 
+})
+
+
 
 
 
@@ -348,8 +472,6 @@ const deleteAddress=(addressId,userId)=>{
       }
     });
   }
-
-
 
 
 
