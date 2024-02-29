@@ -3,7 +3,7 @@
                 <div class="breadcrumb">
                     <a href="/" rel="nofollow">Home</a>
                     <span></span> Shop
-                    <span></span> Checkout
+                    <span></span> Order details
                 </div>
             </div>
         </div>
@@ -11,28 +11,24 @@
             <div class="container">
                 <div class="row">
                     <div class="col-lg-6 mb-sm-15">
-                       {{#if userAddress}}
-                       {{#each userAddress.[0].arrAddress}}
+                       {{#if deliveryAddress}}
+                      
                           <div class="card-header">
                                                         <h5 class="mb-0">Shipping Address:{{#if isDefaultAddress}}<span style="color:rgb(13, 190, 13);">Default</span>{{/if}}</h5> 
                                                     </div>
                         <div class='card-body'>
-                        <address>{{strFullName}}<br />
-                          {{strPhoneNo}},<br />
-                          {{strCity}}.
-                          <br />{{intPinCode}}</address>
-                        <p>{{strState}}</p>
+                        <address>{{deliveryAddress.strFullName}}<br />
+                          {{deliveryAddress.strPhoneNo}},<br />
+                          {{deliveryAddress.strCity}}.
+                          <br />{{deliveryAddress.intPinCode}}</address>
+                        <p>{{deliveryAddress.strState}}</p>
                         <p>India</p>
-                       <a href='/getEditAddress?pkAddressId={{pkAddressId}}&pkUserId={{pkUserId}}' class='btn-small'>Edit</a>
-                        <a href="#" onclick="deleteAddress('{{pkAddressId}}','{{pkUserId}}','toCheckout')" class='btn-small ml-5'>Remove</a>
-                       {{#if isDefaultAddress}}  {{else}} <a href='#'  data-pk-address-id="{{pkAddressId}}" data-pk-user-id="{{pkUserId}}" data-check-out="toCheckOut" class='btn-small ml-5 set-as-default'>Set as default</a>{{/if}}
                       
                       </div>
-                      {{/each}}
+                      
                     {{/if}}
-                    <a href="/getAddAddress?pkUserId={{pkUserId}}" class="btn btn-primary btn-sm rounded">Add new address</a>
+                   
                     </div>
-
 
                      <div class="col-md-6">
                         <div class="order_review">
@@ -48,8 +44,8 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {{#if cartProducts}}
-                                        {{#each cartProducts}}
+                                        {{#if orderProducts}}
+                                        {{#each orderProducts}}
                                         <tr>
                                             <td class="image product-thumbnail"><img src={{mainProductUrl}} alt="#"></td>
                                             <td>
@@ -60,11 +56,24 @@
                                         {{/each}}
                                         {{/if}}
 
-                                        {{#if cartDetails}}
-                                        {{#each cartDetails}}
+                                        {{#if orderDetails}}
+                                        {{#each orderDetails}}
+                                        <tr>
+                                            <th>Order Status</th>
+                                            <td class="product-subtotal font-xl" {{#eq strOrderStatus 'Processing'}}style="color: orange"
+                            {{else}}{{#eq strOrderStatus 'Delivered'}}style="color: green"
+                           {{else}}{{#eq strOrderStatus 'Cancelled'}}style="color: red"
+                             {{/eq}}
+                             {{/eq}}
+                            {{/eq}} colspan="2">{{strOrderStatus}}</td>
+                                        </tr>
+                                          <tr>
+                                            <th>Payment Method</th>
+                                            <td class="product-subtotal font-xl" colspan="2">{{strPaymentMethod}}</td>
+                                        </tr>
                                         <tr>
                                             <th>SubTotal</th>
-                                            <td class="product-subtotal" colspan="2">₹{{total_cart_price}}</td>
+                                            <td class="product-subtotal" colspan="2">₹{{intTotalOrderPrice}}</td>
                                         </tr>
                                         <tr>
                                             <th>Shipping</th>
@@ -72,7 +81,7 @@
                                         </tr>
                                         <tr>
                                             <th>Total</th>
-                                            <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">₹{{total_cart_price}}</span></td>
+                                            <td colspan="2" class="product-subtotal"><span class="font-xl text-brand fw-900">₹{{intTotalOrderPrice}}</span></td>
                                         </tr>
                                         {{/each}}
                                         {{/if}}
@@ -80,23 +89,17 @@
                                 </table>
                             </div>
                             <div class="bt-1 border-color-1 mt-30 mb-30"></div>
-                            <div class="payment_method">
-                                <div class="mb-25">
-                                    <h5>Payment</h5>
-                                </div>
-                                <div class="payment_option">
-                                    <div class="custome-radio">
-                                        <input class="form-check-input" required="" type="radio" name="payment_option" id="exampleRadios3" checked="">
-                                        <label class="form-check-label" for="exampleRadios3" data-bs-toggle="collapse" data-target="#bankTranfer" aria-controls="bankTranfer">COD</label>
-                                        <div class="form-group collapse in" id="bankTranfer">
-                                            <p class="text-muted mt-5">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration. </p>
-                                        </div>
-                                    </div>
-                                   
-                                </div>
-                            </div>
-                             <button id="place-order-btn" class='btn btn-fill-out submit' name='submit' value='Submit'>Order submit</button>
-                            
+                            {{#eq orderDetails.[0].strOrderStatus 'Delivered'}}
+                            {{else}}
+                            {{#eq orderDetails.[0].strOrderStatus 'Cancelled'}}
+                            {{else}}
+                              <a 
+                                href='#' data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Cancelled"
+                                class='btn-small d-block cancel-order-btn'
+                              >  <button  class='btn btn-fill-out'>Cancel Order</button></a>
+                           
+                            {{/eq}}
+                            {{/eq}}
                         </div>
                     </div>
                     

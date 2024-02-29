@@ -54,7 +54,7 @@ res.render("admin/homePage",{layout:"admin_layout",admin:true})
       let users=await result.map((user,index)=>{
         const isoDate = user.createdDate;
         const date = new Date(isoDate);
-        const formattedDate = date.toString().substring(0, 15) + date.getFullYear()
+        const formattedDate = date.toString().substring(0, 15) 
         return {
           ...user,
           index:index+1,
@@ -305,7 +305,7 @@ const getProductList=async(req,res)=>{
       let products=await result.map((product,index)=>{
         const isoDate = product.createdDate;
         const date = new Date(isoDate);
-        const formattedDate = date.toString().substring(0, 15) + date.getFullYear()
+        const formattedDate = date.toString().substring(0, 15)
         return {
           ...product,
           index:index+1,
@@ -383,11 +383,19 @@ const getProductAdd=async(req,res)=>{
      } )
 
      if(otherProductImgs.length){
-     arrayOtherImages= otherProductImgs.map((item)=>{
+     arrayOtherImages= otherProductImgs.map((item,index)=>{
+      if(index===0){
         return {
-         imageUrl:item.path
-
-        }
+          imageUrl1:item.path
+ 
+         }
+      }else{
+        return {
+          imageUrl2:item.path
+ 
+         }
+      }
+        
       })
       
      }
@@ -448,7 +456,7 @@ const getProductAdd=async(req,res)=>{
         }
        }
       else{
-         res.red("/admin/listProduct",{layout:"admin_layout",admin:true})
+         res.redirect("/admin/listProduct",{layout:"admin_layout",admin:true})
       }
      
     } catch (error) {
@@ -465,14 +473,15 @@ const getProductAdd=async(req,res)=>{
 
     //edit product
   const editProduct=async(req,res)=>{
-    console.log("edit product router");
+    
     try {
-      console.log(req.body.pkProductId);
+  
       if(req.body.pkProductId){
         let pkProductId= new ObjectId(req.body.pkProductId);
-      let dataToUpdate={}
+        let dataToUpdate={}
+     
       if(req.files){
-      
+      let files=req.files
       
        let  mainProductImg=files.filter(item=>
           item.fieldname==='mainProductImg'
@@ -487,36 +496,35 @@ const getProductAdd=async(req,res)=>{
 
     }
      
-     let otherProductImgs=files.filter((item)=>{
-       if (item.fieldname==='otherProductImg1' || item.fieldname=== 'otherProductImg2') {
-         return item.path
-       }
+     let otherProductImgs=files.filter(async(item)=>{
+       if (item.fieldname==='otherProductImg1') {
+         dataToUpdate={
+          ...dataToUpdate,
+          "arrayOtherImages.0.imageUrl1":item.path,
+         }
+
+         } 
+         if (item.fieldname==='otherProductImg2') {
+          dataToUpdate={
+          ...dataToUpdate,
+          "arrayOtherImages.1.imageUrl2": item.path
+          }
+     
+     
+     
+        }
+       
        
       } )
  
-      if(otherProductImgs.length){
-      arrayOtherImages= otherProductImgs.map((item)=>{
-         return {
-          imageUrl:item.path
- 
-         }
-       })
-       
-       dataToUpdate={
-        ...dataToUpdate,
-        arrayOtherImages
-       }
-      
-      }
-          
+    
      
     }
 
 
   
       let dataToAdd={
-        ...dataToUpdate,
-        pkProductId:new ObjectId(), 
+       ...dataToUpdate,
         strProductName:req.body.strProductName,
         strDescription:req.body.strDescription,
         fkcategoryId:req.body.pkCategoryId,

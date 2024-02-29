@@ -14,8 +14,8 @@
                 <div class="col-lg-6">
                     <div class="card mb-4">
                         <div class="card-body">
-                            <form action="#" method="POST" enctype="multipart/form-data" id="product-form">
-                            
+                            <form action="/admin/editProduct" method="POST" enctype="multipart/form-data" id="product-edit-form">
+                            <input type="text" name="pkProductId" value={{product.[0].pkProductId}}>
                             <div class="row">
                                 <div class="col-md-3">
                                     <h6>1. General info</h6>
@@ -116,7 +116,7 @@
                                 
                                 <div class="col-md-3">
                                     
-                                         <button id="product-submit" type="submit" class="btn btn-md rounded font-sm hover-up">Publish</button>
+                                         <button id="product-edit-submit" type="submit" class="btn btn-md rounded font-sm hover-up">Publish</button>
                                     
                                 </div>
                                  <!-- col.// -->

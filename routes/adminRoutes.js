@@ -90,7 +90,7 @@ router.post("/addProduct",uploads.any(),addProduct)
 router.get("/getProductEdit",isAdmin,getProductEdit)
 
 //edit product
-router.post("/editProduct",editProduct)
+router.post("/editProduct",uploads.any(),editProduct)
 
 //delete product
 router.patch("/deleteProduct",deleteProduct)

@@ -79,36 +79,40 @@
                           </tr>
                         </thead>
                         <tbody>
+                          {{#if userOrders}}
+                          {{#each userOrders}}
                           <tr>
-                            <td>#1357</td>
-                            <td>March 45, 2020</td>
-                            <td>Processing</td>
-                            <td>$125.00 for 2 item</td>
-                            <td><a
-                                href='#'
+                            <td>{{pkOrderId}}</td>
+                            <td>{{createdDate}}</td>
+                            <td {{#eq strOrderStatus 'Processing'}}style="color: orange"
+                            {{else}}{{#eq strOrderStatus 'Delivered'}}style="color: green"
+                           {{else}}{{#eq strOrderStatus 'Cancelled'}}style="color: red"
+                             {{/eq}}
+                             {{/eq}}
+                            {{/eq}}>
+                             {{strOrderStatus}}
+                             </td>
+                            <td>{{intTotalOrderPrice}}</td>
+                            <td>
+                            
+                                 {{!-- <a style="color: red;"
+                                href='#' data-pk-order-id="{{pkOrderId}}" data-pk-user-id="{{pkUserId}}" data-order-status-change="Cancelled"
+                                class='btn-small d-block cancel-order-btn'
+                              >Cancel Order</a> --}}
+                                  <a 
+                                href='/getOrderDetails?pkOrderId={{pkOrderId}}&pkUserId={{pkUserId}}'
                                 class='btn-small d-block'
-                              >View</a></td>
+                              >View details</a>
+                               
+                              </td>
+                           
+
+                              
+                             
+                              </td>
                           </tr>
-                          <tr>
-                            <td>#2468</td>
-                            <td>June 29, 2020</td>
-                            <td>Completed</td>
-                            <td>$364.00 for 5 item</td>
-                            <td><a
-                                href='#'
-                                class='btn-small d-block'
-                              >View</a></td>
-                          </tr>
-                          <tr>
-                            <td>#2366</td>
-                            <td>August 02, 2020</td>
-                            <td>Completed</td>
-                            <td>$280.00 for 3 item</td>
-                            <td><a
-                                href='#'
-                                class='btn-small d-block'
-                              >View</a></td>
-                          </tr>
+                          {{/each}}
+                           {{/if}}
                         </tbody>
                       </table>
                     </div>
@@ -138,8 +142,9 @@
                       {{#each arrAddress.[0].arrAddress}}
                   <div class='col-md-6'>
                     <div class='card mb-3 mb-lg-0'>
+               
                       <div class='card-header'>
-                        <h5 class='mb-0'>Billing Address:{{#if isDefaultAddress}} <small>Default</small>   {{/if}}</h5>
+                        <h5 class='mb-0'>Address:{{#if isDefaultAddress}} <span style="color:rgb(13, 190, 13);">Default</span>   {{/if}}</h5>
                       </div>
                       <div class='card-body'>
                         <address>{{strFullName}}<br />
@@ -148,9 +153,9 @@
                           <br />{{intPinCode}}</address>
                         <p>{{strState}}</p>
                         <p>India</p>
-                        <a href='#' class='btn-small'>Edit</a>
+                        <a href='/getEditAddress?pkAddressId={{pkAddressId}}&pkUserId={{pkUserId}}' class='btn-small'>Edit</a>
                         <a href="#" onclick="deleteAddress('{{pkAddressId}}','{{pkUserId}}')" class='btn-small ml-5'>Remove</a>
-                      {{#if isDefaultAddress}}  {{else}} <a href='#' class='btn-small ml-5'>Set as default</a>{{/if}}
+                      {{#if isDefaultAddress}}  {{else}} <a href='#'  data-pk-address-id="{{pkAddressId}}" data-pk-user-id="{{pkUserId}}" class='btn-small ml-5 set-as-default'>Set as default</a>{{/if}}
                       </div>
                     </div>
                   </div>

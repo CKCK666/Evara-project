@@ -12,7 +12,7 @@ const authToken = process.env.TWILIO_TOKEN;
 const twilioClient = twilio(accountSid, authToken);
 const otpStorage = new Map();
 // get signup page
-const getSignUp = (req, res) => {
+const getSignUp =(req, res) => {
  
   if (req.session.user || req.session.passport) {
    
@@ -27,7 +27,7 @@ const getSignUp = (req, res) => {
 const signUp = async (req, res) => {
   try {
     let { username, email, password ,phno} = req.body;
-     console.log("signup+++++",phno);
+   
       let strPhoneNumber="+91"+phno
     let emailExist = await db.get().collection(USER_COLLECTION).findOne({ strEmail:email,strStatus:{$ne:"Deleted"} });
 
@@ -46,12 +46,12 @@ const signUp = async (req, res) => {
         updatedDate: null,
       };
       let result = await db.get().collection(USER_COLLECTION).insertOne(userData);
-      console.log(result);
+   
       if(result.insertedId){
         let _id=result.insertedId
         let findUser=await db.get().collection(USER_COLLECTION).find({_id},{strPassword:-1,strProfileImg:-1}).toArray()
         req.session.user = findUser[0];
-        console.log(req.session.user);
+      
         req.session.otpVerified=false
 
         res.json({ success:true, message: 'Form submitted successfully!' });
@@ -131,7 +131,7 @@ const generateOtp=(req, res) => {
     console.log("phno:",phoneNumber);
   const OTP = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false,lowerCaseAlphabets:false });
 
- 
+ console.log(process.env.TWILIO_SID,process.env.TWILIO_TOKEN);
   // Save OTP in memory
   otpStorage.set(phoneNumber,OTP);
 console.log(otpStorage);
@@ -232,13 +232,36 @@ const getUserSetting=async(req,res)=>{
           strEmail:1
         }
       }
+    
       let arrAddress= await db.get().collection(USER_COLLECTION).aggregate([match,project]).toArray()
+      arrAddress.forEach(doc => {
+        doc.arrAddress.sort((a, b) => {
+            if (a.isDefaultAddress && !b.isDefaultAddress) {
+                return -1; // a comes before b
+            } else if (!a.isDefaultAddress && b.isDefaultAddress) {
+                return 1; // b comes before a
+            }
+            return 0; // maintain original order
+        });
+    });
+     let result=await db.get().collection(ORDER_COLLECTION).find({pkUserId:new ObjectId(req.query.pkUserId)}).toArray()
+     let userOrders=await result.map((order,index)=>{
+      const isoDate = order.createdDate;
+      const date = new Date(isoDate);
+      const formattedDate = date.toString().substring(0, 15) 
+      return {
+        ...order,
+        index:index+1,
+        createdDate: formattedDate
+       }
+      
+      })
       let userCart=await db.get().collection(CART_COLLECTION).find({pkUserId:new ObjectId(req.query.pkUserId)}).toArray()
       let cartCount= await getCartCount(req.query.pkUserId)
-      console.log(arrAddress);
+    
       if(arrAddress && arrAddress.length ){
       
-        res.render("user/userSettings",{layout:"user_layout",user:true,arrAddress,pkUserId:req.query.pkUserId,cartCount})
+        res.render("user/userSettings",{layout:"user_layout",user:true,arrAddress,pkUserId:req.query.pkUserId,cartCount,userOrders})
       }
      
     }else{
@@ -268,7 +291,7 @@ const getAddressPage=async(req,res)=>{
 
 //add address
 const addNewAddress=async(req,res)=>{
-  console.log(req.body);
+  
   try {
      if(req.body.pkUserId){
        let matchQuery={
@@ -319,6 +342,164 @@ const addNewAddress=async(req,res)=>{
   }
 
 }
+//edit address
+const editAddress=async(req,res)=>{
+
+  try {
+    if(req.body.pkUserId){
+      if(req.body.pkAddressId){
+        let pkUserId=new ObjectId(req.body.pkUserId)
+        let pkAddressId=new ObjectId(req.body.pkAddressId)
+        const filter = {
+          pkUserId,
+          "arrAddress.pkAddressId": pkAddressId
+        };
+        
+        // Construct the update operation
+        const update = {
+          $set: {
+            "arrAddress.$[address].strFullName": req.body.fname,
+            "arrAddress.$[address].strPhoneNo": req.body.phno,
+            "arrAddress.$[address].strArea": req.body.area || "",
+            "arrAddress.$[address].strCity": req.body.city,
+            "arrAddress.$[address].strState": req.body.state,
+            "arrAddress.$[address].updatedDate": new Date()
+          }
+        };
+        
+        // Options for array filters
+        const options = {
+          arrayFilters: [{ "address.pkAddressId": pkAddressId }]
+        };
+        
+        // Perform the update operation
+        const result = await db.get().collection(USER_COLLECTION).updateOne(filter, update, options);
+        
+        console.log(`${result.modifiedCount} document was modified.`);
+
+      if (result.modifiedCount) {
+       
+        res.json({success:true,message: 'successfully updated!',pkUserId:req.body.pkUserId,result})
+      }
+      else{
+        console.log("fail to update address");
+        res.json({success:false,message: 'Fail to update address!'})
+      }
+      
+
+      }else{
+        res.json({success:false,message:"Address id not found"})
+      }
+    }else{
+      res.json({success:false,message:"User id id not found"})
+    }
+    
+   
+ 
+   } catch (error) {
+    console.log(error.message);
+      res.json({success:false,message: error.message})
+   }
+}
+
+//get edit address page
+const getEditAddressPage=async(req,res)=>{
+  try {
+   let pkAddressId=req.query.pkAddressId
+   let pkUserId=req.query.pkUserId
+   if (pkAddressId) {
+    let matchQuery1={
+      $match:{
+        pkUserId:new ObjectId(pkUserId)
+      }
+    }
+    let unwind={
+      $unwind:"$arrAddress"
+    }
+    let matchQuery2={
+      $match:{
+        "arrAddress.pkAddressId":new ObjectId(pkAddressId)
+      }
+    }
+  let userAddress=await db.get().collection(USER_COLLECTION).aggregate([matchQuery1,unwind,matchQuery2]).toArray()
+ 
+      let addressCount=false
+       if(userAddress[0].length>0){
+         addressCount=true
+       }
+     
+      res.render("user/editAddress",{layout:"user_layout",arrAddress:userAddress[0].arrAddress, addressCount})
+    
+   } else {
+    res.json({success:false,message:"address id not found"})
+   }
+
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
+}
+
+//set as default address
+const setAsDefaultAddress=async(req,res)=>{
+ 
+  try {
+    if(req.body.pkUserId){
+      if(req.body.pkAddressId){
+       
+       
+        const pkUserId = new ObjectId(req.body.pkUserId);
+        const pkAddressId = new ObjectId(req.body.pkAddressId);
+        
+       
+        const filter1 = {
+          pkUserId,
+          "arrAddress.isDefaultAddress": true
+        };
+        
+        const update1 = {
+          $set: {
+            "arrAddress.$.isDefaultAddress": false
+          }
+        };
+        
+        const result1 = await db.get().collection(USER_COLLECTION).updateMany(filter1, update1);
+        
+        console.log(`${result1.modifiedCount} document(s) updated to set isDefaultAddress to false.`);
+        
+       
+        const filter2 = {
+          pkUserId,
+          "arrAddress.pkAddressId": pkAddressId
+        };
+        
+        const update2 = {
+          $set: {
+            "arrAddress.$.isDefaultAddress": true
+          }
+        };
+        
+        const result2 = await db.get().collection(USER_COLLECTION).updateOne(filter2, update2);
+        
+        console.log(`${result2.modifiedCount} document updated to set isDefaultAddress to true for pkAddressId: ${pkAddressId}.`);
+        res.json({success:true,message:"Address set as default address"})
+      
+
+      }else{
+        res.json({success:false,message:"Address id not found"})
+      }
+    }else{
+      res.json({success:false,message:"User id id not found"})
+    }
+    
+   
+ 
+   } catch (error) {
+    console.log(error.message);
+      res.json({success:false,message: error.message})
+   }
+}
+
+
 
 //delete address
 const deleteAddress=async(req,res)=>{
@@ -503,7 +684,7 @@ const addToCart=async(req,res)=>{
 //get cart page
 const getCartPage=async(req,res)=>{
  try {
-  let pkUserId ="65d30dd06aa1162bcd232981"
+  let pkUserId =req.session.user.pkUserId
   
   let cartCount=0
  let cartDetails=await db.get().collection(CART_COLLECTION).find({pkUserId:new ObjectId(pkUserId)}).toArray()
@@ -530,6 +711,16 @@ const getCheckoutPage=async(req,res)=>{
   try {
     let pkUserId =new ObjectId(req.session.user.pkUserId)
     let userAddress=await db.get().collection(USER_COLLECTION).find({pkUserId:pkUserId},{ projection: { "arrAddress": 1, "_id": 0 }}).toArray()
+    userAddress.forEach(doc => {
+      doc.arrAddress.sort((a, b) => {
+          if (a.isDefaultAddress && !b.isDefaultAddress) {
+              return -1; // a comes before b
+          } else if (!a.isDefaultAddress && b.isDefaultAddress) {
+              return 1; // b comes before a
+          }
+          return 0; // maintain original order
+      });
+  });
     let cartDetails=await db.get().collection(CART_COLLECTION).find({pkUserId}).toArray()
     let cartCount=0
     if (cartDetails && cartDetails.length) {
@@ -581,7 +772,7 @@ const checkOut=async (req,res)=>{
       intTotalOrderPrice:cartProducts[0].total_cart_price,
       strPaymentStatus:"Success",
       strPaymentMethod:"COD",
-      strOrderStatus:"Pending",
+      strOrderStatus:"Processing",
       createdDate:new Date(),
       updatedDate:null
     }
@@ -705,6 +896,64 @@ const userEdit = async (req, res) => {
   }
 };
 
+  // change order status
+  const changeOrderStatus=async(req,res)=>{
+   try {
+    console.log(req.body);
+     if(req.body.pkOrderId || req.body.pkUserId){
+      let pkOrderId=new ObjectId(req.body.pkOrderId)
+      let pkUserId=new ObjectId(req.body.pkUserId)
+      let orderStatus=req.body.orderStatusChange
+    let result=await db.get().collection(ORDER_COLLECTION).updateOne({pkUserId,pkOrderId},{$set:{strOrderStatus:orderStatus,updatedDate:new Date()}})
+      console.log(result);
+    if (result.modifiedCount>0) {
+      
+      res.json({success:true,message: 'successfully Cancelled the order!',userBlocked:true})
+    }
+    else{
+    
+      res.json({success:false,message: 'fail to update!'})
+    }
+  }else{
+    res.json({success:false,message: 'Need both order id and user id'})
+  }
+   } catch (error) {
+    console.log(error.message);
+      res.json({success:false,message: error.message})
+   }
+  }
+
+  const getOrderDetailsPage=async(req,res)=>{
+   
+    try {
+      if(req.query.pkUserId || req.query.pkOrderId){
+      let pkUserId =new ObjectId(req.query.pkUserId)
+      let pkOrderId =new ObjectId(req.query.pkOrderId)
+      let orderDetails=await db.get().collection(ORDER_COLLECTION).find({pkUserId,pkOrderId}).toArray()
+      
+      let cartCount=0
+      if (orderDetails && orderDetails.length) {
+        
+        let cartCount= await getCartCount(pkUserId)
+        let orderProducts= await orderDetails[0].arrProductsDetails.map(obj=>{
+          let intTotalPrice=obj.intQuantity*obj.intPrice
+          return {...obj,intTotalPrice:intTotalPrice}
+           
+        })
+        
+         res.render("user/orderDetails",{layout:"user_layout",success:true,deliveryAddress:orderDetails[0].arrDeliveryAddress,orderProducts,orderDetails,cartCount ,message:"successfully loaded cart page",user:true})
+       } else {
+        res.render("user/orderDetails",{layout:"user_layout",success:true,user:true,pkUserId,cartCount})
+       }
+      }else{
+
+      }
+    } catch (error) {
+      res.json({success:false,message:error.message})
+    }
+     
+    
+  }
 
 //logout
 const logout = (req, res) => {
@@ -744,4 +993,4 @@ async function getCartCount(userId) {
   
 }
 
-module.exports = { getSignUp, signUp, getHome, login, logout ,userEdit,generateOtp,getOtpPage,getSingleProductPage,verifyOTP,addNewAddress,getUserSetting,deleteAddress,getAddressPage,addToCart,getCartPage,getCheckoutPage,checkOut,changeQuantity};
+module.exports = {getOrderDetailsPage,changeOrderStatus,setAsDefaultAddress, getEditAddressPage,editAddress,getSignUp, signUp, getHome, login, logout ,userEdit,generateOtp,getOtpPage,getSingleProductPage,verifyOTP,addNewAddress,getUserSetting,deleteAddress,getAddressPage,addToCart,getCartPage,getCheckoutPage,checkOut,changeQuantity};

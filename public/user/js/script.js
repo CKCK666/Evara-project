@@ -52,7 +52,7 @@ inputs.forEach((input, index1) => {
 window.addEventListener("load", () => inputs[0].focus());
 
 // JavaScript code
-let countdown = 10; // Initial countdown value
+let countdown = 45; // Initial countdown value
 const countdownDisplay = document.getElementById('countdown');
 const resendButton = document.getElementById('resendButton');
 const timerDisplay = document.getElementById('timer');
@@ -74,7 +74,7 @@ const timer = setInterval(updateCountdown, 1000);
 // Function to handle OTP resend
 function resendOTP() {
   // Reset countdown
-  countdown = 10;
+  countdown = 45;
   countdownDisplay.textContent = countdown;
   // Show timer and hide resend button
   timerDisplay.style.display = 'block';
@@ -131,6 +131,36 @@ $.ajax({
   
 
 });
+
+ //resend otp
+ $('#resendButton').click(async function (e) {
+  e.preventDefault()
+   resendOTP()
+
+   $.ajax({
+    type: 'POST',
+    url: '/generateOTP', 
+                          
+    success: function(otpResponse) {
+        if (otpResponse.success) {
+          console.error('OTP generated:', otpResponse.message);
+        } else {
+            console.error('Error generating OTP:', otpResponse.message);
+            // Handle error
+        }
+    },
+    error: function(error) {
+        console.error('Error generating OTP:', error);
+        // Handle error
+    }
+});
+   
+ 
+
+  
+
+});
+
 
  
 });

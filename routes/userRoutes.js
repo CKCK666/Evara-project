@@ -1,5 +1,5 @@
 const express = require('express');
-const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, getSingleProductPage, verifyOTP, addNewAddress, getUserSetting, deleteAddress, getAddressPage, addToCart, getCartPage, getCheckoutPage, checkOut, changeQuantity, userEdit } = require('../controller/userController');
+const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, getSingleProductPage, verifyOTP, addNewAddress, getUserSetting, deleteAddress, getAddressPage, addToCart, getCartPage, getCheckoutPage, checkOut, changeQuantity, userEdit, editAddress, getEditAddressPage, setAsDefaultAddress, changeOrderStatus, getOrderDetailsPage } = require('../controller/userController');
 const {verifyLogin}=require("../middlewares/verifications")
 const router =express.Router()
 const passport = require('passport');
@@ -59,9 +59,11 @@ router.post("/addAddress",addNewAddress)
 router.post("/deleteAddress",deleteAddress)
 
 //get edit address page
-router.get("/editAddress",(req,res)=>{
-  
-})
+router.get("/getEditAddress",getEditAddressPage)
+// edit address
+router.post("/editAddress",editAddress)
+
+router.post("/setAsDefault",setAsDefaultAddress)
 
 //addToCart
 
@@ -86,6 +88,13 @@ router.post("/changeQuantity",changeQuantity)
 //edit user
 
 router.post("/userEdit",userEdit)
+
+//change order status
+
+router.post("/orderStatusChange",changeOrderStatus)
+
+//get order details page
+router.get("/getOrderDetails",getOrderDetailsPage)
 
 //post logout
 router.get('/logout',logout)

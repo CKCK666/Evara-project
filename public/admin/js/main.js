@@ -252,25 +252,22 @@ return false;
    
 })
 
-$('#product-submit').click(function (e) {
+$('#product-edit-submit').click(function (e) {
   e.preventDefault()
   let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
-  let data = new FormData($('#product-form')[0]);
+  let data = new FormData($('#product-edit-form')[0]);
 
   
   let pkProductId=data.get("pkProductId")
-      console.log(pkProductId);
   let strProductName=data.get("strProductName")
   let strDescription=data.get("strDescription")
   let intPrice=data.get("intPrice")
   let intStock=data.get("intStock")
-  let mainProductImg=data.get("mainProductImg")
-  let otherProductImg1=data.get("otherProductImg1")
-  let otherProductImg2=data.get("otherProductImg2")
  
+   console.log(pkProductId,strDescription,strProductName,intPrice,intStock);
 
 
-    if (strProductName === ''|| strDescription=='' || !mainProductImg || !intPrice || !intStock || !otherProductImg1 || !otherProductImg2) {
+    if (strProductName === ''|| strDescription=='' || !intPrice || !intStock) {
   
       $('#errorMessage').text('Please fill in all fields.');
       $('.form-control').addClass('error') 
@@ -303,18 +300,18 @@ $("textarea[name='strDescription']").addClass('error');
 return false;
 }
 let swalLoader = Swal.fire({
-title: 'Loading...',
-allowOutsideClick: false,
-showConfirmButton: false,
-onBeforeOpen: () => {
-  Swal.showLoading();
-}
+  title: 'Loading...',
+  allowOutsideClick: false,
+  showConfirmButton: false,
+  onBeforeOpen: () => {
+      Swal.showLoading();
+  }
 });
-
+console.log("edit client side");
 
 // $('#product-form').submit()
 $.ajax({
-url: $('#edit-product-form').attr('action'),
+url: $('#product-edit-form').attr('action'),
 data:data,
 type: "POST",
 processData: false,
@@ -325,11 +322,11 @@ success: function(response) {
       Swal.fire({
           position: 'top-end',
           icon: 'success',
-          title: 'successfully added a product',
+          title: 'successfully edited a product',
           showConfirmButton: false,
           timer: 1500,
           didClose:()=>{
-        window.location.href = '/admin/getAddProduct';
+         window.location.reload()
           }
         })
       console.log('success:', response.message);
