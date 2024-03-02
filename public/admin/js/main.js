@@ -13,8 +13,8 @@ $(document).ready(function () {
   //add category //edit category
   $('#cate-submit').click(function (e) {
       e.preventDefault()
-      let nameRegex = /^(?=(.*[a-zA-Z]){3})[a-zA-Z0-9\s\-\_.]+$/;
-      let data = new FormData($('#cate-form')[0]);
+      let nameRegex= /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
+       let data = new FormData($('#cate-form')[0]);
 
       let category_id = data.get("category_id");
       let category=data.get("category")
@@ -347,7 +347,76 @@ return false;
 
 
 });
+$(".delivered-order-btn").click(function(e){
+  let pkOrderId = $(this).data('pk-order-id');
+  let pkUserId = $(this).data('pk-user-id');
+  let orderStatusChange=$(this).data('order-status-change')
+ 
+  
+  const swalWithBootstrapButtons = Swal.mixin({
+    customClass: {
+      confirmButton: 'btn btn-danger',
+      cancelButton: 'btn btn-danger'
+    },
+    buttonsStyling: false
+  })
+  
+  swalWithBootstrapButtons.fire({
+    title: `Want to make it delivered `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, make it!',
+    cancelButtonText: 'No, cancel!',
+    reverseButtons: true
+  }).then((result) => {
+    if (result.isConfirmed) {
+        $.ajax({
+            type: 'POST', 
+            url: "/orderStatusChange",
+            data: {
+              pkOrderId,
+              pkUserId,
+              orderStatusChange
+            }, 
+            success: function(response) {
+                if (response.success) {
+                    swalWithBootstrapButtons.fire(
+                        'Updated!',
+                        'Order is Delivered.',
+                        'success'
+                      ).then(()=>{
+                         window.location.href=`/admin/orderDetailsPage?pkOrderId=${pkOrderId}`
+                      })
+                     
+                    console.log('success:', response.message);
+                } else {
+                  console.log('success:', response.message);
+                    swalWithBootstrapButtons.fire(
+                        'Cancelled',
+                        
+                      )
+                }
+               
+            },
+            error: function(error) {
+                
+                console.error('Error:', error);
+            }
+        });
+      
+    } else if (
+      /* Read more about handling dismissals below */
+      result.dismiss === Swal.DismissReason.cancel
+    ) {
+      swalWithBootstrapButtons.fire(
+        'Cancelled',
+        
+      )
+    }
+  })
 
+
+})
 
  
 });

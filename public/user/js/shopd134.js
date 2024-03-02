@@ -100,14 +100,16 @@
             let productAmt=parseInt($(this).find('.price').text(),10)
             let productTotalAmt=parseInt($(this).find('.product-total-amount').text(),10)
             let pkProductId=$(this).find("#pkProductId").val()
-           
+            let stock =parseInt($(this).find('#intStock').text(), 10)
+
             if (isNaN(productAmt) || isNaN(productTotalAmt)) {
                 console.error("Product amount is not a valid number:", productAmt);
                 return; // Exit the loop if productAmt is NaN
             }
             $('.qty-up', this).on('click', function (event) {
                 event.preventDefault();
-                if (qtyval < 10) {
+                 let limit =stock<10?stock:10
+                if (qtyval < limit) {
                     qtyval = qtyval + 1;
                     $(this).prev().text(qtyval);
                     productTotalAmt=productAmt*qtyval

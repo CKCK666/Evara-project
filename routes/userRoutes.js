@@ -1,5 +1,5 @@
 const express = require('express');
-const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, getSingleProductPage, verifyOTP, addNewAddress, getUserSetting, deleteAddress, getAddressPage, addToCart, getCartPage, getCheckoutPage, checkOut, changeQuantity, userEdit, editAddress, getEditAddressPage, setAsDefaultAddress, changeOrderStatus, getOrderDetailsPage } = require('../controller/userController');
+const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, getSingleProductPage, verifyOTP, addNewAddress, getUserSetting, deleteAddress, getAddressPage, addToCart, getCartPage, getCheckoutPage, checkOut, changeQuantity, userEdit, editAddress, getEditAddressPage, setAsDefaultAddress, changeOrderStatus, getOrderDetailsPage, sortProducts } = require('../controller/userController');
 const {verifyLogin}=require("../middlewares/verifications")
 const router =express.Router()
 const passport = require('passport');
@@ -47,10 +47,10 @@ router.post("/verifyOTP",verifyOTP)
 router.get("/getProduct",verifyLogin,getSingleProductPage)
 
 //get user settings page
-router.get("/userSettings",getUserSetting)
+router.get("/userSettings",verifyLogin,getUserSetting)
 
 //get address
-router.get("/getAddAddress",getAddressPage)
+router.get("/getAddAddress",verifyLogin,getAddressPage)
 
 //add address
 router.post("/addAddress",addNewAddress)
@@ -59,7 +59,7 @@ router.post("/addAddress",addNewAddress)
 router.post("/deleteAddress",deleteAddress)
 
 //get edit address page
-router.get("/getEditAddress",getEditAddressPage)
+router.get("/getEditAddress",verifyLogin,getEditAddressPage)
 // edit address
 router.post("/editAddress",editAddress)
 
@@ -71,11 +71,11 @@ router.post("/addToCart",addToCart)
 
 //get Cart page
 
-router.get("/getCartPage",getCartPage)
+router.get("/getCartPage",verifyLogin,getCartPage)
 
 //get checkout page
 
-router.get("/getCheckoutPage",getCheckoutPage)
+router.get("/getCheckoutPage",verifyLogin,getCheckoutPage)
 
 //checkout
 
@@ -94,7 +94,11 @@ router.post("/userEdit",userEdit)
 router.post("/orderStatusChange",changeOrderStatus)
 
 //get order details page
-router.get("/getOrderDetails",getOrderDetailsPage)
+router.get("/getOrderDetails",verifyLogin,getOrderDetailsPage)
+
+//search and filter
+
+router.get("/search",verifyLogin,sortProducts)
 
 //post logout
 router.get('/logout',logout)

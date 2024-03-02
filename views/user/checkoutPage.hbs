@@ -11,6 +11,7 @@
             <div class="container">
                 <div class="row">
                     <div class="col-lg-6 mb-sm-15">
+                         
                        {{#if userAddress}}
                        {{#each userAddress.[0].arrAddress}}
                           <div class="card-header">
@@ -31,6 +32,7 @@
                       {{/each}}
                     {{/if}}
                     <a href="/getAddAddress?pkUserId={{pkUserId}}" class="btn btn-primary btn-sm rounded">Add new address</a>
+                    
                     </div>
 
 
@@ -95,8 +97,9 @@
                                    
                                 </div>
                             </div>
+                          
                              <button id="place-order-btn" class='btn btn-fill-out submit' name='submit' value='Submit'>Order submit</button>
-                            
+                            <h6 id='errorMessage' style='color: red; text-align: center;font-size:medium;font-weight:normal' >Add a new address to order</h6>
                         </div>
                     </div>
                     
@@ -107,3 +110,8 @@
                 
             </div>
         </section>
+
+        <style>
+             .form-control.error:not(#search-form-control){
+        border-color: red;}
+        </style>

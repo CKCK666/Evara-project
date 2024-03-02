@@ -2,7 +2,7 @@ const db=require("../config/connection")
 const bcrypt=require("bcrypt")
 const jwt =require("jsonwebtoken")
 const { ObjectId} = require('mongodb');
-const {USER_COLLECTION,ADMIN_COLLECTION, CATEGORY_COLLECTION, PRODUCTS_COLLECTION}=require("../config/collections");
+const {USER_COLLECTION,ADMIN_COLLECTION, CATEGORY_COLLECTION, PRODUCTS_COLLECTION, ORDER_COLLECTION}=require("../config/collections");
 const { log, logger } = require("handlebars");
 //post login
 const adminLogin=async(req,res)=>{
@@ -140,8 +140,8 @@ res.render("admin/homePage",{layout:"admin_layout",admin:true})
         updatedDate:null
       }
       
-       const existingCategory= await db.get().collection(CATEGORY_COLLECTION).findOne({strCategoryName:req.body.category,strStatus:{$ne:"Deleted"}})
-      if(existingCategory){
+       const existingCategory= await db.get().collection(CATEGORY_COLLECTION).find({strCategoryName:{$regex:req.body.category,$options:"i"},strStatus:{$ne:"Deleted"}}).toArray()
+      if(existingCategory.length){
         return res.json({success:false,message:"category already exist"})
       }
     let result = await db.get().collection(CATEGORY_COLLECTION).insertOne(dataToAdd)
@@ -170,7 +170,7 @@ res.render("admin/homePage",{layout:"admin_layout",admin:true})
         res.render("admin/categoryPage",{layout:"admin_layout",count,categories,admin:true})
       }
       else{
-
+        res.render("admin/categoryPage",{layout:"admin_layout",count,admin:true})
       }
     } catch (error) {
       res.status(500).json({success:false,message: error.message})
@@ -257,7 +257,7 @@ res.render("admin/homePage",{layout:"admin_layout",admin:true})
     if (req.body.category){
       const strCategoryName=req.body.category
      
-     let findCate=await db.get().collection(CATEGORY_COLLECTION).find({strCategoryName,pkCategoryId:{$ne:objectIdToUpdate}}).toArray()
+     let findCate=await db.get().collection(CATEGORY_COLLECTION).find({strCategoryName:{$regex:req.body.category,$options:"i"},pkCategoryId:{$ne:objectIdToUpdate}}).toArray()
      console.log(findCate);
       if(findCate.length==0){
         dateToUpdate={
@@ -468,9 +468,6 @@ const getProductAdd=async(req,res)=>{
     
     }
   
-
-
-
     //edit product
   const editProduct=async(req,res)=>{
     
@@ -602,7 +599,79 @@ const getProductAdd=async(req,res)=>{
       res.json({success:false,message: error.message})
    }
   }
+  
+  //get order list
+  const getOrderList=async(req,res)=>{
+    try {
+    
+       let result=await db.get().collection(ORDER_COLLECTION).find().toArray()
+       if(result.length){
+       let usersOrders=await result.map((order,index)=>{
+        const isoDate = order.createdDate;
+        const date = new Date(isoDate);
+        const formattedDate = date.toString().substring(0, 15) 
+        return {
+          ...order,
+          index:index+1,
+          createdDate: formattedDate
+         }
+        
+        })
+       
+        res.render("admin/orderList",{layout:"admin_layout",admin:true,usersOrders})
+       }
+       else{
+        res.json({success:false,message:"Fail to fetch orders"})
+       }
+  
+      
+    } catch (error) {
+      res.json({success:false,message:error.message})
+    }
+  
+  }
 
+  const getOrderDetailsPage=async(req,res)=>{
+   
+    try {
+      if(req.query.pkOrderId){
+      // let pkUserId =new ObjectId(req.query.pkUserId)
+      let pkOrderId =new ObjectId(req.query.pkOrderId)
+      let result =await db.get().collection(ORDER_COLLECTION).find({pkOrderId}).toArray()
+      
+      if (result  && result.length) {
+        let orderDetails=await result.map((order,index)=>{
+          const isoDate = order.createdDate;
+          const date = new Date(isoDate);
+          const formattedDate = date.toString().substring(0, 15) 
+          return {
+            ...order,
+            index:index+1,
+            createdDate: formattedDate
+           }
+          
+          })
+      
+        let orderProducts= await orderDetails[0].arrProductsDetails.map(obj=>{
+          let intTotalPrice=obj.intQuantity*obj.intPrice
+          return {...obj,intTotalPrice:intTotalPrice}
+           
+        })
+        console.log(orderProducts);
+        
+         res.render("admin/orderDetailsPage",{layout:"admin_layout",success:true,deliveryAddress:orderDetails[0].arrDeliveryAddress,orderProducts,orderDetails,message:"successfully loaded cart page",admin:true})
+       } else {
+        res.render("admin/orderDetailsPage",{layout:"admin_layout",success:true,admin:true})
+       }
+      }else{
+        res.json({success:false,message:"order id not found"})
+      }
+    } catch (error) {
+      res.json({success:false,message:error.message})
+    }
+     
+    
+  }
   //logout 
 const logout=(req,res)=>{
     req.session.destroy();
@@ -610,6 +679,8 @@ const logout=(req,res)=>{
    }
    
   module.exports={adminLogin,
+    getOrderDetailsPage,
+    getOrderList,
     getAdminHome,logout,
     deleteUser,getUserList,
     blockUser,addCategory,

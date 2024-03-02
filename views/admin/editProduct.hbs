@@ -15,7 +15,7 @@
                     <div class="card mb-4">
                         <div class="card-body">
                             <form action="/admin/editProduct" method="POST" enctype="multipart/form-data" id="product-edit-form">
-                            <input type="text" name="pkProductId" value={{product.[0].pkProductId}}>
+                            <input type="hidden" name="pkProductId" value={{product.[0].pkProductId}}>
                             <div class="row">
                                 <div class="col-md-3">
                                     <h6>1. General info</h6>

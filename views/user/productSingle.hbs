@@ -22,17 +22,18 @@
                                             <figure class="border-radius-10">
                                                 <img src={{product.[0].mainProductUrl}} alt="product image">
                                             </figure>
-                                             {{#each product.[0].arrayOtherImages}}
+                                          
                                               <figure class="border-radius-10">
-                               <img src={{imageUrl}} alt="product image">
+                                            <img src={{imageUrl1}} alt="product image">
                                             </figure>
-                                           {{/each}} 
+                                           
                                             
                                         </div>
                                         <!-- THUMBNAILS -->
                                         <div class="slider-nav-thumbnails pl-15 pr-15">
                                             <div><img src={{product.[0].mainProductUrl}} alt="product image"></div>
-                                           {{#each product.[0].arrayOtherImages}} <div><img src={{imageUrl}} alt="product image"></div>{{/each}}
+                                       <div><img src={{imageUrl1}} alt="product image"></div>
+                                        <div><img src={{imageUrl2}} alt="product image"></div>
                                         </div>
                                         
                                     </div>
@@ -85,11 +86,11 @@
                                        
                                         {{else}}
                                         <div class="detail-extralink">
-                                            <div class="detail-qty border radius">
+                                            {{!-- <div class="detail-qty border radius">
                                                 <a href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
                                                 <span class="qty-val">1</span>
                                                 <a href="#" class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
-                                            </div>
+                                            </div> --}}
                                             <div class="product-extra-link2">
                                                 <button onclick="handleAddToCart('{{product.[0].pkProductId}}','{{userId}}')" class="button button-add-to-cart">Add to cart</button>
                                                 <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>

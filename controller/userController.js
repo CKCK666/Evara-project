@@ -198,7 +198,7 @@ const getSingleProductPage=async(req,res)=>{
       
         if(product.length){
           
-        res.render("user/productSingle",{layout:"user_layout",user:true,product,userId,cartCount})
+        res.render("user/productSingle",{layout:"user_layout",user:true,product,imageUrl1:product[0].arrayOtherImages[0].imageUrl1,imageUrl2:product[0].arrayOtherImages[1].imageUrl2,userId,cartCount})
         }
         else{
           res.json({success:false,message:"product  not found"})
@@ -283,7 +283,7 @@ const getAddressPage=async(req,res)=>{
        addressCount=true
      }
 
-    res.render("user/addAddress",{layout:"user_layout",pkUserId,addressCount})
+    res.render("user/addAddress",{layout:"user_layout",pkUserId,addressCount,user:true})
   } catch (error) {
     res.json({success:false,message:"fail to render add  address page"})
   }
@@ -721,6 +721,7 @@ const getCheckoutPage=async(req,res)=>{
           return 0; // maintain original order
       });
   });
+  
     let cartDetails=await db.get().collection(CART_COLLECTION).find({pkUserId}).toArray()
     let cartCount=0
     if (cartDetails && cartDetails.length) {
@@ -955,6 +956,44 @@ const userEdit = async (req, res) => {
     
   }
 
+ const sortProducts=async(req,res)=>{
+  try {
+    let sort={createdDate:-1}
+     let search={strStatus: 'Active'}
+    if(req.query.lowToHigh){
+      sort={
+       
+        intPrice:1
+      }
+    }
+    if(req.query.highToLow){
+      sort={
+       
+        intPrice:-1
+      }
+    }
+    if(req.query.productName){
+      let productName=req.query.productName
+    search={
+      $and: [
+        { strProductName: { $regex:productName, $options: 'i' } }, 
+        { ...search },
+        {intStock:{$ne:0}}
+    ] 
+    }
+
+    }
+    let result=await db.get().collection(PRODUCTS_COLLECTION).find(search).sort(sort).toArray()
+    
+    res.render("user/filterProducts",{layout:"user_layout",user:true,result})
+  } catch (error) {
+    res.json({success:true,message:"Fail to sort"})
+  }
+ }
+
+
+
+
 //logout
 const logout = (req, res) => {
   res.clearCookie('ckCookie', { domain: 'localhost', path: '/' })
@@ -993,4 +1032,4 @@ async function getCartCount(userId) {
   
 }
 
-module.exports = {getOrderDetailsPage,changeOrderStatus,setAsDefaultAddress, getEditAddressPage,editAddress,getSignUp, signUp, getHome, login, logout ,userEdit,generateOtp,getOtpPage,getSingleProductPage,verifyOTP,addNewAddress,getUserSetting,deleteAddress,getAddressPage,addToCart,getCartPage,getCheckoutPage,checkOut,changeQuantity};
+module.exports = {sortProducts,getOrderDetailsPage,changeOrderStatus,setAsDefaultAddress, getEditAddressPage,editAddress,getSignUp, signUp, getHome, login, logout ,userEdit,generateOtp,getOtpPage,getSingleProductPage,verifyOTP,addNewAddress,getUserSetting,deleteAddress,getAddressPage,addToCart,getCartPage,getCheckoutPage,checkOut,changeQuantity};

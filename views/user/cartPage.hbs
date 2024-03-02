@@ -72,15 +72,17 @@
                             
                             </div>
                             <div class="col-lg-6 col-md-12">
+                                  {{#if cartDetails}}
+                                    {{#each cartDetails}}
                                 <div class="border p-md-4 p-30 border-radius cart-totals">
                                     <div class="heading_s1 mb-3">
                                         <h4>Cart Totals</h4>
                                     </div>
                                     <div class="table-responsive">
+                                       
                                         <table class="table">
                                             <tbody>
-                                                {{#if cartDetails}}
-                                                {{#each cartDetails}}
+                                               
                                                 <tr>
                                                     <td class="cart_total_label">Cart Subtotal</td>
                                                     <td class="cart_total_amount"><span id="cart_subtotal" class="font-lg fw-900 text-brand">{{total_cart_price}}</span></td>
@@ -93,13 +95,19 @@
                                                     <td class="cart_total_label">Total</td>
                                                     <td class="cart_total_amount"><strong><span id="totalPrice" class="font-xl fw-900 text-brand">{{total_cart_price}}</span></strong></td>
                                                 </tr>
-                                                {{/each}}
-                                                {{/if}}
+                                             
                                             </tbody>
                                         </table>
+                                          
                                     </div>
+                                    
                                     <a href="/getCheckoutPage" class="btn "> <i class="fi-rs-box-alt mr-10"></i> Proceed To CheckOut</a>
+
+                                    
                                 </div>
+                                 {{/each}}
+                                                {{/if}}
+                                    
                             </div>
                         </div>
                     </div>
