@@ -9,9 +9,12 @@
                         </div>
                     </div>
                 </div>
+             
             </div>
+         
+            
             <div class="row">
-                <div class="col-lg-6">
+                <div class="col-lg-4">
                     <div class="card mb-4">
                         <div class="card-body">
                             <form action="/admin/editProduct" method="POST" enctype="multipart/form-data" id="product-edit-form">
@@ -42,7 +45,7 @@
                                 <div class="col-md-9">
                                    
                                         <label class="form-label">Cost in INR</label>
-                                        <input name="intPrice" type="number" placeholder="00.0" class="form-control" value={{product.[0].intPrice}} >
+                                        <input name="intPrice" type="number" placeholder="00.0" class="form-control numOnly" value={{product.[0].intPrice}} >
                                     
                                 </div> <!-- col.// -->
                             </div> <!-- row.// -->
@@ -54,7 +57,7 @@
                                 <div class="col-md-9">
                                    
                                         <label class="form-label">Stock</label>
-                                        <input name="intStock" type="number" placeholder="0" class="form-control" value={{product.[0].intStock}}>
+                                        <input name="intStock" type="number" placeholder="0" class="form-control numOnly" value={{product.[0].intStock}}>
                                     
                                 </div> <!-- col.// -->
                             </div>
@@ -73,42 +76,7 @@
                                  <!-- col.// -->
                             </div> <!-- row.// -->
                             <hr class="mb-4 mt-3">
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <h6>5. Media</h6>
-                                </div>
-                                <div class="col-md-9">
-                                    <div class="mb-4">
-                                        <label class="form-label">Main Image</label>
-                                        <input name="mainProductImg" class="form-control" type="file" onchange="displaySelectedImage(this)">
-                                    </div>
-                                </div>
-                                 <!-- col.// -->
-                            </div> <!-- .row end// -->
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <h6></h6>
-                                </div>
-                                <div class="col-md-9">
-                                    <div class="mb-4">
-                                        <label class="form-label">Images</label>
-                                        <input name="otherProductImg1" class="form-control" type="file" onchange="displaySelectedImage(this)">
-                                    </div>
-                                </div>
-                                 <!-- col.// -->
-                            </div>
-                            <div class="row">
-                                <div class="col-md-3">
-                                    <h6></h6>
-                                </div>
-                                <div class="col-md-9">
-                                    <div class="mb-4">
-                                        <label class="form-label">Images</label>
-                                        <input name="otherProductImg2" class="form-control" type="file" onchange="displaySelectedImage(this)">
-                                    </div>
-                                </div>
-                                 <!-- col.// -->
-                            </div>
+                          
                              <div class="row">
                                 <div class="col-md-9">
                                     <h6></h6>
@@ -134,56 +102,132 @@
                     </div>
                     
                 </div>
-               <div class="col-lg-6">
-           <div id="imagePreview">
-        <!-- Image previews will be displayed here -->
-          </div>
-          </div> 
-    <!-- Image preview will be displayed here -->
+
+                {{!-- image --}}
+
+                <div class="col-lg-8">
+    <div class="row">
+    <div class="col-4">
+        <div class="mb-4">
+            <label class="form-label">Main Image</label>
+            <div id="imagePreviewContainer1" class="image-preview-container">
+                <img id="previewImage1" src={{product.[0].mainProductUrl}} alt="Selected Image">
             </div>
+            <input name="mainProductImg" class="form-control inputImage1" type="file" onchange="displaySelectedImage(this, 'imagePreviewContainer1', 'previewImage1')">
+        </div>
+    </div>
+    <div class="col-4 ml-4">
+        <div class="mb-4">
+            <label class="form-label">Image-1</label>
+            <div id="imagePreviewContainer2" class="image-preview-container">
+                <img id="previewImage2" src={{imageUrl1}} alt="Selected Image">
+            </div>
+            <input name="otherProductImg1" class="form-control inputImage2" type="file" onchange="displaySelectedImage(this, 'imagePreviewContainer2', 'previewImage2')">
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="mb-4">
+            <label class="form-label">Image-2</label>
+            <div id="imagePreviewContainer3" class="image-preview-container">
+                <img id="previewImage3" src={{imageUrl2}} alt="Selected Image">
+            </div>
+            <input name="otherProductImg2" class="form-control inputImage3" type="file" onchange="displaySelectedImage(this, 'imagePreviewContainer3', 'previewImage3')">
+        </div>
+    </div>
+</div>
+
+ <div class="row">
+
+    <div class="col-md-4 d-flex justify-content-end align-items-center">
+    <button id="product-edit-image1"  class="btn btn-md rounded font-sm hover-up">Publish</button>
+    </div>
+     <div class="col-md-4  d-flex justify-content-end align-items-center">
+    <button id="product-edit-image2"  class="btn btn-md rounded font-sm hover-up">Publish</button>
+    </div>
+     <div class="col-md-4  d-flex justify-content-end align-items-center">
+    <button id="product-edit-image3"  class="btn btn-md rounded font-sm hover-up">Publish</button>
+    </div>
+
+ </div>
+</div>
+</div>
+  
+ {{!-- /imagessss --}}
+            
             </div>
             </div>
         </section>
 
-          <style>
-            .form-control.error:not(#search-form-control){
-        border-color: red;}
+        
 
-          #imagePreview {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%; /* Ensure the container fills its parent's height */
-    }
-
-    .image-preview {
-        max-width: 100%; /* Ensure the image doesn't exceed the container width */
-        max-height: 100%; /* Ensure the image doesn't exceed the container height */
-    }
-
-    
-        </style>
-
-        <script>
-function displaySelectedImage(input) {
-    const imagePreview = document.getElementById('imagePreview');
-
-    // Clear previous image preview
-    imagePreview.innerHTML = '';
-
+ <script>
+function displaySelectedImage(input, previewContainerId) {
     if (input.files && input.files[0]) {
-        const reader = new FileReader();
+        var reader = new FileReader();
 
-        reader.onload = function(e) {
-            const image = document.createElement('img');
-            image.src = e.target.result;
-            image.classList.add('img-fluid');
-          
-           
-              imagePreview.appendChild(image);
+        reader.onload = function (e) {
+            $('#' + previewContainerId).find('img').attr('src', e.target.result);
+            $('#' + previewContainerId + ' img').on('load', function () {
+               
+            });
         };
 
         reader.readAsDataURL(input.files[0]);
     }
 }
+
+
+
+
+  
+
+
 </script>
+
+<style>
+    .numOnly::-webkit-inner-spin-button,
+.numOnly::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.numOnly {
+  /* Firefox */
+  -moz-appearance: textfield;
+}
+
+.form-control.error:not(#search-form-control){
+        border-color: red;}
+
+
+   #imagePreviewContainer1, #imagePreviewContainer2,#imagePreviewContainer3{
+    width: 300px;
+    height: 450px; /* Adjust height as needed */
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+    overflow: hidden;
+    position: relative;
+}
+
+.image-preview-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-preview-container input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 2; /* Ensure the file input is clickable */
+}
+
+/* Optional: Add some styling to the label */
+.form-label {
+    font-weight: bold;
+}
+     </style>

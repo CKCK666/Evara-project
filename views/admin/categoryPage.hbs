@@ -9,7 +9,6 @@
                       <h2 class="content-title card-title">Categories</h2>
                    {{/if}}
                
-                    
                    
                 </div>
                 
@@ -20,13 +19,16 @@
                     <div class="row">
                         <div class="col-md-3">
                             <form id="cate-form">
-                                 <input type="hidden" name="category_id" value="{{category.[0].pkCategoryId}}">
-                               {{#if category}}
+                                  {{#if category}}
+                               
+                                  <input type="hidden" name="category_id" value="{{category.[0].pkCategoryId}}">
+                              
                                 <label class="form-label">Category Name</label>
                                <input type="text" placeholder="Type here" class="form-control" name="category" value="{{category.[0].strCategoryName}}" />
                                {{else}}
                            <label class="form-label">Category Name</label>
                           <input type="text" placeholder="Type here" class="form-control" name="category" />
+                          
                                {{/if}}
                            
                          

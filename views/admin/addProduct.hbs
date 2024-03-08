@@ -42,7 +42,7 @@
                                 <div class="col-md-9">
                                    
                                         <label class="form-label">Cost in INR</label>
-                                        <input name="intPrice" type="number" placeholder="00.0" class="form-control" >
+                                        <input name="intPrice" type="number" placeholder="00.0" class="form-control numOnly" >
                                     
                                 </div> <!-- col.// -->
                             </div> <!-- row.// -->
@@ -53,8 +53,8 @@
                                 </div>
                                 <div class="col-md-9">
                                    
-                                        <label class="form-label">Stock</label>
-                                        <input name="intStock" type="number" placeholder="0" class="form-control">
+                                        <label class="form-label">Stock</label> 
+                                        <input name="intStock" type="number" placeholder="0" class="form-control numOnly" >
                                     
                                 </div> <!-- col.// -->
                             </div>
@@ -187,3 +187,16 @@ function displaySelectedImage(input) {
     }
 }
 </script>
+
+<style>
+    .numOnly::-webkit-inner-spin-button,
+.numOnly::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.numOnly {
+  /* Firefox */
+  -moz-appearance: textfield;
+}
+</style>

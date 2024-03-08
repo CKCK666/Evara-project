@@ -16,10 +16,10 @@ $(document).ready(function () {
       let nameRegex= /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
        let data = new FormData($('#cate-form')[0]);
 
-      let category_id = data.get("category_id");
-      let category=data.get("category")
-      let description=data.get("description")
-       console.log(category.length);
+      let category_id = data.get("category_id")
+      let category=data.get("category").trim()
+      let description=data.get("description").trim()
+      
         if (category === ''|| description=='') {
       
           $('#errorMessage').text('Please fill in all fields.');
@@ -53,20 +53,30 @@ $(document).ready(function () {
 let url;
 let ajaxType;
 let action
+let datas={}
 if (category_id) {
     url = '/admin/editCategory'; 
     ajaxType = 'PATCH';
     action="edited"
+    datas={
+      category_id,
+      category,
+      description
+    }
 } else {
     url = '/admin/addCategory'; 
     ajaxType = 'POST';
-    action="added"
+    action="added",
+    datas={
+      category,
+      description
+    }
 }
-  
+  console.log("datas:",datas);
   $.ajax({
       type: ajaxType, 
       url: url,
-      data:  $('#cate-form').serialize(),
+      data: datas,
       success: function(response) {
           if (response.success) {
               Swal.fire({
@@ -100,19 +110,26 @@ if (category_id) {
       let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
       let data = new FormData($('#product-form')[0]);
 
+      for (let pair of data.entries()) {
+        let [key, value] = pair;
+        if (typeof value === 'string') {
+            data.set(key, value.trim());
+        }
+    }
+  
+
       
       let pkProductId=data.get("pkProductId")
-          console.log(pkProductId);
+          
       let strProductName=data.get("strProductName")
       let strDescription=data.get("strDescription")
-      let intPrice=data.get("intPrice")
-      let intStock=data.get("intStock")
+      let intPrice=parseInt(data.get("intPrice"))
+      let intStock=parseInt(data.get("intStock"))
       let mainProductImg=data.get("mainProductImg")
       let otherProductImg1=data.get("otherProductImg1")
       let otherProductImg2=data.get("otherProductImg2")
      
-   
-    
+     
         if (strProductName === ''|| strDescription=='' || !mainProductImg || !intPrice || !intStock || !otherProductImg1 || !otherProductImg2) {
       
           $('#errorMessage').text('Please fill in all fields.');
@@ -120,7 +137,16 @@ if (category_id) {
 
           return false;
       }
-       
+       if(intPrice<=0 || typeof intPrice===Number){
+        $('#errorMessage').text('Invaild product price');
+        $("input[name='intPrice']").addClass('error')   
+        return false;
+       }
+       if(intStock<=0 ||  typeof intPrice===Number){
+        $('#errorMessage').text('Invaild product stock');
+        $("input[name='intStock']").addClass('error')   
+        return false;
+       }
       
       if(strProductName.length<4){
           $('#errorMessage').text('Product name must be at least 4 characters long.');
@@ -200,8 +226,8 @@ return false;
     let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
     let data = new FormData($('#login-form')[0]);
     
-    let email=data.get('email')
-    let password=data.get("password")
+    let email=data.get('email').trim()
+    let password=data.get("password").trim()
      
     console.log(email,password);
 
@@ -222,7 +248,10 @@ return false;
     $.ajax({
       type: 'POST', 
       url: '/admin/login',
-      data: $('#login-form').serialize(), 
+      data: {
+        email,
+        password
+      }, 
       success: function(response) {
           if (response.success) {
               Swal.fire({
@@ -418,7 +447,188 @@ $(".delivered-order-btn").click(function(e){
 
 })
 
+
+$('#product-edit-image1').click(function(e){
+  e.preventDefault()
+  let pkProductId = $("input[name='pkProductId']").val()
+  let formData = new FormData();
+  $(".inputImage1").each(function() {
+   
+    let file = $(this)[0].files[0];
+    formData.append($(this).attr('name'), file);
+})
+formData.append('pkProductId', pkProductId);
+
+console.log(formData);
+let swalLoader = Swal.fire({
+  title: 'Loading...',
+  allowOutsideClick: false,
+  showConfirmButton: false,
+  onBeforeOpen: () => {
+      Swal.showLoading();
+  }
+});
+
+$.ajax({
+  url:"/admin/editProductImages", 
+  data:formData,
+  type: "POST",
+  processData: false,
+  contentType: false,
+  success: function(response) {
+    if (response.success) {
+      swalLoader.close()
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'successfully edited a product',
+            showConfirmButton: false,
+            timer: 1500,
+            didClose:()=>{
+           window.location.reload()
+            }
+          })
+        console.log('success:', response.message);
+    } else {
+      swalLoader.close()
+        $('#errorMessage').text(response.message)
+    }
+   
+  },
+  error: function(error) {
+  swalLoader.close()
+    console.error('Error:', error);
+  }
+  });
+
+
+
+});
+
+
+$('#product-edit-image2').click(function(e){
+  e.preventDefault()
+  let pkProductId = $("input[name='pkProductId']").val()
+  let formData = new FormData();
+  $(".inputImage2").each(function() {
+   
+    let file = $(this)[0].files[0];
+    formData.append($(this).attr('name'), file);
+})
+formData.append('pkProductId', pkProductId);
+
+console.log(formData);
+let swalLoader = Swal.fire({
+  title: 'Loading...',
+  allowOutsideClick: false,
+  showConfirmButton: false,
+  onBeforeOpen: () => {
+      Swal.showLoading();
+  }
+});
+
+$.ajax({
+  url:"/admin/editProductImages", 
+  data:formData,
+  type: "POST",
+  processData: false,
+  contentType: false,
+  success: function(response) {
+    if (response.success) {
+      swalLoader.close()
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'successfully edited a product',
+            showConfirmButton: false,
+            timer: 1500,
+            didClose:()=>{
+           window.location.reload()
+            }
+          })
+        console.log('success:', response.message);
+    } else {
+      swalLoader.close()
+        $('#errorMessage').text(response.message)
+    }
+   
+  },
+  error: function(error) {
+  swalLoader.close()
+    console.error('Error:', error);
+  }
+  });
+
+
+
+});
  
+
+$('#product-edit-image3').click(function(e){
+  e.preventDefault()
+  let pkProductId = $("input[name='pkProductId']").val()
+  let formData = new FormData();
+  $(".inputImage3").each(function() {
+   
+    let file = $(this)[0].files[0];
+    formData.append($(this).attr('name'), file);
+})
+formData.append('pkProductId', pkProductId);
+
+console.log(formData);
+let swalLoader = Swal.fire({
+  title: 'Loading...',
+  allowOutsideClick: false,
+  showConfirmButton: false,
+  onBeforeOpen: () => {
+      Swal.showLoading();
+  }
+});
+
+$.ajax({
+  url:"/admin/editProductImages", 
+  data:formData,
+  type: "POST",
+  processData: false,
+  contentType: false,
+  success: function(response) {
+    if (response.success) {
+      swalLoader.close()
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'successfully edited a product',
+            showConfirmButton: false,
+            timer: 1500,
+            didClose:()=>{
+           window.location.reload()
+            }
+          })
+        console.log('success:', response.message);
+    } else {
+      swalLoader.close()
+        $('#errorMessage').text(response.message)
+    }
+   
+  },
+  error: function(error) {
+  swalLoader.close()
+    console.error('Error:', error);
+  }
+  });
+
+
+
+});
+
+
+
+
+
+
+
+
+
 });
 
 

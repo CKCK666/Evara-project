@@ -4,18 +4,14 @@ const dotenv=require("dotenv")
 const {verifyLogin}=require("../middlewares/verifications")
 
 dotenv.config()
-const { getAdminHome, adminLogin, logout, deleteUser, getUserList, blockUser, addCategory, getCategoryPage, deleteCategory, blockCategory, getEditCategory, editCategory, getProductList, getProductAdd, addProduct, editProduct, deleteProduct, blockProduct, getProductEdit, getOrderList, getOrderDetailsPage } = require('../controller/adminController');
-
+const { getAdminHome, adminLogin, logout, getOrderList, getOrderDetailsPage} = require('../controller/adminController');
+const { addCategory, getCategoryPage, deleteCategory, blockCategory, getEditCategory, editCategory }=require('../controller/categoryController');
+const { getProductList, getProductAdd, addProduct, editProduct, deleteProduct, blockProduct, getProductEdit,editProductImages} = require('../controller/productController');
+const { deleteUser, getUserList, blockUser,}=require("../controller/userController")
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 
-// Configure Cloudinary
-// cloudinary.config({
-//     cloud_name:process.env.CLOUDINARY_NAME,
-//     api_key:process.env.CLOUDINARY_API_KEY,
-//     api_secret: process.env.CLOUDINARY_API_SECRET
-//   });
   cloudinary.config({
     cloud_name:process.env.CLOUDINARY_NAME,
     api_key:process.env.CLOUDINARY_API_KEY,
@@ -91,6 +87,9 @@ router.get("/getProductEdit",isAdmin,getProductEdit)
 
 //edit product
 router.post("/editProduct",uploads.any(),editProduct)
+
+//edit product images
+router.post("/editProductImages",uploads.any(),editProductImages)
 
 //delete product
 router.patch("/deleteProduct",deleteProduct)

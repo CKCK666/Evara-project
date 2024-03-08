@@ -1,5 +1,8 @@
 const db = require('../config/connection');
 const bcrypt = require('bcrypt');
+const mongoose=require('mongoose')
+const User =require("../models/userModel")
+const Product =require("../models/productModel")
 const {USER_COLLECTION, PRODUCTS_COLLECTION, CATEGORY_COLLECTION, CART_COLLECTION, ORDER_COLLECTION} =require("../config/collections")
 const { ObjectId } = require('mongodb');
 const router = require('../routes/userRoutes');
@@ -29,13 +32,12 @@ const signUp = async (req, res) => {
     let { username, email, password ,phno} = req.body;
    
       let strPhoneNumber="+91"+phno
-    let emailExist = await db.get().collection(USER_COLLECTION).findOne({ strEmail:email,strStatus:{$ne:"Deleted"} });
+    let emailExist = await User.findOne({ strEmail:email,strStatus:{$ne:"Deleted"} });
 
     if (!emailExist) {
       const hashedPassword = await bcrypt.hash(password, 10);
-      let userData = {
+      let userData =new User ({
         pkUserId:new ObjectId(),
-        arrAddress:[],
         strUserName:username,
         strEmail:email,
         strPassword: hashedPassword,
@@ -44,16 +46,16 @@ const signUp = async (req, res) => {
        strStatus:"Pending",
         createdDate: new Date(),
         updatedDate: null,
-      };
-      let result = await db.get().collection(USER_COLLECTION).insertOne(userData);
+      })
+      let result = await userData.save()
    
-      if(result.insertedId){
-        let _id=result.insertedId
-        let findUser=await db.get().collection(USER_COLLECTION).find({_id},{strPassword:-1,strProfileImg:-1}).toArray()
+      if(result._id){
+        let _id=result._id
+        let findUser=await User.find({_id},{strPassword:0,strProfileImg:0})
         req.session.user = findUser[0];
-      
+         
         req.session.otpVerified=false
-
+       
         res.json({ success:true, message: 'Form submitted successfully!' });
       }else{
         res.json({ success: false, message: 'Failed to submitted !' });
@@ -74,23 +76,28 @@ const getHome = async (req, res) => {
   if(req.session.passport){
     console.log(req.session.passport);
     console.log("passporttt");
-    let products =await db.get().collection(PRODUCTS_COLLECTION).find({strStatus:"Active"}).toArray()
+    let products =await User.find({strStatus:"Active"})
    return  res.render('user/homePage', {layout:"user_layout",user:true,products});
   }
   
  const objectIdToFind = new ObjectId(req.session.user.pkUserId);
-  let userExist = await db
-    .get()
-    .collection(USER_COLLECTION)
-    .find({pkUserId: objectIdToFind ,strStatus:"Active"})
-    .toArray();
+  console.log(req.session.user.pkUserId);
+  let userExist = await User.find({pkUserId: objectIdToFind ,strStatus:"Active"})
+    
 
   if (userExist && userExist.length > 0) {
-    let products =await db.get().collection(PRODUCTS_COLLECTION).find({strStatus:"Active"}).toArray()
-    let categories =await db.get().collection(CATEGORY_COLLECTION).find({strStatus:"Active"}).toArray()
-    let cartCount= await getCartCount(req.session.user.pkUserId)
+    let findProducts =await Product.find({strStatus:"Active"})
+    let products=findProducts.map((product)=>{
+      return{
+        ...product._doc
+      }
+    })
+    let categories =await User.find({strStatus:"Active"})
+    let cartCount=0
+    // await getCartCount(req.session.user.pkUserId)
     res.render('user/homePage', {layout:"user_layout",user:true,products,categories,pkUserId:req.session.user.pkUserId,cartCount});
   } else {
+     console.log("not userExist");
     req.session.destroy();
     res.clearCookie('passport')
     res.render('user/loginPage',{layout:"user_layout"});
@@ -104,7 +111,8 @@ const login = async(req,res) => {
   try {
     let { email, password } = req.body;
 
-    let user = await db.get().collection(USER_COLLECTION).findOne({ strEmail:email ,strStatus:"Active"});
+    let user = await User.findOne({ strEmail:email ,strStatus:"Active"});
+     console.log(user);
     if (user) {
       let result = await bcrypt.compare(password, user.strPassword);
       if (result) {
@@ -180,7 +188,7 @@ const verifyOTP=async(req,res)=>{
   // Delete OTP from storage once verified
   otpStorage.delete(phoneNumber);
    
-  await db.get().collection(USER_COLLECTION).updateOne({strEmail:req.session.user.strEmail},{$set:{strStatus:"Active"}})
+  await User.updateOne({strEmail:req.session.user.strEmail},{$set:{strStatus:"Active"}})
   res.status(200).json({success:true,message:'OTP verified successfully'});
 }
 
@@ -273,588 +281,8 @@ const getUserSetting=async(req,res)=>{
 
 }
 
-//get add address page
-const getAddressPage=async(req,res)=>{
-  try {
-   let pkUserId=req.query.pkUserId
-    let user=await db.get().collection(USER_COLLECTION).find({pkUserId:new ObjectId(pkUserId)}).toArray()
-    let addressCount=false
-     if(user[0].arrAddress.length>0){
-       addressCount=true
-     }
-
-    res.render("user/addAddress",{layout:"user_layout",pkUserId,addressCount,user:true})
-  } catch (error) {
-    res.json({success:false,message:"fail to render add  address page"})
-  }
-}
-
-//add address
-const addNewAddress=async(req,res)=>{
-  
-  try {
-     if(req.body.pkUserId){
-       let matchQuery={
-       
-          pkUserId:new ObjectId(req.body.pkUserId),
-          strStatus:"Active",
-        
-        
-       } 
-        let isDefaultAddress=false
-        if(req.body.addressCheckBox){
-          isDefaultAddress=true
-          let arrAddressExist=await db.get().collection(USER_COLLECTION).find(matchQuery,{arrAddress:1}).toArray()
-          console.log(arrAddressExist);
-           if(arrAddressExist.length>0){
-            let matchQuery2={
-              pkUserId:new ObjectId(req.body.pkUserId),
-              strStatus:"Active",
-              "arrAddress.isDefaultAddress":true
-            }
-            await db.get().collection(USER_COLLECTION).updateOne(matchQuery2,{ $set: { "arrAddress.$.isDefaultAddress": false }})
-           }
-         
-        }
-       let dataToAdd={
-        $addToSet:{
-          arrAddress:{
-            pkUserId:new ObjectId(req.body.pkUserId),
-            pkAddressId:new ObjectId(),
-           strFullName:req.body.fname,
-           strPhoneNo:req.body.phno,
-           strArea:req.body.area || null,
-           intPinCode:req.body.pinCode,
-           strCity:req.body.city,
-           strState:req.body.state,
-           isDefaultAddress
-          }
-         }
-    }
-        let result=await db.get().collection(USER_COLLECTION).updateOne(matchQuery,dataToAdd)
-        
-        res.json({success:true,message:"successfully add address",pkUserId:req.body.pkUserId})
-     }else{
-      res.json({success:false,message:"User id not found"})
-     }
-  } catch (error) {
-    res.json({success:false,message:error.message})
-  }
-
-}
-//edit address
-const editAddress=async(req,res)=>{
-
-  try {
-    if(req.body.pkUserId){
-      if(req.body.pkAddressId){
-        let pkUserId=new ObjectId(req.body.pkUserId)
-        let pkAddressId=new ObjectId(req.body.pkAddressId)
-        const filter = {
-          pkUserId,
-          "arrAddress.pkAddressId": pkAddressId
-        };
-        
-        // Construct the update operation
-        const update = {
-          $set: {
-            "arrAddress.$[address].strFullName": req.body.fname,
-            "arrAddress.$[address].strPhoneNo": req.body.phno,
-            "arrAddress.$[address].strArea": req.body.area || "",
-            "arrAddress.$[address].strCity": req.body.city,
-            "arrAddress.$[address].strState": req.body.state,
-            "arrAddress.$[address].updatedDate": new Date()
-          }
-        };
-        
-        // Options for array filters
-        const options = {
-          arrayFilters: [{ "address.pkAddressId": pkAddressId }]
-        };
-        
-        // Perform the update operation
-        const result = await db.get().collection(USER_COLLECTION).updateOne(filter, update, options);
-        
-        console.log(`${result.modifiedCount} document was modified.`);
-
-      if (result.modifiedCount) {
-       
-        res.json({success:true,message: 'successfully updated!',pkUserId:req.body.pkUserId,result})
-      }
-      else{
-        console.log("fail to update address");
-        res.json({success:false,message: 'Fail to update address!'})
-      }
-      
-
-      }else{
-        res.json({success:false,message:"Address id not found"})
-      }
-    }else{
-      res.json({success:false,message:"User id id not found"})
-    }
-    
-   
- 
-   } catch (error) {
-    console.log(error.message);
-      res.json({success:false,message: error.message})
-   }
-}
-
-//get edit address page
-const getEditAddressPage=async(req,res)=>{
-  try {
-   let pkAddressId=req.query.pkAddressId
-   let pkUserId=req.query.pkUserId
-   if (pkAddressId) {
-    let matchQuery1={
-      $match:{
-        pkUserId:new ObjectId(pkUserId)
-      }
-    }
-    let unwind={
-      $unwind:"$arrAddress"
-    }
-    let matchQuery2={
-      $match:{
-        "arrAddress.pkAddressId":new ObjectId(pkAddressId)
-      }
-    }
-  let userAddress=await db.get().collection(USER_COLLECTION).aggregate([matchQuery1,unwind,matchQuery2]).toArray()
- 
-      let addressCount=false
-       if(userAddress[0].length>0){
-         addressCount=true
-       }
-     
-      res.render("user/editAddress",{layout:"user_layout",arrAddress:userAddress[0].arrAddress, addressCount})
-    
-   } else {
-    res.json({success:false,message:"address id not found"})
-   }
-
-  } catch (error) {
-    res.json({success:false,message:error.message})
-  }
-}
-
-//set as default address
-const setAsDefaultAddress=async(req,res)=>{
- 
-  try {
-    if(req.body.pkUserId){
-      if(req.body.pkAddressId){
-       
-       
-        const pkUserId = new ObjectId(req.body.pkUserId);
-        const pkAddressId = new ObjectId(req.body.pkAddressId);
-        
-       
-        const filter1 = {
-          pkUserId,
-          "arrAddress.isDefaultAddress": true
-        };
-        
-        const update1 = {
-          $set: {
-            "arrAddress.$.isDefaultAddress": false
-          }
-        };
-        
-        const result1 = await db.get().collection(USER_COLLECTION).updateMany(filter1, update1);
-        
-        console.log(`${result1.modifiedCount} document(s) updated to set isDefaultAddress to false.`);
-        
-       
-        const filter2 = {
-          pkUserId,
-          "arrAddress.pkAddressId": pkAddressId
-        };
-        
-        const update2 = {
-          $set: {
-            "arrAddress.$.isDefaultAddress": true
-          }
-        };
-        
-        const result2 = await db.get().collection(USER_COLLECTION).updateOne(filter2, update2);
-        
-        console.log(`${result2.modifiedCount} document updated to set isDefaultAddress to true for pkAddressId: ${pkAddressId}.`);
-        res.json({success:true,message:"Address set as default address"})
-      
-
-      }else{
-        res.json({success:false,message:"Address id not found"})
-      }
-    }else{
-      res.json({success:false,message:"User id id not found"})
-    }
-    
-   
- 
-   } catch (error) {
-    console.log(error.message);
-      res.json({success:false,message: error.message})
-   }
-}
 
 
-
-//delete address
-const deleteAddress=async(req,res)=>{
- 
-  try {
-    if(req.body.pkUserId){
-      if(req.body.pkAddressId){
-        let pkUserId=new ObjectId(req.body.pkUserId)
-        let pkAddressId=new ObjectId(req.body.pkAddressId)
-        const result = await db.get().collection(USER_COLLECTION).updateOne(
-          { pkUserId ,strStatus:"Active"},
-          { $pull: { arrAddress: {pkAddressId } } }
-        );
-       
-      if (result.modifiedCount===1) {
-       
-        res.json({success:true,message: 'successfully  deleted!',pkUserId:req.body.pkUserId})
-      }
-      else{
-        console.log("not user deleted");
-        res.json({success:false,message: 'User not deleted!'})
-      }
-      
-
-      }else{
-        res.json({success:false,message:"Address id not found"})
-      }
-    }else{
-      res.json({success:false,message:"User id id not found"})
-    }
-    
-   
- 
-   } catch (error) {
-    console.log(error.message);
-      res.json({success:false,message: error.message})
-   }
-}
-
-const addToCart=async(req,res)=>{
-  try {
-    console.log();
-      if(req.body.pkUserId){
-        let pkUserId =new ObjectId(req.body.pkUserId)
-      let product=await db.get().collection(PRODUCTS_COLLECTION).find({pkProductId:new ObjectId(req.body.pkProductId),strStatus:"Active"}).toArray()
-       if(product && product.length){
-         let pkProductId=new ObjectId(product[0].pkProductId)
-         let userCart= await db.get().collection(CART_COLLECTION).find({pkUserId}).toArray()
-           
-         if(userCart && userCart.length){
-          let productInCart=await db.get().collection(CART_COLLECTION).find({pkUserId,"arrProducts.pkProductId":pkProductId}).toArray()
-          
-          if(productInCart.length){
-            const update = {
-              $inc: { "arrProducts.$.intQuantity": 1 },
-           
-            };
-            const result = await db.get().collection(CART_COLLECTION).updateOne({pkUserId,"arrProducts.pkProductId":pkProductId}, update);
-        
-            
-          let aggregatePipeline = [
-              {
-                $match: { pkUserId } // Match documents with the specified pkUserId
-              },
-              {
-                $unwind: "$arrProducts" // Deconstruct the arrProducts array
-              },
-              {
-                $group: {
-                  _id: null,
-                  total_cart_price: {
-                    $sum: { $multiply: ["$arrProducts.intQuantity", "$arrProducts.intPrice"] }
-                  }
-                }
-              }
-            ];
-            
-            let totalPriceResult = await db.get().collection(CART_COLLECTION).aggregate(aggregatePipeline).toArray();
-            
-            // Update total_cart_price for the cart
-            let updatedTotalPriceResult = await db.get().collection(CART_COLLECTION).updateOne(
-              { pkUserId },
-              { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
-            );
-
-          console.log("cart-updated111111111111");
-            res.json({success:true,message:"cart updated-1"})
-
-
-
-
-
-
-
-        
-          }else{
-            let matchQuery = {
-              pkUserId: new ObjectId(req.body.pkUserId),
-             
-            };
-           
-            let dataToAdd = {
-              $addToSet: {
-                arrProducts: {
-                  
-                  ...product[0],
-                  intQuantity: 1,
-                  
-                }
-              }
-            };
-            
-            let result = await db.get().collection(CART_COLLECTION).updateOne(matchQuery, dataToAdd);
-          
-            
-            // Calculate total_cart_price using aggregation framework
-            let aggregatePipeline = [
-              {
-                $match: {
-                  pkUserId: new ObjectId(req.body.pkUserId), // Match documents with the specified user ID
-                
-                }
-              },
-              {
-                $unwind: "$arrProducts" // Deconstruct the arrProducts array
-              },
-              {
-                $group: {
-                  _id: null,
-                  total_cart_price: {
-                    $sum: { $multiply: ["$arrProducts.intQuantity", "$arrProducts.intPrice"] }
-                  }
-                }
-              }
-            ];
-            
-            let totalPriceResult = await db.get().collection(CART_COLLECTION).aggregate(aggregatePipeline).toArray();
-            
-            // Update total_cart_price for the cart
-            let updatedTotalPriceResult = await db.get().collection(CART_COLLECTION).updateOne(matchQuery, { $set: { total_cart_price: totalPriceResult[0].total_cart_price } });
-            
-       
-           console.log("cartttt-22222222");
-          
-        res.json({success:true,message:"cart updated-2"})
-            }
-
-         }else{
-         
-        
-          
-          product[0].intQuantity=1
-          
-          let dataToAdd={
-            pkCartId:new ObjectId(),
-            pkUserId,
-            arrProducts:[
-              ...product,
-              
-            ],
-            total_cart_price:product[0].intPrice,
-            updatedDate:null,
-            createDate:new Date()
-          }
-          let result=await db.get().collection(CART_COLLECTION).insertOne(dataToAdd)
-          res.json({success:true,message:"new cart added-3"})
-        }
-        
-       }
-       else{
-        res.json({success:true,message:"Product not found"})
-       }
-
-      }else{
-        res.json({success:true,message:"user id not found"})
-      }
-  } catch (error) {
-    res.json({success:false,message:error.message})
-  }
-}
-
-//get cart page
-const getCartPage=async(req,res)=>{
- try {
-  let pkUserId =req.session.user.pkUserId
-  
-  let cartCount=0
- let cartDetails=await db.get().collection(CART_COLLECTION).find({pkUserId:new ObjectId(pkUserId)}).toArray()
-
- if (cartDetails && cartDetails.length) {
-
-  let cartCount= await getCartCount(pkUserId)
-  
-
-  let cartProducts=cartDetails[0].arrProducts.map(obj=>{
-    let intTotalPrice=obj.intQuantity*obj.intPrice
-    return {...obj,intTotalPrice:intTotalPrice}
-  })
-   res.render("user/cartPage",{layout:"user_layout",success:true,cartDetails,cartProducts,pkUserId,message:"successfully loaded cart page",user:true,cartCount})
- } else {
-  res.render("user/cartPage",{layout:"user_layout",success:true,user:true,pkUserId,cartCount})
- }
- } catch (error) {
-  res.json({success:false,message:error.message})
- }
-}
-
-const getCheckoutPage=async(req,res)=>{
-  try {
-    let pkUserId =new ObjectId(req.session.user.pkUserId)
-    let userAddress=await db.get().collection(USER_COLLECTION).find({pkUserId:pkUserId},{ projection: { "arrAddress": 1, "_id": 0 }}).toArray()
-    userAddress.forEach(doc => {
-      doc.arrAddress.sort((a, b) => {
-          if (a.isDefaultAddress && !b.isDefaultAddress) {
-              return -1; // a comes before b
-          } else if (!a.isDefaultAddress && b.isDefaultAddress) {
-              return 1; // b comes before a
-          }
-          return 0; // maintain original order
-      });
-  });
-  
-    let cartDetails=await db.get().collection(CART_COLLECTION).find({pkUserId}).toArray()
-    let cartCount=0
-    if (cartDetails && cartDetails.length) {
-      let cartCount= await getCartCount(req.session.user.pkUserId)
-      let cartProducts=cartDetails[0].arrProducts.map(obj=>{
-        let intTotalPrice=obj.intQuantity*obj.intPrice
-        return {...obj,intTotalPrice:intTotalPrice}
-         
-      })
-      
-       res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,pkUserId,cartDetails,cartCount ,message:"successfully loaded cart page",user:true})
-     } else {
-      res.render("user/checkoutPage",{layout:"user_layout",success:true,user:true,pkUserId,cartCount})
-     }
-  } catch (error) {
-    res.json({success:false,message:error.message})
-  }
-   
-  
-}
-  
-const checkOut=async (req,res)=>{
-  try {
-    console.log("hereeeee");
-    let pkUserId=req.session.user.pkUserId
-    let match1={
-      $match:{
-        pkUserId:new ObjectId(pkUserId),
-        strStatus:"Active",
-      }
-    }
-    let unwind={
-      $unwind:"$arrAddress"
-    }
-    let match2={
-      $match:{
-        "arrAddress.isDefaultAddress": true
-      }
-    }
-    let userAddress=await db.get().collection(USER_COLLECTION).aggregate([match1,unwind,match2]).toArray()
-    console.log(userAddress);
-   
-    let cartProducts=await db.get().collection(CART_COLLECTION).find({pkUserId:new ObjectId(pkUserId)}).toArray()
-    let dataToAdd={
-      pkOrderId:new ObjectId(),
-      pkUserId:new ObjectId(pkUserId),
-      arrProductsDetails:cartProducts[0].arrProducts,
-      arrDeliveryAddress:userAddress[0].arrAddress,
-      intTotalOrderPrice:cartProducts[0].total_cart_price,
-      strPaymentStatus:"Success",
-      strPaymentMethod:"COD",
-      strOrderStatus:"Processing",
-      createdDate:new Date(),
-      updatedDate:null
-    }
-   let result =await db.get().collection(ORDER_COLLECTION).insertOne(dataToAdd)
-   if(result.insertedId){
-    res.json({success:true,message:"Ordered successfully"})
-   }
-   else{
-    res.json({success:false,message:"Order failed"})
-   }
-
-  } catch (error) {
-    res.json({success:true,message:error.message})
-  }
-}
-
-const changeQuantity=async(req,res)=>{
-  try {
-    console.log(req.body);
-    let pkProductId=new ObjectId(req.body.pkProductId)
-    let pkUserId=req.session.user.pkUserId
-    let quantity=parseInt(req.body.quantity)
-    let productInCart=await db.get().collection(CART_COLLECTION).find({pkUserId:new ObjectId(pkUserId),"arrProducts.pkProductId":pkProductId}).toArray()
-       console.log(productInCart);   
-    if(productInCart.length){
-      const update = {
-        $inc: { "arrProducts.$.intQuantity": quantity},
-     
-      };
-      const result = await db.get().collection(CART_COLLECTION).updateOne({pkUserId:new ObjectId(pkUserId),"arrProducts.pkProductId":pkProductId}, update);
-  
-      
-    let aggregatePipeline = [
-        {
-          $match: { pkUserId:new ObjectId(pkUserId) } // Match documents with the specified pkUserId
-        },
-        {
-          $unwind: "$arrProducts" // Deconstruct the arrProducts array
-        },
-        {
-          $group: {
-            _id: null,
-            total_cart_price: {
-              $sum: { $multiply: ["$arrProducts.intQuantity", "$arrProducts.intPrice"] }
-            }
-          }
-        }
-      ];
-      
-      let totalPriceResult = await db.get().collection(CART_COLLECTION).aggregate(aggregatePipeline).toArray();
-      
-      // Update total_cart_price for the cart
-      let updatedTotalPriceResult = await db.get().collection(CART_COLLECTION).updateOne(
-        {pkUserId:new ObjectId( pkUserId )},
-        { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
-      );
-      
-      console.log(updatedTotalPriceResult);
-      let InCart=productInCart[0].arrProducts.map(obj=>{
-        let intTotalPrice=obj.intQuantity*obj.intPrice
-        return {...obj,intTotalPrice:intTotalPrice}
-      })
-
-
-
-      res.json({success:true,message:"cart updated-1",quantity,totalPriceResult:totalPriceResult[0].total_cart_price,pkUserId})
-
-
-
-
-
-
-
-  
-    }
-    console.log("no product cart");
-  } catch (error) {
-     res.json({succes:false,message:error.message})
-  }
-
-}
 
 //post user edit
 const userEdit = async (req, res) => {
@@ -992,6 +420,88 @@ const userEdit = async (req, res) => {
  }
 
 
+   //get user list
+   const getUserList=async(req,res)=>{
+    try {
+      let count =await User.find().countDocuments()
+      if(count>0){
+        let result=await User.find({strStatus:{$nin:["Deleted","Pending"]}})
+       
+        let users= result.map((user,index)=>{
+          const isoDate = user.createdDate;
+          const date = new Date(isoDate);
+          const formattedDate = date.toString().substring(0, 15) 
+          return {
+            ...user._doc,
+            index:index+1,
+            createdDate: formattedDate
+           }
+          
+          })
+        console.log(users);
+        res.render("admin/listUsers",{layout:"admin_layout",users,count,admin:true})
+      }
+      else{
+        
+        res.render("admin/listUsers",{layout:"admin_layout",count,admin:true})
+      }
+   
+     
+     
+    } catch (error) {
+      res.json({success:false,message: error.message})
+    }
+    
+     
+   }
+  
+    //delete
+    const deleteUser=async(req,res)=>{
+      try {
+        let {id}=req.body
+        
+        const objectIdToUpdate = new ObjectId(id);
+    
+    
+        let result=await User.updateOne({pkUserId:objectIdToUpdate},{$set:{strStatus:"Deleted",updatedDate:new Date()}})
+          console.log(result);
+        if (result.modifiedCount>0) {
+         
+          res.json({success:true,message: 'successfully  deleted!',userDeleted:true})
+        }
+        else{
+          console.log("not user deleted");
+          res.json({success:false,message: 'User not deleted!'})
+        }
+        
+       } catch (error) {
+        console.log(error.message);
+          res.json({success:false,message: error.message})
+       }
+    }
+  
+    //block/unblock
+    const blockUser=async(req,res)=>{
+      let {id,strStatus}=req.body
+       let status=strStatus=="Active"?"Blocked":"Active"
+     try {
+      const objectIdToUpdate = new ObjectId(id);
+      let result=await User.updateOne({pkUserId:objectIdToUpdate,strStatus},{$set:{strStatus:status,updatedDate:new Date()}})
+      
+      if (result.modifiedCount>0) {
+        console.log("blocked/unblock");
+        res.json({success:true,message: 'successfully  updated!',userBlocked:true})
+      }
+      else{
+        console.log("not deleted");
+        res.json({success:false,message: 'fail to update!'})
+      }
+      
+     } catch (error) {
+      console.log(error.message);
+        res.json({success:false,message: error.message})
+     }
+    }
 
 
 //logout
@@ -1004,10 +514,10 @@ req.session.destroy();
 
 async function getCartCount(userId) {
 
-  let userCart=await db.get().collection(CART_COLLECTION).find({pkUserId:new ObjectId(userId)}).toArray()
+  let userCart=await User.find({pkUserId:new ObjectId(userId)})
   let cartCount=0
   if(userCart && userCart.length){
-    let totalQuantity=await db.get().collection(CART_COLLECTION).aggregate([
+    let totalQuantity=await User.aggregate([
      {
        $match:{
          pkUserId:new ObjectId(userId)
@@ -1022,7 +532,7 @@ async function getCartCount(userId) {
          totalItems: { $sum: "$arrProducts.intQuantity" }
        }
      }
-   ]).toArray()
+   ])
    cartCount=totalQuantity[0].totalItems
    return cartCount
   }
@@ -1032,4 +542,16 @@ async function getCartCount(userId) {
   
 }
 
-module.exports = {sortProducts,getOrderDetailsPage,changeOrderStatus,setAsDefaultAddress, getEditAddressPage,editAddress,getSignUp, signUp, getHome, login, logout ,userEdit,generateOtp,getOtpPage,getSingleProductPage,verifyOTP,addNewAddress,getUserSetting,deleteAddress,getAddressPage,addToCart,getCartPage,getCheckoutPage,checkOut,changeQuantity};
+module.exports = {sortProducts,
+  getOrderDetailsPage,
+  changeOrderStatus,
+ 
+   getSignUp, signUp, 
+   getHome, login, logout ,
+   userEdit,generateOtp,getOtpPage,
+   getSingleProductPage,verifyOTP,
+   getUserSetting,
+  deleteUser,getUserList,
+   blockUser,
+   
+};

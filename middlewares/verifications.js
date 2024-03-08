@@ -27,6 +27,7 @@ const verifyLogin=async(req,res,next)=>{
           next()
          }
          else{
+          
             res.render("admin/loginPage",{layout:"admin_layout"})
          }
   }

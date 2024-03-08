@@ -1,7 +1,7 @@
 const express=require("express")
 const path =require("path")
 const exphbs=require("express-handlebars")
- const {connectDb}=require("./config/connection")
+ const {connectDB}=require("./config/connection")
 const app=express()
 require("dotenv").config()
 const colors = require('colors')
@@ -12,7 +12,7 @@ const handlebars = require('handlebars');
 var logger = require("morgan");
 const passport = require('./middlewares/passport-setup');
 
-connectDb()
+connectDB()
 handlebars.registerHelper('eq', function(arg1, arg2, options) {
   return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
 });
@@ -53,7 +53,7 @@ app.use("/admin",adminRoutes)
 
 
  
-const PORT=process.env.PORT
+const PORT=process.env.PORT || 5000
 app.listen(PORT,()=>{
   console.log(`server running on http://localhost:${PORT}`.bgGreen)
     

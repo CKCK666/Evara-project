@@ -1,6 +1,8 @@
 const express = require('express');
-const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, getSingleProductPage, verifyOTP, addNewAddress, getUserSetting, deleteAddress, getAddressPage, addToCart, getCartPage, getCheckoutPage, checkOut, changeQuantity, userEdit, editAddress, getEditAddressPage, setAsDefaultAddress, changeOrderStatus, getOrderDetailsPage, sortProducts } = require('../controller/userController');
+const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, getSingleProductPage, verifyOTP,  getUserSetting,  userEdit,  changeOrderStatus, getOrderDetailsPage, sortProducts } = require('../controller/userController');
 const {verifyLogin}=require("../middlewares/verifications")
+const {addToCart, getCartPage, getCheckoutPage, checkOut, changeQuantity,}=require("../controller/cartController")
+const {editAddress, getEditAddressPage, setAsDefaultAddress,deleteAddress, getAddressPage, addNewAddress}=require("../controller/addressController")
 const router =express.Router()
 const passport = require('passport');
 //get signup page

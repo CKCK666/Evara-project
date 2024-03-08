@@ -1,24 +1,14 @@
-const MongoClient=require("mongodb").MongoClient
-let state={
-  db:null
-}
+const mongoose =require ("mongoose")
+const dotenv=require("dotenv")
+dotenv.config()
+const connectDB = async () => {
+  try {
+    const conn = await mongoose.connect(process.env.MONGO_URI, {});
+    console.log("MongoDb connected...........".bgGreen);
+  } catch (error) {
+    console.error(`Error:${error.message}`.red);
+    process.exit(1);
+  }
+};
 
-
-const connectDb=()=>{
-MongoClient.connect(process.env.MONGO_URI).then(async(client)=>{
-   console.log("DB successfully connected".bgGreen);
-   state.db=client.db()
-  
-  
-})
-.catch((error)=>{
-  console.log("error to connect database".bgRed,error);
-  throw error;
-})
-
-}
-
-module.exports={connectDb}
-module.exports.get=function(){
-  return state.db
-}
+module.exports={connectDB}

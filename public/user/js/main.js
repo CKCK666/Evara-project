@@ -76,21 +76,23 @@ $(document).ready(function () {
   let nameRegex = /^(?=(.*[a-zA-Z]){3})[a-zA-Z0-9\s\-\_.]+$/;
 
   let data = new FormData($('#signup-form')[0]);
-    let email=data.get('email')
-    let username=data.get("username")
-    let password=data.get("password")
-    let Cpassword=data.get("Cpassword")
-    let phoneNumber=data.get("phno")
+    let email=data.get('email').trim()
+    let username=data.get("username").trim()
+    let password=data.get("password").trim()
+    let Cpassword=data.get("Cpassword").trim()
+    let phno=data.get("phno").trim()
  
   
-      console.log(username,email,password,Cpassword);
-  if (username === ''|| email === '' || password==="" ||phoneNumber==="" ||Cpassword==="") {
+  if (username === ''|| email === '' || password==="" ||phno==="" ||Cpassword==="") {
   
       $('#errorMessage').text('Please fill in all fields.');
       $('.form-control').addClass('error') 
 
       return;
   }
+  
+  
+
   if(username.length<=3){
       $('#errorMessage').text('Name must be at least 4 characters long.');
       $("input[name='username']").addClass('error');  
@@ -101,7 +103,7 @@ $(document).ready(function () {
     $("input[name='username']").addClass('error');
     return;
 }
-if(phoneNumber.length<10 || phoneNumber.length>10){
+if(phno.length<10 || phno.length>10){
   
   $('#errorMessage').text('Invalid phone number');
   $("input[name='phno']").addClass('error');  
@@ -134,7 +136,9 @@ if(phoneNumber.length<10 || phoneNumber.length>10){
 $.ajax({
   type: 'POST', 
   url: '/signUp',
-  data: $('#signup-form').serialize(), 
+  data: {
+    email,username,password,phno
+  }, 
   success: function(response) {
       if (response.success) {
        
