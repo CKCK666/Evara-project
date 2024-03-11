@@ -27,7 +27,7 @@ const addToCart=async(req,res)=>{
            let userCart= await Cart.find({pkUserId,strStatus:"Active"})
               
            if(userCart && userCart.length){
-            let productInCart=await Cart.find({pkUserId,"arrProducts.pkProductId":pkProductId})
+            let productInCart=await Cart.find({pkUserId,"arrProducts.pkProductId":pkProductId,strStatus:"Active"})
             
             if(productInCart.length){
               const update = {
@@ -57,7 +57,7 @@ const addToCart=async(req,res)=>{
                  
                 // Update total_cart_price for the cart
                 let updatedTotalPriceResult = await Cart.updateOne(
-                  { pkUserId },
+                  { pkUserId,strStatus:"Active" },
                   { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
                 );
     
@@ -103,7 +103,7 @@ const addToCart=async(req,res)=>{
                 {
                   $match: {
                     pkUserId: new ObjectId(req.body.pkUserId), // Match documents with the specified user ID
-                  
+                    strStatus:"Active"
                   }
                 },
                 {
@@ -214,7 +214,7 @@ const addToCart=async(req,res)=>{
        let pkUserId=req.session.user.pkUserId
      
       let quantity=parseInt(req.body.quantity)
-      let productInCartFind=await Cart.find({pkUserId:new ObjectId(pkUserId),"arrProducts.pkProductId":pkProductId})
+      let productInCartFind=await Cart.find({pkUserId:new ObjectId(pkUserId),"arrProducts.pkProductId":pkProductId,strStatus:"Active"})
          let productInCart=productInCartFind.map((product)=>{
          return {...product._doc}
          })
@@ -223,7 +223,7 @@ const addToCart=async(req,res)=>{
           $inc: { "arrProducts.$.intQuantity": quantity},
        
         };
-        const result = await Cart.updateOne({pkUserId:new ObjectId(pkUserId),"arrProducts.pkProductId":pkProductId}, update);
+        const result = await Cart.updateOne({pkUserId:new ObjectId(pkUserId),"arrProducts.pkProductId":pkProductId,strStatus:"Active"}, update);
     
         if(result.modifiedCount>0){
           
@@ -250,7 +250,7 @@ const addToCart=async(req,res)=>{
           
           // Update total_cart_price for the cart
           let updatedTotalPriceResult = await Cart.updateOne(
-            {pkUserId:new ObjectId( pkUserId )},
+            {pkUserId:new ObjectId( pkUserId ),strStatus:"Active"},
             { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
           );
           if(updatedTotalPriceResult.modifiedCount===0){
@@ -378,7 +378,8 @@ const addToCart=async(req,res)=>{
       let totalQuantity=await Cart.aggregate([
        {
          $match:{
-           pkUserId:new ObjectId(userId)
+           pkUserId:new ObjectId(userId),
+           strStatus:"Active"
          }
        },
        {

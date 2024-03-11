@@ -26,7 +26,7 @@ const Order = require('../models/orderModel');
        console.log(result);
      if (result.modifiedCount>0) {
        
-       res.json({success:true,message: 'successfully Cancelled the order!',userBlocked:true})
+       res.json({success:true,message: 'successfully status changed order!',userBlocked:true})
      }
      else{
      
