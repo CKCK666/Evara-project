@@ -1,8 +1,10 @@
 const express = require('express');
-const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, getSingleProductPage, verifyOTP,  getUserSetting,  userEdit,  changeOrderStatus, getOrderDetailsPage, sortProducts } = require('../controller/userController');
+const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, verifyOTP,  getUserSetting,  userEdit, sortProducts } = require('../controller/userController');
 const {verifyLogin}=require("../middlewares/verifications")
-const {addToCart, getCartPage, getCheckoutPage, checkOut, changeQuantity,}=require("../controller/cartController")
+const { getSingleProductPage}=require("../controller/productController")
+const {addToCart, getCartPage, changeQuantity, removeFromCart,}=require("../controller/cartController")
 const {editAddress, getEditAddressPage, setAsDefaultAddress,deleteAddress, getAddressPage, addNewAddress}=require("../controller/addressController")
+const {changeOrderStatus, getCheckoutPage, checkOut, getOrderDetailsPage}=require("../controller/orderController")
 const router =express.Router()
 const passport = require('passport');
 //get signup page
@@ -74,6 +76,9 @@ router.post("/addToCart",addToCart)
 //get Cart page
 
 router.get("/getCartPage",verifyLogin,getCartPage)
+
+//remove from cart
+router.post("/removeFromCart",removeFromCart)
 
 //get checkout page
 

@@ -12,20 +12,20 @@
                 <div class="row">
                     <div class="col-lg-6 mb-sm-15">
                        {{#if deliveryAddress}}
-                      
+                        {{#each deliveryAddress}}
                           <div class="card-header">
-                                                        <h5 class="mb-0">Shipping Address:{{#if isDefaultAddress}}<span style="color:rgb(13, 190, 13);">Default</span>{{/if}}</h5> 
-                                                    </div>
+                          <h5 class="mb-0">Shipping Address</h5> 
+                         </div>
                         <div class='card-body'>
-                        <address>{{deliveryAddress.strFullName}}<br />
-                          {{deliveryAddress.strPhoneNo}},<br />
-                          {{deliveryAddress.strCity}}.
-                          <br />{{deliveryAddress.intPinCode}}</address>
-                        <p>{{deliveryAddress.strState}}</p>
+                        <address>{{strFullName}}<br />
+                          {{strPhoneNo}},<br />
+                          {{strCity}}.
+                          <br />{{intPinCode}}</address>
+                        <p>{{strState}}</p>
                         <p>India</p>
                       
                       </div>
-                      
+                      {{/each}}
                     {{/if}}
                    
                     </div>

@@ -35,7 +35,7 @@
                 </div>
                 <div class='form-group'>
                   <label>Mobile number<span class='required'>*</span></label>
-                  <input required='' class='form-control square' name='phno' type='number' maxlength='100' /> <!-- Adjusted maxlength -->
+                  <input required='' class='form-control square numOnly' name='phno' type='number' maxlength='100' /> <!-- Adjusted maxlength -->
                 </div>
                 <div class='form-group'>
                   <label>Area,Street,Village<span class='required'></span></label>
@@ -43,7 +43,7 @@
                 </div>
                 <div class='form-group'>
                   <label>Pincode<span class='required'>*</span></label>
-                  <input required='' class='form-control square' name='pinCode' type='number' maxlength='50' /> <!-- Adjusted maxlength -->
+                  <input required='' class='form-control square numOnly' name='pinCode' type='number' maxlength='50' /> <!-- Adjusted maxlength -->
                 </div>
                 <div class='form-group'>
                   <label>Town/City<span class='required'>*</span></label>
@@ -124,6 +124,17 @@
   </div>
 </section>
 <style>
+
+       .numOnly::-webkit-inner-spin-button,
+.numOnly::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.numOnly {
+  /* Firefox */
+  -moz-appearance: textfield;
+}
 
 .form-control.error:not(#search-form-control){
         border-color: red;}

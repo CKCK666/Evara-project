@@ -15,16 +15,23 @@ const productSchema = new Schema({
             imageUrl2: String
         }
     ],
-    strStatus: String,
-    createdDate: { type: Date, default: Date.now },
-    updatedDate: Date,
-    intQuantity: Number
+    
+    
+    intQuantity: { type:Number, default: 1 }
 });
 
 const cartSchema = new Schema({
     pkCartId: Schema.Types.ObjectId,
     pkUserId: Schema.Types.ObjectId,
-    arrProducts: [productSchema]
+    arrProducts: [productSchema],
+    strStatus: {
+        type: String,
+        enum: ['Active','Deleted'],
+        default: 'Active'
+    },
+    total_cart_price:Number,
+    createdDate: { type: Date, default: Date.now },
+    updatedDate:  { type: Date, default: null},
 });
 
 const Cart = mongoose.model('Cart', cartSchema);

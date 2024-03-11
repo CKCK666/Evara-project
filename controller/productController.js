@@ -8,6 +8,7 @@ const jwt =require("jsonwebtoken")
 const { ObjectId} = require('mongodb');
 const { log, logger } = require("handlebars");
 const User = require("../models/userModel")
+const Cart = require("../models/cartModel")
 
 
 
@@ -360,11 +361,73 @@ const getProductList=async(req,res)=>{
     }
    }
 
+   const getSingleProductPage=async(req,res)=>{
+ 
+    try {
+      if(req.query.pkProductId){
+        let pkProductId=new ObjectId(req.query.pkProductId)
+        
+         let userId=req.session.user.pkUserId
+        
+         let cartCount=  await getCartCount(userId)
+       
+        let productFind =await Product.find({pkProductId:pkProductId,strStatus:"Active"})
+        let product=productFind.map((pro)=>{
+           return{...pro._doc}
+        })
+        
+          if(product.length){
+            
+          res.render("user/productSingle",{layout:"user_layout",user:true,product,imageUrl1:product[0].arrayOtherImages[0].imageUrl1,imageUrl2:product[0].arrayOtherImages[1].imageUrl2,userId,cartCount})
+          }
+          else{
+            res.json({success:false,message:"product  not found"})
+          }
+      }
+      else{
+        res.json({success:false,message:"product id not found"})
+      }
+    } catch (error) {
+      res.json({success:false,message:error.message})
+    }
+  }
+
    module.exports={getProductList,
     getProductAdd,
     addProduct,editProduct,deleteProduct,
     blockProduct,
     getProductEdit,
-    editProductImages
+    editProductImages,
+    getSingleProductPage
   
+  }
+
+  async function getCartCount(userId) {
+
+    let userCart=await Cart.find({pkUserId:new ObjectId(userId),strStatus:"Active"})
+    let cartCount=0
+    if(userCart && userCart.length){
+      let totalQuantity=await Cart.aggregate([
+       {
+         $match:{
+           pkUserId:new ObjectId(userId)
+         }
+       },
+       {
+         $unwind: "$arrProducts" // Unwind the arrProducts array to deconstruct the array
+       },
+       {
+         $group: {
+           _id: null,
+           totalItems: { $sum: "$arrProducts.intQuantity" }
+         }
+       }
+     ])
+     cartCount=totalQuantity[0].totalItems
+     return cartCount
+    }
+    else{
+      return cartCount
+    }
+    
   }

@@ -4,10 +4,11 @@ const dotenv=require("dotenv")
 const {verifyLogin}=require("../middlewares/verifications")
 
 dotenv.config()
-const { getAdminHome, adminLogin, logout, getOrderList, getOrderDetailsPage} = require('../controller/adminController');
+const { getAdminHome, adminLogin, logout,} = require('../controller/adminController');
 const { addCategory, getCategoryPage, deleteCategory, blockCategory, getEditCategory, editCategory }=require('../controller/categoryController');
 const { getProductList, getProductAdd, addProduct, editProduct, deleteProduct, blockProduct, getProductEdit,editProductImages} = require('../controller/productController');
 const { deleteUser, getUserList, blockUser,}=require("../controller/userController")
+const {getOrderDetailsPageAdmin,getOrderListAdmin,changeOrderStatus}=require("../controller/orderController")
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
@@ -98,9 +99,11 @@ router.patch("/deleteProduct",deleteProduct)
 router.patch("/blockProduct",blockProduct)
 
 //order list page
-router.get("/orderList",isAdmin,getOrderList)
+router.get("/orderList",isAdmin,getOrderListAdmin)
 
 //order details page
-router.get("/orderDetailsPage",isAdmin,getOrderDetailsPage)
+router.get("/orderDetailsPage",isAdmin,getOrderDetailsPageAdmin)
+
+router.post("/orderStatusChange",changeOrderStatus)
 
 module.exports=router

@@ -50,11 +50,11 @@
                                 {{#each usersOrders}}
                                 <tr>
                                     <td>{{index}}</td>
-                                    <td><b>{{arrDeliveryAddress.strFullName}}</b></td>
-                                    <td>{{arrDeliveryAddress.strPhoneNo}}</td>
+                                    <td><b>{{arrDeliveryAddress.[0].strFullName}}</b></td>
+                                    <td>{{arrDeliveryAddress.[0].strPhoneNo}}</td>
                                     <td>{{intTotalOrderPrice}}</td>
                                    
-                                     <td><span class="badge rounded-pill  {{#eq  strOrderStatus 'Processing'}}alert-warning{{else}}{{#eq  strOrderStatus 'Delivered'}}alert-success{{else}}{{#eq  strOrderStatus 'Cancelled'}}alert-danger {{else}}  {{/eq}} {{/eq}}{{/eq}}">{{strOrderStatus}}</span></td>
+                                     <td><span class="badge rounded-pill  {{#eq  strOrderStatus 'Processing'}}alert-warning{{else}}{{#eq  strOrderStatus 'Delivered'}}alert-success{{else}}{{#eq  strOrderStatus 'Cancelled'}}alert-danger {{else}}alert-success  {{/eq}} {{/eq}}{{/eq}}">{{strOrderStatus}}</span></td>
                                     <td>{{createdDate}}</td>
                                     <td>
                                         <a href="/admin/orderDetailsPage?pkOrderId={{pkOrderId}}" class="btn btn-md rounded font-sm">Detail</a>

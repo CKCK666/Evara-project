@@ -27,34 +27,35 @@
         <div class='card-body'>
           <form id="edit-address-form" name='enq'>
             <div class='row'>
+              {{#each arrAddress}}
               <div class='col-md-12'>
                 <div class='form-group'>
-                             <input required='' class='form-control square' name='pkAddressId' type='hidden' maxlength='50' value={{arrAddress.pkAddressId}} />
-                                <input required='' class='form-control square' name='pkUserId' type='hidden' maxlength='50' value={{arrAddress.pkUserId}} />
+                             <input required='' class='form-control square' name='pkAddressId' type='hidden' maxlength='50' value={{pkAddressId}} />
+                                <input required='' class='form-control square' name='pkUserId' type='hidden' maxlength='50' value={{pkUserId}} />
                   <label>Full name<span class='required'>*</span></label>
-                  <input required='' class='form-control square' name='fname' type='text' maxlength='50' value="{{arrAddress.strFullName}}" /> <!-- Adjusted maxlength -->
+                  <input required='' class='form-control square' name='fname' type='text' maxlength='50' value="{{strFullName}}" /> <!-- Adjusted maxlength -->
                 </div>
                 <div class='form-group'>
                   <label>Mobile number<span class='required'>*</span></label>
-                  <input required='' class='form-control square' name='phno' type='number' maxlength='100' value="{{arrAddress.strPhoneNo}}"/> <!-- Adjusted maxlength -->
+                  <input required='' class='form-control square numOnly' name='phno' type='number' maxlength='100' value="{{strPhoneNo}}"/> <!-- Adjusted maxlength -->
                 </div>
                 <div class='form-group'>
                   <label>Area,Street,Village<span class='required'></span></label>
-                  <input required='' class='form-control square' name='area' type='text' maxlength='50' value="{{arrAddress.strArea}}"/> <!-- Adjusted maxlength -->
+                  <input required='' class='form-control square' name='area' type='text' maxlength='50' value="{{strArea}}"/> <!-- Adjusted maxlength -->
                 </div>
                 <div class='form-group'>
                   <label>Pincode<span class='required'>*</span></label>
-                  <input required='' class='form-control square' name='pincode' type='number' maxlength='50' value="{{arrAddress.intPinCode}}"/> <!-- Adjusted maxlength -->
+                  <input required='' class='form-control square numOnly' name='pincode' type='number' maxlength='50' value="{{intPinCode}}"/> <!-- Adjusted maxlength -->
                 </div>
                 <div class='form-group'>
                   <label>Town/City<span class='required'>*</span></label>
-                  <input required='' class='form-control square' name='city' type='text' maxlength='50' value="{{arrAddress.strCity}}" /> <!-- Adjusted maxlength -->
+                  <input required='' class='form-control square' name='city' type='text' maxlength='50' value="{{strCity}}" /> <!-- Adjusted maxlength -->
                 </div>
                
                 <div class='form-group'>
     <label for='state'>State<span class='required'>*</span></label>
     <select required='' class='form-control square' name='state' id='state'>
-        <option value="{{arrAddress.strState}}">{{arrAddress.strState}}</option>
+        <option value="{{strState}}">{{strState}}</option>
         <option value='Andhra Pradesh'>Andhra Pradesh</option>
         <option value='Arunachal Pradesh'>Arunachal Pradesh</option>
         <option value='Assam'>Assam</option>
@@ -92,13 +93,13 @@
     </select>
 </div>
   <h6 id='errorMessage' style='color: red; text-align: center' ></h6>
-                 {{!-- <div class="form-check">
-             <input type="checkbox" class="form-check-input" id="exampleCheck1">
+                <div class="form-check">
+             <input type="checkbox" class="form-check-input" id="exampleCheck1" name="addressCheckBox">
                <label class="form-check-label" for="exampleCheck1">set as Default</label>
-               </div> --}}
+               </div>
              
               </div>
-                
+                {{/each}}
            
               <div class='col-md-12'>
                 <button id="edit-address-submit" class='btn btn-fill-out submit' name='submit' value='Submit'>Save</button>
@@ -118,6 +119,17 @@
   </div>
 </section>
 <style>
+       .numOnly::-webkit-inner-spin-button,
+.numOnly::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.numOnly {
+  /* Firefox */
+  -moz-appearance: textfield;
+}
+
 
 .form-control.error:not(#search-form-control){
         border-color: red;}

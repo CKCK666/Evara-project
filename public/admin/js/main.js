@@ -376,11 +376,21 @@ return false;
 
 
 });
-$(".delivered-order-btn").click(function(e){
+
+$(".order-status-change-btn").click(function(e){
+  const selectElement = document.getElementById('statusSelect');
+  let orderStatusChange=selectElement.value;
+  if(orderStatusChange==""){
+    $('#errorMessage').text('Please select a status!!!!');
+    return
+  }
+
   let pkOrderId = $(this).data('pk-order-id');
   let pkUserId = $(this).data('pk-user-id');
-  let orderStatusChange=$(this).data('order-status-change')
  
+ console.log(pkOrderId,pkUserId,orderStatusChange);
+
+
   
   const swalWithBootstrapButtons = Swal.mixin({
     customClass: {
@@ -391,7 +401,7 @@ $(".delivered-order-btn").click(function(e){
   })
   
   swalWithBootstrapButtons.fire({
-    title: `Want to make it delivered `,
+    title: `Want to make it ${orderStatusChange}`,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonText: 'Yes, make it!',
@@ -401,7 +411,7 @@ $(".delivered-order-btn").click(function(e){
     if (result.isConfirmed) {
         $.ajax({
             type: 'POST', 
-            url: "/orderStatusChange",
+            url: "/admin/orderStatusChange",
             data: {
               pkOrderId,
               pkUserId,
@@ -411,7 +421,7 @@ $(".delivered-order-btn").click(function(e){
                 if (response.success) {
                     swalWithBootstrapButtons.fire(
                         'Updated!',
-                        'Order is Delivered.',
+                        `Order is ${orderStatusChange}.`,
                         'success'
                       ).then(()=>{
                          window.location.href=`/admin/orderDetailsPage?pkOrderId=${pkOrderId}`

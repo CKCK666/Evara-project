@@ -14,17 +14,29 @@
                             </span> <br>
                             <small class="text-muted">Order ID: {{orderDetails.[0].pkOrderId}}</small>
                         </div>
-                        {{!-- <div class="col-lg-6 col-md-6 ms-auto text-md-end">
-                            <select class="form-select d-inline-block mb-lg-0 mb-15 mw-200">
-                                <option>Change status</option>
-                                <option>Awaiting payment</option>
-                                <option>Confirmed</option>
-                                <option>Shipped</option>
-                                <option>Delivered</option>
-                            </select>
-                            <a class="btn btn-primary" href="#">Save</a>
-                            <a class="btn btn-secondary print ms-2" href="#"><i class="icon material-icons md-print"></i></a>
-                        </div> --}}
+                      
+                         {{#each orderDetails}}
+                        {{#eq strOrderStatus 'Delivered'}}
+                          {{else}}
+                          {{#eq strOrderStatus 'Cancelled'}}
+                          {{else}}
+                        <div class="col-lg-6 col-md-6 ms-auto text-md-end">
+                            
+                            <select id="statusSelect" class="form-select d-inline-block mb-lg-0 mb-15 mw-200">
+                            <option value="">Change status</option>
+                          <option value="Confirmed">Confirmed</option>
+                          <option value="Shipped">Shipped</option>
+                           <option value="Delivered">Delivered</option>
+                                </select>
+                              
+                            <a class="btn btn-primary order-status-change-btn"   data-pk-order-id="{{pkOrderId}}" data-pk-user-id="{{pkUserId}}"     href="#">Change</a>
+                            {{!-- <a class="btn btn-secondary print ms-2" href="#"><i class="icon material-icons md-print"></i></a> --}}
+                              
+                        </div>
+                        {{/eq}}
+                        {{/eq}}
+                         {{/each}}
+                        
                     </div>
                 </header> <!-- card-header end// -->
                 <div class="card-body">
@@ -37,7 +49,7 @@
                                 <div class="text">
                                     <h6 class="mb-1">Customer</h6>
                                     <p class="mb-1">
-                                        {{deliveryAddress.strFullName}} <br> <template class="__cf_email__" data-cfemail="e2838e879aa2879a838f928e87cc818d8f">[email&#160;protected]</template> <br> {{deliveryAddress.strPhoneNo}}
+                                        {{deliveryAddress.[0].strFullName}} <br>  <br> {{deliveryAddress.[0].strPhoneNo}}
                                     </p>
                                    
                                 </div>
@@ -52,7 +64,7 @@
                                 <div class="text">
                                     <h6 class="mb-1">Deliver to</h6>
                                     <p class="mb-1">
-                                        City: {{deliveryAddress.strCity}} <br>{{deliveryAddress.strArea}} <br> Pincode:{{deliveryAddress.intPinCode}}
+                                        City: {{deliveryAddress.[0].strCity}} <br>{{deliveryAddress.[0].strArea}} <br> Pincode:{{deliveryAddress.[0].intPinCode}}
                                     </p>
                                    
                                 </div>
@@ -64,7 +76,7 @@
                                 <p>
                                     
                                 Payment Method: {{orderDetails.[0].strPaymentMethod}} <br>
-                                    Phone: {{deliveryAddress.strPhoneNo}}
+                                    Phone: {{deliveryAddress.[0].strPhoneNo}}
                                 </p>
                             </div>
                            {{#each orderDetails}}
@@ -74,7 +86,7 @@
                                 href='#' data-pk-order-id="{{pkOrderId}}" data-pk-user-id="{{pkUserId}}" data-order-status-change="Delivered"
                                 class='btn-small d-block delivered-order-btn'
                               >  <button class="btn btn-primary">Make as Delivered</button></a>
-                               
+                               <h6 id='errorMessage' style='color: red; text-align: center' ></h6>
                             </div>
                             {{/eq}}
                             {{/each}}
@@ -134,7 +146,7 @@
                                                     <dl class="dlist">
                                                         <dt class="text-muted">Order Status</dt>
                                                         <dd>
-                                                         {{#each orderDetails}}   <span class="badge rounded-pill  {{#eq  strOrderStatus 'Processing'}}alert-warning{{else}}{{#eq  strOrderStatus 'Delivered'}}alert-success{{else}}{{#eq  strOrderStatus 'Cancelled'}}alert-danger {{else}}  {{/eq}} {{/eq}}{{/eq}}">{{strOrderStatus}}</span>{{/each}}
+                                                         {{#each orderDetails}}   <span class="badge rounded-pill  {{#eq  strOrderStatus 'Processing'}}alert-warning{{else}}{{#eq  strOrderStatus 'Delivered'}}alert-success{{else}}{{#eq  strOrderStatus 'Cancelled'}}alert-danger {{else}}alert-success{{/eq}} {{/eq}}{{/eq}}">{{strOrderStatus}}</span>{{/each}}
                                                         </dd>
                                                     </dl>
                                                 </article>

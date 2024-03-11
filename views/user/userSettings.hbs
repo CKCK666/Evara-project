@@ -86,7 +86,8 @@
                             <td>{{createdDate}}</td>
                             <td {{#eq strOrderStatus 'Processing'}}style="color: orange"
                             {{else}}{{#eq strOrderStatus 'Delivered'}}style="color: green"
-                           {{else}}{{#eq strOrderStatus 'Cancelled'}}style="color: red"
+                           {{else}}{{#eq strOrderStatus 'Cancelled'}}style="color: red",
+                           {{else}}style="color: orange"
                              {{/eq}}
                              {{/eq}}
                             {{/eq}}>
@@ -139,7 +140,7 @@
                     <div class="row">
                       {{#if arrAddress}}
                      
-                      {{#each arrAddress.[0].arrAddress}}
+                      {{#each arrAddress}}
                   <div class='col-md-6'>
                     <div class='card mb-3 mb-lg-0'>
                
@@ -154,7 +155,7 @@
                         <p>{{strState}}</p>
                         <p>India</p>
                         <a href='/getEditAddress?pkAddressId={{pkAddressId}}&pkUserId={{pkUserId}}' class='btn-small'>Edit</a>
-                        <a href="#" onclick="deleteAddress('{{pkAddressId}}','{{pkUserId}}')" class='btn-small ml-5'>Remove</a>
+                                  {{#if isDefaultAddress}}  {{else}}             <a href="#" onclick="deleteAddress('{{pkAddressId}}','{{pkUserId}}')" class='btn-small ml-5'>Remove</a>{{/if}}
                       {{#if isDefaultAddress}}  {{else}} <a href='#'  data-pk-address-id="{{pkAddressId}}" data-pk-user-id="{{pkUserId}}" class='btn-small ml-5 set-as-default'>Set as default</a>{{/if}}
                       </div>
                     </div>
@@ -167,7 +168,7 @@
 
                   <div class="col-lg-4">
                      
-                <a href="/getAddAddress?pkUserId={{arrAddress.[0].pkUserId}}" class="btn btn-primary btn-sm rounded">Create new</a>
+                <a href="/getAddAddress?pkUserId={{userDetails.[0].pkUserId}}" class="btn btn-primary btn-sm rounded">Create new</a>
                   </div>
                 
                   
@@ -188,14 +189,14 @@
                   <div class='card-body'>
 
                     <form id="user-profile-form" name='enq'>
-                      <input type="hidden" name="pkUserId" value="{{arrAddress.[0].pkUserId}}">
+                      <input type="hidden" name="pkUserId" value="{{userDetails.[0].pkUserId}}">
                       <div class='row'>
                         <div class='col-md-6'>
                           <div class='form-group'>
                             <label>Username
                               <span class='required'>*</span></label>
                             <input
-                            value="{{arrAddress.[0].strUserName}}"
+                            value="{{userDetails.[0].strUserName}}"
                               required=''
                               class='form-control square'
                               name='name'
@@ -207,7 +208,7 @@
                             <label>Email Address
                               <span class='required'></span></label>
                             <input
-                              value="{{arrAddress.[0].strEmail}}"
+                              value="{{userDetails.[0].strEmail}}"
                               required=''
                               class='form-control square'
                               name='email'
@@ -304,6 +305,32 @@
 </section>
 <style>
 
+     .numOnly::-webkit-inner-spin-button,
+.numOnly::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.numOnly {
+  /* Firefox */
+  -moz-appearance: textfield;
+}
+
   .form-control.error:not(#search-form-control){
         border-color: red;}
 </style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+  
+    let activeTab = localStorage.getItem("activeTab") || "account-detail";
+    document.getElementById(activeTab).classList.add("active", "show");
+
+    document.querySelectorAll("[data-toggle='tab']").forEach(function(tab) {
+      tab.addEventListener("click", function(event) {
+        let activeTabId = event.target.getAttribute("href").substring(1);
+        localStorage.setItem("activeTab", activeTabId);
+      });
+    });
+  });
+</script>

@@ -13,10 +13,14 @@
                     <div class="col-lg-6 mb-sm-15">
                          
                        {{#if userAddress}}
-                       {{#each userAddress.[0].arrAddress}}
+                       {{#each userAddress}}
+                         
                           <div class="card-header">
+                            <input type="radio" name="shipping-address" id="shipping-address-{{pkAddressId}}" data-pk-address-id="{{pkAddressId}}" {{#if isDefaultAddress}}checked{{/if}}>
                                                         <h5 class="mb-0">Shipping Address:{{#if isDefaultAddress}}<span style="color:rgb(13, 190, 13);">Default</span>{{/if}}</h5> 
-                                                    </div>
+                        </div>
+                      <input type="hidden" name="pkAddressId" value={{pkAddressId}}>
+
                         <div class='card-body'>
                         <address>{{strFullName}}<br />
                           {{strPhoneNo}},<br />
@@ -25,8 +29,8 @@
                         <p>{{strState}}</p>
                         <p>India</p>
                        <a href='/getEditAddress?pkAddressId={{pkAddressId}}&pkUserId={{pkUserId}}' class='btn-small'>Edit</a>
-                        <a href="#" onclick="deleteAddress('{{pkAddressId}}','{{pkUserId}}','toCheckout')" class='btn-small ml-5'>Remove</a>
-                       {{#if isDefaultAddress}}  {{else}} <a href='#'  data-pk-address-id="{{pkAddressId}}" data-pk-user-id="{{pkUserId}}" data-check-out="toCheckOut" class='btn-small ml-5 set-as-default'>Set as default</a>{{/if}}
+                   {{#if isDefaultAddress}}  {{else}}     <a href="#" onclick="deleteAddress('{{pkAddressId}}','{{pkUserId}}','toCheckout')" class='btn-small ml-5'>Remove</a>{{/if}}
+                       {{!-- {{#if isDefaultAddress}}  {{else}} <a href='#'  data-pk-address-id="{{pkAddressId}}" data-pk-user-id="{{pkUserId}}" data-check-out="toCheckOut" class='btn-small ml-5 set-as-default'>Set as default</a>{{/if}} --}}
                       
                       </div>
                       {{/each}}
@@ -99,7 +103,7 @@
                             </div>
                           
                              <button id="place-order-btn" class='btn btn-fill-out submit' name='submit' value='Submit'>Order submit</button>
-                            <h6 id='errorMessage' style='color: red; text-align: center;font-size:medium;font-weight:normal' >Add a new address to order</h6>
+                            <h6 id='errorMessage' style='color: red; text-align: center;font-size:medium;font-weight:normal' ></h6>
                         </div>
                     </div>
                     
@@ -112,6 +116,16 @@
         </section>
 
         <style>
+            .card-header {
+    display: flex;
+    align-items: center;
+}
+
+.card-header input[type="radio"] {
+      width: 15px; /* Set the width of the radio button */
+    height: 15px; 
+    margin-right: 10px; /* Adjust margin as needed */
+}
              .form-control.error:not(#search-form-control){
         border-color: red;}
         </style>

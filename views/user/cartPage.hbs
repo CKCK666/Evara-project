@@ -50,16 +50,22 @@
                                         <td class="text-right" data-title="Cart">
                                             <span class="product-total-amount">{{intTotalPrice}}</span>
                                         </td>
-                                        <td class="action" data-title="Remove"><a href="#" class="text-muted"><i class="fi-rs-trash"></i></a></td>
+                                        <td class="action" data-title="Remove"><a href="#"  class="text-muted removeFromCart"
+                                        data-pk-cart-id="{{pkCartId}}" data-pk-product-id="{{pkProductId}}" 
+                                        ><i class="fi-rs-trash"
+                                         ></i></a></td>
+                                       
                                     </tr>
                                     {{/each}}
                                      {{/if}}
-                                   
+
+                                    {{#if cartProducts}}
                                     <tr>
                                         <td colspan="6" class="text-end">
                                             <a href="#" class="text-muted"> <i class="fi-rs-cross-small"></i> Clear Cart</a>
                                         </td>
                                     </tr>
+                                    {{/if}}
                                 </tbody>
                             </table>
                         </div>

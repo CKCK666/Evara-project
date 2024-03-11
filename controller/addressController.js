@@ -7,16 +7,15 @@ const { ObjectId } = require('mongodb');
 const router = require('../routes/userRoutes');
 const otpGenerator = require('otp-generator');
 const twilio = require('twilio');
-
+const Address=require("../models/addressModel");
+const { log } = require('handlebars/runtime');
 //get add address page
 const getAddressPage=async(req,res)=>{
     try {
      let pkUserId=req.query.pkUserId
-      let user=await db.get().collection(USER_COLLECTION).find({pkUserId:new ObjectId(pkUserId)}).toArray()
-      let addressCount=false
-       if(user[0].arrAddress.length>0){
-         addressCount=true
-       }
+      let addressCount=await Address.countDocuments({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
+    
+       
   
       res.render("user/addAddress",{layout:"user_layout",pkUserId,addressCount,user:true})
     } catch (error) {
@@ -36,24 +35,30 @@ const getAddressPage=async(req,res)=>{
           
           
          } 
-          let isDefaultAddress=false
-          if(req.body.addressCheckBox){
+         let isDefaultAddress
+
+         let addressCount=await Address.countDocuments(matchQuery)
+         if(!addressCount){
+          console.log("not address");
+          isDefaultAddress=true
+         }
+      
+          if(req.body.addressCheckBox==="true" || req.body.addressCheckBox===true){
+           
             isDefaultAddress=true
-            let arrAddressExist=await db.get().collection(USER_COLLECTION).find(matchQuery,{arrAddress:1}).toArray()
-            console.log(arrAddressExist);
+            let arrAddressExist=await Address.find(matchQuery)
+            
              if(arrAddressExist.length>0){
               let matchQuery2={
                 pkUserId:new ObjectId(req.body.pkUserId),
                 strStatus:"Active",
-                "arrAddress.isDefaultAddress":true
+                isDefaultAddress:true
               }
-              await db.get().collection(USER_COLLECTION).updateOne(matchQuery2,{ $set: { "arrAddress.$.isDefaultAddress": false }})
+              await Address.updateOne(matchQuery2,{ $set: {isDefaultAddress: false }})
              }
            
           }
-         let dataToAdd={
-          $addToSet:{
-            arrAddress:{
+         let dataToAdd=new Address({
               pkUserId:new ObjectId(req.body.pkUserId),
               pkAddressId:new ObjectId(),
              strFullName:req.body.fname,
@@ -63,12 +68,18 @@ const getAddressPage=async(req,res)=>{
              strCity:req.body.city,
              strState:req.body.state,
              isDefaultAddress
-            }
+            })
+
+          let result=await dataToAdd.save()
+          if(result._id){
+       
+            res.json({success:true,message:"successfully add address",pkUserId:req.body.pkUserId})
            }
-      }
-          let result=await db.get().collection(USER_COLLECTION).updateOne(matchQuery,dataToAdd)
+           else{
+            res.json({success:false,message:"fail to  add address"})
+           }
           
-          res.json({success:true,message:"successfully add address",pkUserId:req.body.pkUserId})
+         
        }else{
         res.json({success:false,message:"User id not found"})
        }
@@ -79,40 +90,59 @@ const getAddressPage=async(req,res)=>{
   }
   //edit address
   const editAddress=async(req,res)=>{
-  
+    console.log(req.body);
     try {
       if(req.body.pkUserId){
         if(req.body.pkAddressId){
           let pkUserId=new ObjectId(req.body.pkUserId)
           let pkAddressId=new ObjectId(req.body.pkAddressId)
-          const filter = {
-            pkUserId,
-            "arrAddress.pkAddressId": pkAddressId
+          const match = {
+            pkAddressId,
+            strStatus:"Active"
           };
+          let isDefaultAddress={}
+          if(req.body.addressCheckBox==="true" || req.body.addressCheckBox===true){
+            let matchQuery={
+              pkUserId:new ObjectId(req.body.pkUserId),
+              strStatus:"Active",
+              isDefaultAddress:true
+            }
+           
+            
+            let arrAddressExist=await Address.find(matchQuery)
+            
+             if(arrAddressExist.length>0){
+            
+              await Address.updateMany(matchQuery,{ $set: {isDefaultAddress: false }})
+              isDefaultAddress={
+                ...isDefaultAddress,
+                isDefaultAddress:true
+              }
+             }
+           
+          }
           
           // Construct the update operation
           const update = {
             $set: {
-              "arrAddress.$[address].strFullName": req.body.fname,
-              "arrAddress.$[address].strPhoneNo": req.body.phno,
-              "arrAddress.$[address].strArea": req.body.area || "",
-              "arrAddress.$[address].strCity": req.body.city,
-              "arrAddress.$[address].strState": req.body.state,
-              "arrAddress.$[address].updatedDate": new Date()
+              strFullName: req.body.fname,
+              strPhoneNo: req.body.phno,
+              strArea: req.body.area || "",
+              intPinCode:req.body.pinCode,
+              strCity: req.body.city,
+              strState: req.body.state,
+              updatedDate: new Date(),
+              ...isDefaultAddress
             }
           };
           
-          // Options for array filters
-          const options = {
-            arrayFilters: [{ "address.pkAddressId": pkAddressId }]
-          };
-          
+      
           // Perform the update operation
-          const result = await db.get().collection(USER_COLLECTION).updateOne(filter, update, options);
+          const result = await Address.updateOne(match, update);
           
           console.log(`${result.modifiedCount} document was modified.`);
   
-        if (result.modifiedCount) {
+        if (result.modifiedCount>0) {
          
           res.json({success:true,message: 'successfully updated!',pkUserId:req.body.pkUserId,result})
         }
@@ -143,27 +173,26 @@ const getAddressPage=async(req,res)=>{
      let pkAddressId=req.query.pkAddressId
      let pkUserId=req.query.pkUserId
      if (pkAddressId) {
+      
       let matchQuery1={
         $match:{
-          pkUserId:new ObjectId(pkUserId)
+          pkAddressId:new ObjectId(pkAddressId),
+          strStatus:"Active"
         }
       }
-      let unwind={
-        $unwind:"$arrAddress"
+    let userAddress=await Address.aggregate([matchQuery1])
+    if(userAddress.length){
+      let addressCount=false
+      if(userAddress[0].length>0){
+        addressCount=true
       }
-      let matchQuery2={
-        $match:{
-          "arrAddress.pkAddressId":new ObjectId(pkAddressId)
-        }
-      }
-    let userAddress=await db.get().collection(USER_COLLECTION).aggregate([matchQuery1,unwind,matchQuery2]).toArray()
+    
+     res.render("user/editAddress",{layout:"user_layout",arrAddress:userAddress, addressCount})
+    }else{
+      res.json({success:false,message:"Failed to fetch address"})
+    }
    
-        let addressCount=false
-         if(userAddress[0].length>0){
-           addressCount=true
-         }
-       
-        res.render("user/editAddress",{layout:"user_layout",arrAddress:userAddress[0].arrAddress, addressCount})
+    
       
      } else {
       res.json({success:false,message:"address id not found"})
@@ -176,7 +205,7 @@ const getAddressPage=async(req,res)=>{
   
   //set as default address
   const setAsDefaultAddress=async(req,res)=>{
-   
+     console.log(req.body);
     try {
       if(req.body.pkUserId){
         if(req.body.pkAddressId){
@@ -186,38 +215,48 @@ const getAddressPage=async(req,res)=>{
           const pkAddressId = new ObjectId(req.body.pkAddressId);
           
          
-          const filter1 = {
+          const match1 = {
+         
             pkUserId,
-            "arrAddress.isDefaultAddress": true
+            strStatus:"Active",
+            isDefaultAddress: true
+        
           };
           
           const update1 = {
             $set: {
-              "arrAddress.$.isDefaultAddress": false
+              isDefaultAddress: false
             }
           };
+
+          const match2 = {
+            pkAddressId,
+            strStatus:"Active",
+           
           
-          const result1 = await db.get().collection(USER_COLLECTION).updateMany(filter1, update1);
-          
-          console.log(`${result1.modifiedCount} document(s) updated to set isDefaultAddress to false.`);
-          
-         
-          const filter2 = {
-            pkUserId,
-            "arrAddress.pkAddressId": pkAddressId
           };
           
           const update2 = {
             $set: {
-              "arrAddress.$.isDefaultAddress": true
+              isDefaultAddress: true
             }
           };
           
-          const result2 = await db.get().collection(USER_COLLECTION).updateOne(filter2, update2);
+          const result = await Address.updateMany(match1,update1);
+           console.log(result);
+           if(!result.modifiedCount){return res.json({success:false,message:"Failed change to false"})}
+         
+          const setToDefault=await Address.updateOne(match2,update2)
           
-          console.log(`${result2.modifiedCount} document updated to set isDefaultAddress to true for pkAddressId: ${pkAddressId}.`);
-          res.json({success:true,message:"Address set as default address"})
-        
+          if(setToDefault.modifiedCount>0){
+            console.log(`${result.modifiedCount} document updated to set isDefaultAddress to true for pkAddressId: ${pkAddressId}.`);
+            res.json({success:true,message:"Address set as default address"})
+          
+          }else{
+            res.json({success:false,message:"Failed set as default address"})
+          }
+          
+          
   
         }else{
           res.json({success:false,message:"Address id not found"})
@@ -230,7 +269,7 @@ const getAddressPage=async(req,res)=>{
    
      } catch (error) {
       console.log(error.message);
-        res.json({success:false,message: error.message})
+        res.json({success:false,message: error})
      }
   }
   
@@ -244,9 +283,9 @@ const getAddressPage=async(req,res)=>{
         if(req.body.pkAddressId){
           let pkUserId=new ObjectId(req.body.pkUserId)
           let pkAddressId=new ObjectId(req.body.pkAddressId)
-          const result = await db.get().collection(USER_COLLECTION).updateOne(
-            { pkUserId ,strStatus:"Active"},
-            { $pull: { arrAddress: {pkAddressId } } }
+          const result = await Address.updateOne(
+            { pkAddressId,strStatus:"Active"},
+            { $set: { strStatus: "Deleted" } }
           );
          
         if (result.modifiedCount===1) {

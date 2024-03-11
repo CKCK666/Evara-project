@@ -56,78 +56,8 @@ res.render("admin/homePage",{layout:"admin_layout",admin:true})
 
 
   
-  //get order list
-  const getOrderList=async(req,res)=>{
-    try {
-    
-       let result=await db.get().collection(ORDER_COLLECTION).find().toArray()
-       if(result.length){
-       let usersOrders=await result.map((order,index)=>{
-        const isoDate = order.createdDate;
-        const date = new Date(isoDate);
-        const formattedDate = date.toString().substring(0, 15) 
-        return {
-          ...order,
-          index:index+1,
-          createdDate: formattedDate
-         }
-        
-        })
-       
-        res.render("admin/orderList",{layout:"admin_layout",admin:true,usersOrders})
-       }
-       else{
-        res.json({success:false,message:"Fail to fetch orders"})
-       }
-  
-      
-    } catch (error) {
-      res.json({success:false,message:error.message})
-    }
-  
-  }
 
-  const getOrderDetailsPage=async(req,res)=>{
-   
-    try {
-      if(req.query.pkOrderId){
-      // let pkUserId =new ObjectId(req.query.pkUserId)
-      let pkOrderId =new ObjectId(req.query.pkOrderId)
-      let result =await db.get().collection(ORDER_COLLECTION).find({pkOrderId}).toArray()
-      
-      if (result  && result.length) {
-        let orderDetails=await result.map((order,index)=>{
-          const isoDate = order.createdDate;
-          const date = new Date(isoDate);
-          const formattedDate = date.toString().substring(0, 15) 
-          return {
-            ...order,
-            index:index+1,
-            createdDate: formattedDate
-           }
-          
-          })
-      
-        let orderProducts= await orderDetails[0].arrProductsDetails.map(obj=>{
-          let intTotalPrice=obj.intQuantity*obj.intPrice
-          return {...obj,intTotalPrice:intTotalPrice}
-           
-        })
-        console.log(orderProducts);
-        
-         res.render("admin/orderDetailsPage",{layout:"admin_layout",success:true,deliveryAddress:orderDetails[0].arrDeliveryAddress,orderProducts,orderDetails,message:"successfully loaded cart page",admin:true})
-       } else {
-        res.render("admin/orderDetailsPage",{layout:"admin_layout",success:true,admin:true})
-       }
-      }else{
-        res.json({success:false,message:"order id not found"})
-      }
-    } catch (error) {
-      res.json({success:false,message:error.message})
-    }
-     
-    
-  }
+ 
   //logout 
 const logout=(req,res)=>{
     req.session.destroy();
@@ -135,8 +65,7 @@ const logout=(req,res)=>{
    }
    
   module.exports={adminLogin,
-    getOrderDetailsPage,
-    getOrderList,
+  
     getAdminHome,logout,
     
   }

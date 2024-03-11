@@ -18,8 +18,8 @@ $(document).ready(function () {
     let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
     let data = new FormData($('#login-form')[0]);
     
-    let email=data.get('email')
-    let password=data.get("password")
+    let email=data.get('email').trim()
+    let password=data.get("password").trim()
      
     console.log(email,password);
 
@@ -40,7 +40,9 @@ $(document).ready(function () {
     $.ajax({
       type: 'POST', 
       url: '/login',
-      data: $('#login-form').serialize(), 
+      data:{
+        email,password
+      }, 
       success: function(response) {
           if (response.success) {
               Swal.fire({
@@ -179,28 +181,38 @@ $.ajax({
  $('#add-address-submit').click(function (e) {
     e.preventDefault()
     let nameRegex = /^(?=(.*[a-zA-Z]){3})[a-zA-Z0-9\s\-\_.]+$/;
+    const indianPhoneNumberRegex = /^(\+91[\-\s]?)?[0]?(91)?[789]\d{9}$/;
+
     let pincodeRegex = /^[1-9][0-9]{5}$/;
     let data = new FormData($('#add-address-form')[0]);
+    for (let pair of data.entries()) {
+      let [key, value] = pair;
+      if (typeof value === 'string') {
+          data.set(key, value.trim());
+      }
+  }
+    
+
     let hasCheckbox = $("#add-address-form input[type='checkbox']").length > 0;
 
     // Serialize the form data
-    let formData; // Declare formData variable
+    let formData={} // Declare formData variable
 
     if (hasCheckbox) {
-        formData = $("#add-address-form").serializeArray(); // If checkbox exists, use serializeArray()
-        var checkboxName = $("#add-address-form input[type='checkbox']").attr("name");
-        var checkboxValue = $("#add-address-form input[type='checkbox']").is(":checked") ? "checked" : "unchecked";
-        formData.push({ name: checkboxName, value: checkboxValue });
+       
+       
+        var checkboxValue = $("#add-address-form input[type='checkbox']").is(":checked") ? true :false;
+        formData={ addressCheckBox:checkboxValue}
     } 
       
-
+      let pkUserId=data.get("pkUserId")
       let fullName=data.get("fname")
-      let pinCode=data.get("pincode")
+      let pinCode=data.get("pinCode")
       let city=data.get("city")
       let phoneNumber=data.get("phno")
       let state=data.get("state")
       let area=data.get("area")
-      
+    
     if (fullName === ''|| pinCode === '' || city==="" ||phoneNumber==="" || state==="") {
     
         $('#errorMessage').text('Please fill in all fields.');
@@ -229,7 +241,12 @@ $.ajax({
  
     return
   }
-    
+  if (!indianPhoneNumberRegex.test(phoneNumber)) {
+    $('#errorMessage').text('Invailid mobile number');
+    $("input[name='phno']").addClass('error');
+    return;
+}
+  
     if(city.legnth){
       $('#errorMessage').text('City name must 3 characters long.'); 
       $("input[name='city']").addClass('error');
@@ -242,12 +259,31 @@ $.ajax({
   $.ajax({
     type: 'POST', 
     url: '/addAddress',
-    data:  $("#add-address-form").serialize(), 
+    data: {
+         pkUserId,
+         fname:fullName,
+      phno: phoneNumber,
+         area,
+         pinCode,
+         city,
+         state  ,
+         ...formData
+    },
     success: function(response) {
         if (response.success) {
           console.log(response.pkUserId);
+          Swal.fire({
+                  position: 'top-end',
+                  icon: 'success',
+                  title: 'Successfully Added new address',
+                  showConfirmButton: false,
+                  timer: 1500,
+                  didClose:()=>{
+                    window.location.reload()
+                  }
+                })
         //  window.location.href=`/userSettings?pkUserId=${response.pkUserId}`
-        window.location.reload()
+        
           
         } else {
             $('#errorMessage').text(response.message)
@@ -268,8 +304,15 @@ $.ajax({
   $("#user-profile-edit-btn").click(async function(e){
     e.preventDefault()
    console.log("calll");
-    let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
+   let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
     let data = new FormData($('#user-profile-form')[0]);
+
+    for (let pair of data.entries()) {
+      let [key, value] = pair;
+      if (typeof value === 'string') {
+          data.set(key, value.trim());
+      }
+  }
     
     let email=data.get('email')
     let password=data.get("password")
@@ -294,6 +337,13 @@ $.ajax({
         $('input[name="email"]').addClass('error');
         return;
     }
+    if (!nameRegex.test(username)) {
+      $('#errorMessage').text('Username contains aleast 3 alphabets');
+      $('input[name="name"]').addClass('error');
+      return;
+  }
+    
+
     if(password.length){
       if(cpassword=="" || npassword ==""){
         $('#errorMessage').text('Fill the password');
@@ -307,9 +357,28 @@ $.ajax({
         $('input[name="npassword"]').addClass('error');
         return
       }
-    
+      if(cpassword.length<8 ||npassword.length<8){
+        $('#errorMessage').text('Passwords must be strong');
+        $('input[name="cpassword"]').addClass('error');
+        $('input[name="npassword"]').addClass('error');
+        return
+      }
+      if(password == npassword){
+        $('#errorMessage').text('Enter a new password');
+       
+        return
+      }
     }
-
+    if(cpassword.length || npassword.length){
+      if(password.length==0){
+        $('#errorMessage').text('Required current password');
+        $('input[name="password"]').addClass('error');
+        return
+      }
+   
+     
+     
+    }
 
     $.ajax({
       type: 'POST', 
@@ -324,7 +393,8 @@ $.ajax({
                   showConfirmButton: false,
                   timer: 1500,
                   didClose:()=>{
-                window.location.href = `/userSetting?pkUserId=${response.pkUserId}`;
+                // window.location.href = `/userSetting?pkUserId=${pkUserId}`;
+                window.location.reload()
                   }
                 })
               console.log('success:', response.message);
@@ -346,9 +416,40 @@ $.ajax({
 
 $("#place-order-btn").click(async function(e){
   e.preventDefault()
+  const radioButtons = document.querySelectorAll('input[type="radio"][name="shipping-address"]');
+  let pkAddressId;
+
+  //get default addressId
+  radioButtons.forEach(function(radioButton) {
+    if (radioButton.checked) {
+        // const pkAddressIdInput = radioButton.parentNode.nextElementSibling.querySelector('input[name="pkAddressId"]');
+        pkAddressId = radioButton.dataset.pkAddressId
+    }
+});
+
+
+  // get the address when radio button change event
+  radioButtons.forEach(function(radioButton) {
+      radioButton.addEventListener('change', function(event) {
+          if (event.target.checked) {
+               pkAddressId = event.target.dataset.pkAddressId;
+              console.log('pkAddressId:', pkAddressId);
+             
+          }
+      });
+  });
+
+  if(!pkAddressId.length){
+    $('#errorMessage').text('Select a shipping address');
+    return
+  }
+  
  $.ajax({
     type: 'POST', 
     url: '/checkOut',
+    data:{
+      pkAddressId
+    },
     success: function(response) {
         if (response.success) {
             Swal.fire({
@@ -368,7 +469,7 @@ $("#place-order-btn").click(async function(e){
        
     },
     error: function(error) {
-        
+      $('#errorMessage').text(error.message)
         console.error('Error:', error);
     }
 });
@@ -383,9 +484,28 @@ $("#place-order-btn").click(async function(e){
   e.preventDefault()
   let nameRegex = /^(?=(.*[a-zA-Z]){3})[a-zA-Z0-9\s\-\_.]+$/;
   let pincodeRegex = /^[1-9][0-9]{5}$/;
+  const indianPhoneNumberRegex = /^(\+91[\-\s]?)?[0]?(91)?[789]\d{9}$/;
   let data = new FormData($('#edit-address-form')[0]);
- let  data1= $("#edit-address-form").serialize()
-  console.log(data1);
+  for (let pair of data.entries()) {
+    let [key, value] = pair;
+    if (typeof value === 'string') {
+        data.set(key, value.trim());
+    }
+  }   
+
+  let hasCheckbox = $("#edit-address-form input[type='checkbox']").length > 0;
+
+  // Serialize the form data
+  let formData={} // Declare formData variable
+
+  if (hasCheckbox) {
+     
+     
+      var checkboxValue = $("#edit-address-form input[type='checkbox']").is(":checked") ? true :false;
+      formData={ addressCheckBox:checkboxValue}
+  } 
+let pkUserId=data.get("pkUserId")
+let pkAddressId=data.get("pkAddressId")
     let fullName=data.get("fname")
     let pinCode=data.get("pincode")
     let city=data.get("city")
@@ -421,6 +541,13 @@ if(phoneNumber.legnth<10 || phoneNumber<0 || phoneNumber.length>10){
 
   return
 }
+
+if (!indianPhoneNumberRegex.test(phoneNumber)) {
+  $('#errorMessage').text('Invailid mobile number');
+  $("input[name='phno']").addClass('error');
+  return;
+}
+
   
   if(city.legnth){
     $('#errorMessage').text('City name must 3 characters long.'); 
@@ -434,7 +561,17 @@ if(phoneNumber.legnth<10 || phoneNumber<0 || phoneNumber.length>10){
 $.ajax({
   type: 'POST', 
   url: '/editAddress',
-  data:  $("#edit-address-form").serialize(), 
+  data: {
+    pkUserId,
+    pkAddressId,
+    fname:fullName,
+    phn:phoneNumber,
+    area,
+    pinCode,
+    city,
+    state,
+    ...formData
+  }, 
   success: function(response) {
       if (response.success) {
         console.log(response.pkUserId);
@@ -466,6 +603,7 @@ $.ajax({
 });
 
 $(".set-as-default").click(function(e){
+  e.preventDefault()
   let pkAddressId = $(this).data('pk-address-id');
   let pkUserId = $(this).data('pk-user-id');
    let render=$(this).data('check-out');
@@ -541,6 +679,7 @@ $(".set-as-default").click(function(e){
 })
 
 $(".cancel-order-btn").click(function(e){
+  e.preventDefault()
   let pkOrderId = $(this).data('pk-order-id');
   let pkUserId = $(this).data('pk-user-id');
   let orderStatusChange=$(this).data('order-status-change')
@@ -607,6 +746,41 @@ $(".cancel-order-btn").click(function(e){
       )
     }
   })
+
+
+})
+
+$(".removeFromCart").click(function(e){
+  e.preventDefault()
+  let pkCartId = $(this).data('pk-cart-id');
+  let pkProductId = $(this).data('pk-product-id');
+  console.log(pkCartId,pkProductId);
+ 
+    
+        $.ajax({
+            type: 'POST', 
+            url: "/removeFromCart",
+            data: {
+         pkCartId,
+         pkProductId
+            }, 
+            success: function(response) {
+                if (response.success) {
+                    
+                     window.location.reload()
+                    console.log('success:', response.message);
+                } else {
+                  console.log('success:', response.message);
+                    
+                }
+               
+            },
+            error: function(error) {
+                
+                console.error('Error:', error);
+            }
+        });
+  
 
 
 })
