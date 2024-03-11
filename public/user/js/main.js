@@ -76,13 +76,21 @@ $(document).ready(function () {
  $('#submit-signup').click(function (e) {
   e.preventDefault()
   let nameRegex = /^(?=(.*[a-zA-Z]){3})[a-zA-Z0-9\s\-\_.]+$/;
-
+  const indianPhoneNumberRegex = /^(\+91[\-\s]?)?[0]?(91)?[789]\d{9}$/;
   let data = new FormData($('#signup-form')[0]);
-    let email=data.get('email').trim()
-    let username=data.get("username").trim()
-    let password=data.get("password").trim()
-    let Cpassword=data.get("Cpassword").trim()
-    let phno=data.get("phno").trim()
+ 
+  for (let pair of data.entries()) {
+    let [key, value] = pair;
+    if (typeof value === 'string') {
+        data.set(key, value.trim());
+    }
+}
+
+    let email=data.get('email')
+    let username=data.get("username")
+    let password=data.get("password")
+    let Cpassword=data.get("Cpassword")
+    let phno=data.get("phno")
  
   
   if (username === ''|| email === '' || password==="" ||phno==="" ||Cpassword==="") {
@@ -111,7 +119,11 @@ if(phno.length<10 || phno.length>10){
   $("input[name='phno']").addClass('error');  
   return;
 }
-
+if (!indianPhoneNumberRegex.test(phno)) {
+  $('#errorMessage').text('Invailid mobile number');
+  $("input[name='phno']").addClass('error');
+  return;
+}
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
@@ -784,6 +796,218 @@ $(".removeFromCart").click(function(e){
 
 
 })
+
+ //Forget password sent OTP
+ $('#sent-otp').click(function (e) {
+  e.preventDefault()
+  let nameRegex = /^(?=(.*[a-zA-Z]){3})[a-zA-Z0-9\s\-\_.]+$/;
+  const indianPhoneNumberRegex = /^(\+91[\-\s]?)?[0]?(91)?[789]\d{9}$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  let data = new FormData($('#forgot-password-form')[0]);
+  for (let pair of data.entries()) {
+    let [key, value] = pair;
+    if (typeof value === 'string') {
+        data.set(key, value.trim());
+    }
+  }   
+
+    let email=data.get('email')
+     let phno=data.get("phno")
+ 
+  
+  if (email === '' || phno ==="") {
+  
+      $('#errorMessage').text('Please fill in all fields.');
+      $('.form-control').addClass('error') 
+
+      return;
+  }
+  
+  
+if(phno.length<10 || phno.length>10){
+  
+  $('#errorMessage').text('Invalid phone number');
+  $("input[name='phno']").addClass('error');  
+  return;
+}
+if (!indianPhoneNumberRegex.test(phno)) {
+  $('#errorMessage').text('Invailid mobile number');
+  $("input[name='phno']").addClass('error');
+  return;
+}
+
+  
+  if (!emailRegex.test(email)) {
+      $('#errorMessage').text('Invalid email format.');
+      $("input[name='email']").addClass('error');
+      return;
+  }
+ 
+$.ajax({
+  type: 'POST', 
+  url: '/verifyUser',
+  data: {
+     strEmail:email,
+    strPhoneNumber:"+91"+phno
+  }, 
+  success: function(response) {
+    
+    if (response.success) {
+      $.ajax({
+          type: 'POST',
+          url: '/generateOTP', // Replace with the actual endpoint for generating OTP
+          data: {
+            strEmail:email,
+           strPhoneNumber:"+91"+phno
+         },                     // Provide the user's phone number
+          success: function(otpResponse) {
+              if (otpResponse.success) {
+                 window.location.href="/getOTP"
+              } else {
+                  console.error('Error generating OTP:', otpResponse.message);
+                  // Handle error
+              }
+          },
+          error: function(error) {
+              console.error('Error generating OTP:', error);
+              // Handle error
+          }
+      });
+     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    } else {
+      $('#errorMessage').text(response.message);
+       console.log(response);
+        console.error('Error generating OTP:', response.message);
+        
+    }
+},
+  error: function(error) {
+    $('#errorMessage').text(error.message);
+      console.error('Error:', error);
+  }
+});
+  
+
+})
+
+
+  // reset password
+  $("#submit-reset-password").click(async function(e){
+    e.preventDefault()
+   console.log("calll");
+  
+    let data = new FormData($('#reset-password-form')[0]);
+
+    for (let pair of data.entries()) {
+      let [key, value] = pair;
+      if (typeof value === 'string') {
+          data.set(key, value.trim());
+      }
+  }
+    
+    let password=data.get("password")
+    
+    let cpassword=data.get("cpassword")
+   
+    
+     
+    
+
+    if ( password === '' || cpassword==="") {
+    
+        $('#errorMessage').text('Please fill in all fields.');
+        $('input[name="email"]').addClass('error');
+        $('input[name="name"]').addClass('error');
+
+        return;
+    }
+    
+    
+    
+      if(cpassword!=password){
+        $('#errorMessage').text('Passwords doesn"t match');
+        $('input[name="cpassword"]').addClass('error');
+        $('input[name="npassword"]').addClass('error');
+        return
+      }
+      if(cpassword.length<8 ||password.length<8){
+        $('#errorMessage').text('Passwords must be strong');
+        $('input[name="cpassword"]').addClass('error');
+        $('input[name="npassword"]').addClass('error');
+        return
+      }
+     
+    
+   
+
+    $.ajax({
+      type: 'POST', 
+      url: '/resetPassword',
+      data: {
+        password
+      }, 
+      success: function(response) {
+          if (response.success) {
+              Swal.fire({
+                  position: 'top-end',
+                  icon: 'success',
+                  title: 'Successfully reset the password',
+                  showConfirmButton: false,
+                  timer: 1500,
+                  didClose:()=>{
+              
+                window.location.href="/"
+                  }
+                })
+              console.log('success:', response.message);
+          } else {
+              $('#errorMessage').text(response.message)
+          }
+         
+      },
+      error: function(error) {
+          
+          console.error('Error:', error);
+      }
+  });
+
+
+   
+   
+})
+
+
+
+
+
+
+
+
+
+
 
 
  

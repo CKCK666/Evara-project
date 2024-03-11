@@ -14,7 +14,7 @@ const Cart = require('../models/cartModel');
 
 const addToCart=async(req,res)=>{
     try {
-     
+    
         if(req.body.pkUserId){
           let pkUserId =new ObjectId(req.body.pkUserId)
         let productFind=await Product.find({pkProductId:new ObjectId(req.body.pkProductId),strStatus:"Active"},{createdDate:0,updatedDate:0})

@@ -137,7 +137,18 @@ const login = async(req,res) => {
 
 // Route to generate and send OTP
 const generateOtp=(req, res) => {
-  const phoneNumber=req.session.user.strPhoneNumber
+  let phoneNumber
+   if(req.session.user){
+     phoneNumber=req.session.user.strPhoneNumber
+   }
+   else if(req.body.strPhoneNumber){
+    phoneNumber=req.body.strPhoneNumber
+    req.session.strPhoneNumber=req.body.strPhoneNumber
+   }
+   else{
+    phoneNumber=req.session.strPhoneNumber
+   }
+ 
     console.log("phno:",phoneNumber);
   const OTP = otpGenerator.generate(6, { upperCaseAlphabets: false, specialChars: false,lowerCaseAlphabets:false });
 
@@ -175,7 +186,16 @@ const getOtpPage=(req,res)=>{
 const verifyOTP=async(req,res)=>{
  
   const { otp } = req.body;
-  let phoneNumber=req.session.user.strPhoneNumber
+  let phoneNumber
+  let redirect
+  if(req.session.user){
+    redirect="home"
+    phoneNumber=req.session.user.strPhoneNumber
+  }else{
+    redirect="resetPassword"
+   phoneNumber=req.session.strPhoneNumber
+     req.session.resetPageAccess=true
+  }
  
   const storedOTP = otpStorage.get(phoneNumber);
    
@@ -185,13 +205,18 @@ const verifyOTP=async(req,res)=>{
       res.json({success:false,message:'Invalid OTP'});
       return;
   }
-  req.session.otpVerified=true
+  if(req.session.user){
+    req.session.otpVerified=true
+  }
+
   req.session.accessOtpPage=false
   // Delete OTP from storage once verified
   otpStorage.delete(phoneNumber);
-   
-  await User.updateOne({strEmail:req.session.user.strEmail},{$set:{strStatus:"Active"}})
-  res.status(200).json({success:true,message:'OTP verified successfully'});
+   if(req.session.user){
+    await User.updateOne({strEmail:req.session.user.strEmail},{$set:{strStatus:"Active"}})
+   }
+ 
+  res.status(200).json({success:true,message:'OTP verified successfully',redirect});
 }
 
 
@@ -349,40 +374,7 @@ const userEdit = async (req, res) => {
 
 
 
- const sortProducts=async(req,res)=>{
-  try {
-    let sort={createdDate:-1}
-     let search={strStatus: 'Active'}
-    if(req.query.lowToHigh){
-      sort={
-       
-        intPrice:1
-      }
-    }
-    if(req.query.highToLow){
-      sort={
-       
-        intPrice:-1
-      }
-    }
-    if(req.query.productName){
-      let productName=req.query.productName
-    search={
-      $and: [
-        { strProductName: { $regex:productName, $options: 'i' } }, 
-        { ...search },
-        {intStock:{$ne:0}}
-    ] 
-    }
 
-    }
-    let result=await db.get().collection(PRODUCTS_COLLECTION).find(search).sort(sort).toArray()
-    
-    res.render("user/filterProducts",{layout:"user_layout",user:true,result})
-  } catch (error) {
-    res.json({success:true,message:"Fail to sort"})
-  }
- }
 
 
    //get user list
@@ -476,6 +468,81 @@ req.session.destroy();
   res.redirect('/');
 };
 
+//get forgot password page
+const forgotPasswordPage=(req,res)=>{
+  try {
+    if(req.session.user){
+      res.redirect('/')
+    }else{
+      res.render("user/forgotPasswordPage",{layout:"user_layout"})
+    }
+    
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
+}
+
+const verfiyUser=async(req,res)=>{
+  console.log(req.body.strEmail, req.body.strPhoneNumber);
+  try {
+    if(req.body.strEmail || req.body.strPhoneNumber){
+       let strEmail=req.body.strEmail
+       let strPhoneNumber=req.body.strPhoneNumber
+       let findUser=await User.findOne({strEmail,strPhoneNumber})
+       if(findUser){
+        req.session.accessOtpPage=true
+        req.session.strEmail=req.body.strEmail
+        res.json({success:true,message:"UserExist"})
+       }
+       else{
+       return res.json({success:false,message:"User not found"})
+       }
+    }else{
+      res.json({success:false,message:"Email and phone number not found"})
+    }
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
+}
+
+const getResetPassword=(req,res)=>{
+  try {
+    if( req.session.resetPageAccess){
+      req.session.resetPageAccess=false
+      res.render("user/resetPasswordPage",{layout:"user_layout"})
+    }else{
+      res.redirect('/')
+     
+    }
+    
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
+ 
+  
+  }
+
+
+
+const resetPassword=async(req,res)=>{
+  try {
+    if(req.session.strEmail || req.body.password){
+      const strEmail=req.session.strEmail
+      const strPassword = await bcrypt.hash(req.body.password, 10);
+      const updatePassword=await User.updateOne({strEmail,strStatus:"Active"},{$set:{strPassword:strPassword}})
+      if(updatePassword.modifiedCount>0){
+        res.json({success:true,message:"Successfully updated password"})
+      }else{
+        res.json({success:false,message:"Fail to update password"})
+      }
+    }else{
+      res.json({success:false,message:"Email and new password not found"})
+    }
+  } catch (error) {
+    res.json({success:false,message:error.message})
+  }
+}
+
 
 async function getCartCount(userId) {
 
@@ -507,9 +574,13 @@ async function getCartCount(userId) {
   
 }
 
-module.exports = {sortProducts,
 
- 
+
+
+
+module.exports = {
+  verfiyUser,
+  forgotPasswordPage,
    getSignUp, signUp, 
    getHome, login, logout ,
    userEdit,generateOtp,getOtpPage,
@@ -517,5 +588,7 @@ module.exports = {sortProducts,
    getUserSetting,
   deleteUser,getUserList,
    blockUser,
+   resetPassword,
+   getResetPassword
    
 };

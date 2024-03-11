@@ -367,9 +367,9 @@ const getProductList=async(req,res)=>{
       if(req.query.pkProductId){
         let pkProductId=new ObjectId(req.query.pkProductId)
         
-         let userId=req.session.user.pkUserId
+         let pkUserId=req.session.user.pkUserId
         
-         let cartCount=  await getCartCount(userId)
+         let cartCount=  await getCartCount(pkUserId)
        
         let productFind =await Product.find({pkProductId:pkProductId,strStatus:"Active"})
         let product=productFind.map((pro)=>{
@@ -378,7 +378,7 @@ const getProductList=async(req,res)=>{
         
           if(product.length){
             
-          res.render("user/productSingle",{layout:"user_layout",user:true,product,imageUrl1:product[0].arrayOtherImages[0].imageUrl1,imageUrl2:product[0].arrayOtherImages[1].imageUrl2,userId,cartCount})
+          res.render("user/productSingle",{layout:"user_layout",user:true,product,imageUrl1:product[0].arrayOtherImages[0].imageUrl1,imageUrl2:product[0].arrayOtherImages[1].imageUrl2,pkUserId,cartCount})
           }
           else{
             res.json({success:false,message:"product  not found"})
@@ -391,8 +391,49 @@ const getProductList=async(req,res)=>{
       res.json({success:false,message:error.message})
     }
   }
+  const sortProducts=async(req,res)=>{
+    try {
+      let sort={createdDate:-1}
+       let search={strStatus: 'Active'}
+      if(req.query.lowToHigh){
+        sort={
+         
+          intPrice:1
+        }
+      }
+      if(req.query.highToLow){
+        sort={
+         
+          intPrice:-1
+        }
+      }
+      if(req.query.productName){
+        let productName=req.query.productName
+      search={
+        $and: [
+          { strProductName: { $regex:productName, $options: 'i' } }, 
+          { ...search },
+          {intStock:{$ne:0}}
+      ] 
+      }
+  
+      }
+      let findResult=await Product.find(search).sort(sort)
+      let result=findResult.map((product)=>{
+        return {
+          ...product._doc
+        }
+      })
+      console.log(result);
+      res.render("user/filterProducts",{layout:"user_layout",user:true,result})
+    } catch (error) {
+      res.json({success:true,message:error.message})
+    }
+   }
+
 
    module.exports={getProductList,
+    sortProducts,
     getProductAdd,
     addProduct,editProduct,deleteProduct,
     blockProduct,
@@ -410,7 +451,8 @@ const getProductList=async(req,res)=>{
       let totalQuantity=await Cart.aggregate([
        {
          $match:{
-           pkUserId:new ObjectId(userId)
+           pkUserId:new ObjectId(userId),
+           strStatus:"Active"
          }
        },
        {

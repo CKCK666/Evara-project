@@ -22,9 +22,34 @@ const Order = require('../models/orderModel');
        let pkOrderId=new ObjectId(req.body.pkOrderId)
        let pkUserId=new ObjectId(req.body.pkUserId)
        let orderStatus=req.body.orderStatusChange
-     let result=await Order.updateOne({pkUserId,pkOrderId},{$set:{strOrderStatus:orderStatus,updatedDate:new Date()}})
-       console.log(result);
+     let result=await Order.updateOne({pkUserId,pkOrderId,strStatus:"Active"},{$set:{strOrderStatus:orderStatus,updatedDate:new Date()}})
+     let productArray = await Order.aggregate([
+      {
+        $match: {
+         pkOrderId,
+         strStatus:"Active"
+          
+        }
+      },
+      {
+        $project: {
+          
+          arrProductsDetails: 1
+        }
+      }
+    ]);
+     
      if (result.modifiedCount>0) {
+      if(orderStatus=="Cancelled"){
+       
+        productArray[0].arrProductsDetails.map(async(product)=>{
+        
+          let quantity=product.intQuantity
+            let updateStock=await Product.updateOne({pkProductId:new ObjectId(product.pkProductId)},{$inc:{intStock:quantity}})
+         
+        })
+
+      }
        
        res.json({success:true,message: 'successfully status changed order!',userBlocked:true})
      }
@@ -44,6 +69,7 @@ const Order = require('../models/orderModel');
    const getOrderDetailsPage=async(req,res)=>{
     
      try {
+      
        if(req.query.pkUserId || req.query.pkOrderId){
        let pkUserId =new ObjectId(req.query.pkUserId)
        let pkOrderId =new ObjectId(req.query.pkOrderId)
@@ -77,12 +103,42 @@ const Order = require('../models/orderModel');
    const getCheckoutPage=async(req,res)=>{
     try {
       let pkUserId =new ObjectId(req.session.user.pkUserId)
-      let userAddress=await Address.aggregate([{ $match:{ pkUserId:pkUserId,strStatus:"Active" }}])
+
+      let match={
+        $match:{
+          pkUserId,
+          strStatus:"Active"
+        }
+      }
+      let addField={
+        $addFields: {
+          isDefaultAddressInt: { $cond: { if: "$isDefaultAddress", then: 1, else: 0 } }
+        }
+      }
+      let sort= {
+        $sort: {
+          isDefaultAddressInt: -1 
+        }
+      }
+      let projectAddress={
+        $project:{
+          isDefaultAddressInt: 0
+        }
+      }
+
+      let orderSort={
+        $sort:{
+          updatedDate:-1,
+          createdDate:-1
+        }
+      }
+      let  userAddress=await Address.aggregate([match,addField,sort,projectAddress])
+      // let userAddress=await Address.aggregate([{ $match:{ pkUserId:pkUserId,strStatus:"Active" }}])
     
      
       let cartDetails=await Cart.aggregate([{ $match:{ pkUserId:pkUserId,strStatus:"Active" }}])
       
-      let cartCount=0
+      
       if (cartDetails && cartDetails.length) {
         let cartCount= await getCartCount(req.session.user.pkUserId)
         let cartProducts=cartDetails[0].arrProducts.map(obj=>{
@@ -93,7 +149,7 @@ const Order = require('../models/orderModel');
       
          res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,pkUserId,cartDetails,cartCount ,message:"successfully loaded cart page",user:true})
        } else {
-        res.render("user/checkoutPage",{layout:"user_layout",success:true,user:true,pkUserId,cartCount})
+        res.redirect("/")
        }
     } catch (error) {
       res.json({success:false,message:error.message})
@@ -269,7 +325,8 @@ const Order = require('../models/orderModel');
       let totalQuantity=await Cart.aggregate([
        {
          $match:{
-           pkUserId:new ObjectId(userId)
+           pkUserId:new ObjectId(userId),
+           strStatus:"Active"
          }
        },
        {

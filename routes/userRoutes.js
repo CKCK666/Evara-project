@@ -1,7 +1,7 @@
 const express = require('express');
-const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, verifyOTP,  getUserSetting,  userEdit, sortProducts } = require('../controller/userController');
+const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, verifyOTP,  getUserSetting,  userEdit, forgotPasswordPage, verfiyUser, resetPassword, getResetPassword } = require('../controller/userController');
 const {verifyLogin}=require("../middlewares/verifications")
-const { getSingleProductPage}=require("../controller/productController")
+const { getSingleProductPage,sortProducts}=require("../controller/productController")
 const {addToCart, getCartPage, changeQuantity, removeFromCart,}=require("../controller/cartController")
 const {editAddress, getEditAddressPage, setAsDefaultAddress,deleteAddress, getAddressPage, addNewAddress}=require("../controller/addressController")
 const {changeOrderStatus, getCheckoutPage, checkOut, getOrderDetailsPage}=require("../controller/orderController")
@@ -24,7 +24,7 @@ router.get("/",verifyLogin,getHome)
 //post login
 router.post("/login",login)
 
-
+router.get("/getForgotPassword",forgotPasswordPage)
 
 
 // Google authentication route
@@ -107,6 +107,14 @@ router.get("/getOrderDetails",verifyLogin,getOrderDetailsPage)
 
 router.get("/search",verifyLogin,sortProducts)
 
+//router user exist
+router.post('/verifyUser',verfiyUser)
+
+//router get password reset page
+router.get("/getResetPassword",getResetPassword)
+
+
+router.post("/resetPassword",resetPassword)
 //post logout
 router.get('/logout',logout)
 

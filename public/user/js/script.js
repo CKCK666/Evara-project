@@ -116,7 +116,12 @@ $.ajax({
   success: function(response) {
       if (response.success) {
         console.log('success:', response.message);
-        window.location.href="/"
+        if(response.redirect=="home"){
+          window.location.href="/"
+        }else{
+          window.location.href="/getResetPassword"
+        }
+        
       } else {
         console.log('falied:', response.message);
           $('#errorMessage').text(response.message)
