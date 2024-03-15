@@ -6,7 +6,7 @@ const {verifyLogin}=require("../middlewares/verifications")
 dotenv.config()
 const { getAdminHome, adminLogin, logout,} = require('../controller/adminController');
 const { addCategory, getCategoryPage, deleteCategory, blockCategory, getEditCategory, editCategory }=require('../controller/categoryController');
-const { getProductList, getProductAdd, addProduct, editProduct, deleteProduct, blockProduct, getProductEdit,editProductImages} = require('../controller/productController');
+const { getProductList, getProductAdd, addProduct, editProduct, deleteProduct, blockProduct, getProductEdit,editProductImages, getProductImageEditPage} = require('../controller/productController');
 const { deleteUser, getUserList, blockUser,}=require("../controller/userController")
 const {getOrderDetailsPageAdmin,getOrderListAdmin,changeOrderStatus}=require("../controller/orderController")
 const multer = require('multer');
@@ -105,5 +105,7 @@ router.get("/orderList",isAdmin,getOrderListAdmin)
 router.get("/orderDetailsPage",isAdmin,getOrderDetailsPageAdmin)
 
 router.post("/orderStatusChange",changeOrderStatus)
+
+router.get("/getProductImageEdit",getProductImageEditPage)
 
 module.exports=router

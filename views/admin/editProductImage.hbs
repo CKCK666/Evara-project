@@ -1,0 +1,137 @@
+ <section class="content-main">
+       <input type="hidden" name="pkProductId" value={{pkProductId}}>
+            <div class="row">
+                <div class="col-6">
+                    <div class="content-header">
+                        <h2 class="content-title">Edit {{imgName}}</h2>
+                        <div>
+                            
+                            
+                        </div>
+                    </div>
+                </div>
+             
+            </div>
+         
+            
+            <div class="row">
+              
+                <div class="col-lg-8">
+                    <h3 class="text-center"></h3>
+    <div class="row">
+    <div class="col-4">
+        <div class="mb-4">
+            <label class="form-label">{{imgName}}</label>
+            <div id="imagePreviewContainer1" class="image-preview-container">
+                <img id="previewImage1" src={{productImage}} alt="Selected Image">
+            </div>
+              <div class="input-container">
+    
+    <div class="image-container">
+      <h3 class="heading">Main Image </h3>
+      <input type="file" class="inputImage" accept="image/*">
+      <div class="image-preview"></div>
+      <button class="cropButton">Crop Image</button>
+      <h6 class="cropped-heading">Cropped Image Preview </h6>
+      <div class="cropped-preview"></div>
+    </div>
+  </div>
+   
+   <button id="product-edit-image" data-image-name="{{imgName}}" data-product-id="{{pkProductId}}"  class="btn btn-md rounded font-sm hover-up product-edit-image">Edit main image</button>
+           
+        </div>
+     
+    </div>
+   
+</div>
+
+ 
+              </div> 
+        
+         
+         
+         
+         
+         
+         
+         
+           </div>
+  
+
+
+  
+
+
+
+
+
+
+
+
+ {{!-- /imagessss --}}
+            
+            </div>
+            </div>
+        </section>
+
+        
+
+
+
+<style>
+
+.image-container {
+      margin-bottom: 20px;
+    }
+    .image-preview {
+      width: 400px;
+      height: 300px;
+      overflow: hidden;
+      display: none; /* Initially hide image preview */
+    }
+    .cropped-preview {
+      width: 600px;
+      height: 600px;
+      
+      display: none; /* Initially hide cropped image preview */
+    }
+    .cropButton, .heading {
+      display: none; /* Initially hide crop button and heading */
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    .numOnly::-webkit-inner-spin-button,
+.numOnly::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.numOnly {
+  /* Firefox */
+  -moz-appearance: textfield;
+}
+
+.form-control.error:not(#search-form-control){
+        border-color: red;}
+
+
+
+/* Optional: Add some styling to the label */
+.form-label {
+    font-weight: bold;
+}
+     </style>

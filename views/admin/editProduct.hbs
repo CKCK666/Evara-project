@@ -14,7 +14,7 @@
          
             
             <div class="row">
-                <div class="col-lg-4">
+                <div class="col-lg-7">
                     <div class="card mb-4">
                         <div class="card-body">
                             <form action="/admin/editProduct" method="POST" enctype="multipart/form-data" id="product-edit-form">
@@ -99,13 +99,22 @@
                           
                         </div>
                        
+ 
+
+
+
+
+
                     </div>
                     
                 </div>
 
-                {{!-- image --}}
+              
+
+            
 
                 <div class="col-lg-8">
+                    <h3 class="text-center">Edit Product Images</h3>
     <div class="row">
     <div class="col-4">
         <div class="mb-4">
@@ -113,16 +122,21 @@
             <div id="imagePreviewContainer1" class="image-preview-container">
                 <img id="previewImage1" src={{product.[0].mainProductUrl}} alt="Selected Image">
             </div>
-            <input name="mainProductImg" class="form-control inputImage1" type="file" onchange="displaySelectedImage(this, 'imagePreviewContainer1', 'previewImage1')">
+    
+  <a href="/admin/getProductImageEdit?pkProductId={{product.[0].pkProductId}}&imgName=Main Image"> <button   class="btn btn-md rounded font-sm hover-up">Edit main image</button></a>
+           
         </div>
+     
     </div>
+    
     <div class="col-4 ml-4">
         <div class="mb-4">
             <label class="form-label">Image-1</label>
             <div id="imagePreviewContainer2" class="image-preview-container">
                 <img id="previewImage2" src={{imageUrl1}} alt="Selected Image">
             </div>
-            <input name="otherProductImg1" class="form-control inputImage2" type="file" onchange="displaySelectedImage(this, 'imagePreviewContainer2', 'previewImage2')">
+                      
+       <a href="/admin/getProductImageEdit?pkProductId={{product.[0].pkProductId}}&imgName=Image-1"> <button   class="btn btn-md rounded font-sm hover-up">Edit main image</button></a>     
         </div>
     </div>
     <div class="col-4">
@@ -131,27 +145,35 @@
             <div id="imagePreviewContainer3" class="image-preview-container">
                 <img id="previewImage3" src={{imageUrl2}} alt="Selected Image">
             </div>
-            <input name="otherProductImg2" class="form-control inputImage3" type="file" onchange="displaySelectedImage(this, 'imagePreviewContainer3', 'previewImage3')">
+    
+         <a href="/admin/getProductImageEdit?pkProductId={{product.[0].pkProductId}}&imgName=Image-2"> <button  class="btn btn-md rounded font-sm hover-up">Edit main image</button></a> 
         </div>
     </div>
 </div>
 
- <div class="row">
-
-    <div class="col-md-4 d-flex justify-content-end align-items-center">
-    <button id="product-edit-image1"  class="btn btn-md rounded font-sm hover-up">Publish</button>
-    </div>
-     <div class="col-md-4  d-flex justify-content-end align-items-center">
-    <button id="product-edit-image2"  class="btn btn-md rounded font-sm hover-up">Publish</button>
-    </div>
-     <div class="col-md-4  d-flex justify-content-end align-items-center">
-    <button id="product-edit-image3"  class="btn btn-md rounded font-sm hover-up">Publish</button>
-    </div>
-
- </div>
-</div>
-</div>
+ 
+              </div> 
+        
+         
+         
+         
+         
+         
+         
+         
+           </div>
   
+
+
+  
+
+
+
+
+
+
+
+
  {{!-- /imagessss --}}
             
             </div>
@@ -160,31 +182,44 @@
 
         
 
- <script>
-function displaySelectedImage(input, previewContainerId) {
-    if (input.files && input.files[0]) {
-        var reader = new FileReader();
 
-        reader.onload = function (e) {
-            $('#' + previewContainerId).find('img').attr('src', e.target.result);
-            $('#' + previewContainerId + ' img').on('load', function () {
-               
-            });
-        };
-
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-
-
-
-  
-
-
-</script>
 
 <style>
+
+.image-container {
+      margin-bottom: 20px;
+    }
+    .image-preview {
+      width: 400px;
+      height: 300px;
+      overflow: hidden;
+      display: none; /* Initially hide image preview */
+    }
+    .cropped-preview {
+      width: 600px;
+      height: 600px;
+      
+      display: none; /* Initially hide cropped image preview */
+    }
+    .cropButton, .heading {
+      display: none; /* Initially hide crop button and heading */
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     .numOnly::-webkit-inner-spin-button,
 .numOnly::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -200,31 +235,6 @@ function displaySelectedImage(input, previewContainerId) {
         border-color: red;}
 
 
-   #imagePreviewContainer1, #imagePreviewContainer2,#imagePreviewContainer3{
-    width: 300px;
-    height: 450px; /* Adjust height as needed */
-    border: 1px solid #ccc;
-    background: #f9f9f9;
-    overflow: hidden;
-    position: relative;
-}
-
-.image-preview-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.image-preview-container input[type="file"] {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: pointer;
-    z-index: 2; /* Ensure the file input is clickable */
-}
 
 /* Optional: Add some styling to the label */
 .form-label {

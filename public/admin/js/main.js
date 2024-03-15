@@ -3,7 +3,7 @@
 
 
 $(document).ready(function () {
-
+let imageData=[]
 
   $('.form-control').focus(function () {
       $(this).removeClass('error');
@@ -104,121 +104,6 @@ if (category_id) {
     
   });
 
-  // add product 
-  $('#product-submit').click(function (e) {
-      e.preventDefault()
-      let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
-      let data = new FormData($('#product-form')[0]);
-
-      for (let pair of data.entries()) {
-        let [key, value] = pair;
-        if (typeof value === 'string') {
-            data.set(key, value.trim());
-        }
-    }
-  
-
-      
-      let pkProductId=data.get("pkProductId")
-          
-      let strProductName=data.get("strProductName")
-      let strDescription=data.get("strDescription")
-      let intPrice=parseInt(data.get("intPrice"))
-      let intStock=parseInt(data.get("intStock"))
-      let mainProductImg=data.get("mainProductImg")
-      let otherProductImg1=data.get("otherProductImg1")
-      let otherProductImg2=data.get("otherProductImg2")
-     
-     
-        if (strProductName === ''|| strDescription=='' || !mainProductImg || !intPrice || !intStock || !otherProductImg1 || !otherProductImg2) {
-      
-          $('#errorMessage').text('Please fill in all fields.');
-          $('.form-control').addClass('error') 
-
-          return false;
-      }
-       if(intPrice<=0 || typeof intPrice===Number){
-        $('#errorMessage').text('Invaild product price');
-        $("input[name='intPrice']").addClass('error')   
-        return false;
-       }
-       if(intStock<=0 ||  typeof intPrice===Number){
-        $('#errorMessage').text('Invaild product stock');
-        $("input[name='intStock']").addClass('error')   
-        return false;
-       }
-      
-      if(strProductName.length<4){
-          $('#errorMessage').text('Product name must be at least 4 characters long.');
-          $("input[name='strProductName']").addClass('error')   
-          return false;
-      }
-
-      if (!nameRegex.test(strProductName)) {
-        $('#errorMessage').text('Product name must contain at least three alphabetical character');
-        $("input[name='strProductName']").addClass('error');
-        return false;
-    }
-
-    if(strDescription.length<5){
-      $('#errorMessage').text('Description must be at least 5 characters long.');
-      $("textarea[name='strDescription']").addClass('error')   
-      return false;
-  }
-   
-  if (!nameRegex.test(strDescription)) {
-    $('#errorMessage').text('Description must contain at least three alphabetical character');
-    $("textarea[name='strDescription']").addClass('error');
-    return false;
-}
-let swalLoader = Swal.fire({
-  title: 'Loading...',
-  allowOutsideClick: false,
-  showConfirmButton: false,
-  onBeforeOpen: () => {
-      Swal.showLoading();
-  }
-});
-
-
-// $('#product-form').submit()
-$.ajax({
-  url: $('#product-form').attr('action'),
-  data:data,
-  type: "POST",
-  processData: false,
-  contentType: false,
-  success: function(response) {
-      if (response.success) {
-        swalLoader.close()
-          Swal.fire({
-              position: 'top-end',
-              icon: 'success',
-              title: 'successfully added a product',
-              showConfirmButton: false,
-              timer: 1500,
-              didClose:()=>{
-            window.location.href = '/admin/getAddProduct';
-              }
-            })
-          console.log('success:', response.message);
-      } else {
-        swalLoader.close()
-          $('#errorMessage').text(response.message)
-      }
-     
-  },
-  error: function(error) {
-    swalLoader.close()
-      console.error('Error:', error);
-  }
-});
-
-return false;
- 
-
-    
-  });
 
   $("#login-submit").click(async function(e){
     e.preventDefault()
@@ -292,7 +177,8 @@ $('#product-edit-submit').click(function (e) {
   let strDescription=data.get("strDescription")
   let intPrice=data.get("intPrice")
   let intStock=data.get("intStock")
- 
+  
+
    console.log(pkProductId,strDescription,strProductName,intPrice,intStock);
 
 
@@ -310,6 +196,18 @@ $('#product-edit-submit').click(function (e) {
       $("input[name='strProductName']").addClass('error')   
       return false;
   }
+
+  if(intPrice<=0 ){
+    $('#errorMessage').text('Invaild product price');
+    $("input[name='intPrice']").addClass('error')   
+    return false;
+   }
+   if (intStock.includes('.') || intStock <= 0){
+    $('#errorMessage').text('Invaild product stock');
+    $("input[name='intStock']").addClass('error')   
+    return false;
+   }
+
 
   if (!nameRegex.test(strProductName)) {
     $('#errorMessage').text('Product name must contain at least three alphabetical character');
@@ -458,134 +356,207 @@ $(".order-status-change-btn").click(function(e){
 })
 
 
-$('#product-edit-image1').click(function(e){
-  e.preventDefault()
-  let pkProductId = $("input[name='pkProductId']").val()
-  let formData = new FormData();
-  $(".inputImage1").each(function() {
-   
-    let file = $(this)[0].files[0];
-    formData.append($(this).attr('name'), file);
-})
-formData.append('pkProductId', pkProductId);
 
-console.log(formData);
-let swalLoader = Swal.fire({
-  title: 'Loading...',
-  allowOutsideClick: false,
-  showConfirmButton: false,
-  onBeforeOpen: () => {
-      Swal.showLoading();
-  }
-});
 
-$.ajax({
-  url:"/admin/editProductImages", 
-  data:formData,
-  type: "POST",
-  processData: false,
-  contentType: false,
-  success: function(response) {
-    if (response.success) {
-      swalLoader.close()
-        Swal.fire({
-            position: 'top-end',
-            icon: 'success',
-            title: 'successfully edited a product',
-            showConfirmButton: false,
-            timer: 1500,
-            didClose:()=>{
-           window.location.reload()
-            }
-          })
-        console.log('success:', response.message);
-    } else {
-      swalLoader.close()
-        $('#errorMessage').text(response.message)
+document.querySelectorAll('.inputImage').forEach(function(input, index) {
+  input.addEventListener('change', function (e) {
+    var imageFile = e.target.files[0];
+    var imageType = /^image\//;
+
+    if (!imageType.test(imageFile.type)) {
+      console.error('Please select an image file');
+      return;
     }
-   
-  },
-  error: function(error) {
-  swalLoader.close()
-    console.error('Error:', error);
-  }
-  });
 
+    var reader = new FileReader();
+    reader.onload = function (event) {
+      var img = new Image();
+      img.src = event.target.result;
+      img.onload = function () {
+        var imagePreview = input.parentElement.querySelector('.image-preview');
+        imagePreview.innerHTML = ''; // Clear previous image if any
+        imagePreview.style.display = 'block'; // Show image preview
+        imagePreview.appendChild(img);
 
+        var cropper = new Cropper(img, {
+          // No fixed aspect ratio
+          crop: function (event) {
+            // You can access cropped data here
+            // Example: console.log(event.detail.x, event.detail.y, event.detail.width, event.detail.height, event.detail.rotate, event.detail.scaleX, event.detail.scaleY);
+          }
+        });
 
-});
+        // Show crop button and heading
+        input.parentElement.querySelector('.cropButton').style.display = 'block';
+        input.parentElement.querySelector('.heading').style.display = 'block';
 
+        input.parentElement.querySelector('.cropButton').addEventListener('click', function () {
+          var croppedCanvas = cropper.getCroppedCanvas();
+          var croppedPreview = input.parentElement.querySelector('.cropped-preview');
+          croppedPreview.innerHTML = ''; // Clear previous preview if any
+          croppedPreview.style.display = 'block'; // Show cropped image preview
+          croppedPreview.appendChild(croppedCanvas);
 
-$('#product-edit-image2').click(function(e){
-  e.preventDefault()
-  let pkProductId = $("input[name='pkProductId']").val()
-  let formData = new FormData();
-  $(".inputImage2").each(function() {
-   
-    let file = $(this)[0].files[0];
-    formData.append($(this).attr('name'), file);
-})
-formData.append('pkProductId', pkProductId);
-
-console.log(formData);
-let swalLoader = Swal.fire({
-  title: 'Loading...',
-  allowOutsideClick: false,
-  showConfirmButton: false,
-  onBeforeOpen: () => {
-      Swal.showLoading();
-  }
-});
-
-$.ajax({
-  url:"/admin/editProductImages", 
-  data:formData,
-  type: "POST",
-  processData: false,
-  contentType: false,
-  success: function(response) {
-    if (response.success) {
-      swalLoader.close()
-        Swal.fire({
-            position: 'top-end',
-            icon: 'success',
-            title: 'successfully edited a product',
-            showConfirmButton: false,
-            timer: 1500,
-            didClose:()=>{
-           window.location.reload()
-            }
+          // Get the cropped image data
+          var croppedImageData = croppedCanvas.toDataURL();
+          var imageName = imageFile.name;
+          
+          imageData.push({
+            croppedImageData,
+            imageName,
+            index:index+1
           })
-        console.log('success:', response.message);
-    } else {
-      swalLoader.close()
-        $('#errorMessage').text(response.message)
-    }
-   
-  },
-  error: function(error) {
-  swalLoader.close()
-    console.error('Error:', error);
-  }
+          // Send cropped image data and image name to backend
+          // sendToBackend(croppedImageData, imageName, index + 1);
+        });
+      };
+    };
+    reader.readAsDataURL(imageFile);
   });
-
-
-
 });
+
+
+
+
+
+  // add product 
+  $('#product-submit').click(function (e) {
+    e.preventDefault()
+
+   
+    
+    let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
+    let data = new FormData($('#product-form')[0]);
+    
+    imageData.map((img)=>{
+      data.append(`Image_${img.index}`,img.croppedImageData)
+    })
+
+    console.log(data);
+    
+    for (let pair of data.entries()) {
+      let [key, value] = pair;
+      if (typeof value === 'string') {
+          data.set(key, value.trim());
+      }
+  }
+
+
+    
+    let pkProductId=data.get("pkProductId")
+        
+    let strProductName=data.get("strProductName")
+    let strDescription=data.get("strDescription")
+    let intPrice=parseInt(data.get("intPrice"))
+    let intStock=parseInt(data.get("intStock"))
+  
+   
+   
+      if (strProductName === ''|| strDescription=='' || !intPrice || !intStock) {
+    
+        $('#errorMessage').text('Please fill in all fields.');
+        $('.form-control').addClass('error') 
+
+        return false;
+    }
+     if(intPrice<=0){
+      $('#errorMessage').text('Invaild product price');
+      $("input[name='intPrice']").addClass('error')   
+      return false;
+     }
+     if (intStock.includes('.') || intStock <= 0){
+      $('#errorMessage').text('Invaild product stock');
+      $("input[name='intStock']").addClass('error')   
+      return false;
+     }
+    
+    if(strProductName.length<4){
+        $('#errorMessage').text('Product name must be at least 4 characters long.');
+        $("input[name='strProductName']").addClass('error')   
+        return false;
+    }
+
+    if (!nameRegex.test(strProductName)) {
+      $('#errorMessage').text('Product name must contain at least three alphabetical character');
+      $("input[name='strProductName']").addClass('error');
+      return false;
+  }
+
+  if(strDescription.length<5){
+    $('#errorMessage').text('Description must be at least 5 characters long.');
+    $("textarea[name='strDescription']").addClass('error')   
+    return false;
+}
  
+if (!nameRegex.test(strDescription)) {
+  $('#errorMessage').text('Description must contain at least three alphabetical character');
+  $("textarea[name='strDescription']").addClass('error');
+  return false;
+}
+let swalLoader = Swal.fire({
+title: 'Loading...',
+allowOutsideClick: false,
+showConfirmButton: false,
+onBeforeOpen: () => {
+    Swal.showLoading();
+}
+});
 
-$('#product-edit-image3').click(function(e){
-  e.preventDefault()
-  let pkProductId = $("input[name='pkProductId']").val()
-  let formData = new FormData();
-  $(".inputImage3").each(function() {
+
+// $('#product-form').submit()
+$.ajax({
+url:"/admin/addProduct",
+data:data,
+type: "POST",
+processData: false,
+contentType: false,
+success: function(response) {
+    if (response.success) {
+      swalLoader.close()
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'successfully added a product',
+            showConfirmButton: false,
+            timer: 1500,
+            didClose:()=>{
+          window.location.href = '/admin/getAddProduct';
+            }
+          })
+        console.log('success:', response.message);
+    } else {
+      swalLoader.close()
+        $('#errorMessage').text(response.message)
+    }
    
-    let file = $(this)[0].files[0];
-    formData.append($(this).attr('name'), file);
-})
-formData.append('pkProductId', pkProductId);
+},
+error: function(error) {
+  swalLoader.close()
+    console.error('Error:', error);
+}
+});
 
-console.log(formData);
+return false;
+
+
+  
+});
+
+
+
+$('.product-edit-image').click(function(e){
+  e.preventDefault()
+  // let pkProductId = $("input[name='pkProductId']").val()
+  let pkProductId = $(this).data('product-id');
+  let imgName=$(this).data('image-name');
+  let data = new FormData();
+    
+  imageData.map((img)=>{
+    data.append('imageUrl',img.croppedImageData)
+  })
+  data.append('pkProductId',pkProductId)
+  data.append('imgName',imgName)
+
 let swalLoader = Swal.fire({
   title: 'Loading...',
   allowOutsideClick: false,
@@ -597,7 +568,7 @@ let swalLoader = Swal.fire({
 
 $.ajax({
   url:"/admin/editProductImages", 
-  data:formData,
+  data:data,
   type: "POST",
   processData: false,
   contentType: false,
@@ -611,7 +582,7 @@ $.ajax({
             showConfirmButton: false,
             timer: 1500,
             didClose:()=>{
-           window.location.reload()
+           window.location.href=`/admin/getProductEdit?pkProductId=${pkProductId}`
             }
           })
         console.log('success:', response.message);
@@ -630,6 +601,16 @@ $.ajax({
 
 
 });
+
+
+
+
+
+
+
+
+
+
 
 
 

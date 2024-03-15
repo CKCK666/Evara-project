@@ -14,7 +14,7 @@
                 <div class="col-lg-6">
                     <div class="card mb-4">
                         <div class="card-body">
-                            <form action="/admin/addProduct" method="POST" enctype="multipart/form-data" id="product-form">
+                            <form  method="POST" enctype="multipart/form-data" id="product-form">
                             
                             <div class="row">
                                 <div class="col-md-3">
@@ -73,7 +73,7 @@
                                  <!-- col.// -->
                             </div> <!-- row.// -->
                             <hr class="mb-4 mt-3">
-                            <div class="row">
+                             {{!-- <div class="row">
                                 <div class="col-md-3">
                                     <h6>5. Media</h6>
                                 </div>
@@ -108,7 +108,7 @@
                                     </div>
                                 </div>
                                  <!-- col.// -->
-                            </div>
+                            </div> --}}
                              <div class="row">
                                 <div class="col-md-9">
                                     <h6></h6>
@@ -121,25 +121,70 @@
                                 </div>
                                  <!-- col.// -->
                             </div>
+                           
+                           
                              <div>
                                     <h6
                                  id='errorMessage'
                                    style='color: red; text-align: center'
                                    ></h6>
                                    </div>
+  
+
+
+
                            </form>
                           
                         </div>
+
+                         <h4>Add images</h4>
+  <div class="input-container">
+    
+    <div class="image-container">
+      <h3 class="heading">Main Image </h3>
+      <input type="file" class="inputImage" accept="image/*">
+      <div class="image-preview"></div>
+      <button class="cropButton">Crop Image</button>
+      <h6 class="cropped-heading">Cropped Image Preview 1</h6>
+      <div class="cropped-preview"></div>
+    </div>
+  </div>
+
+  <div class="input-container">
+    <div class="image-container">
+       <h3 class="heading"> Image-1 </h3>
+      <input type="file" class="inputImage" accept="image/*">
+      <div class="image-preview"></div>
+      <button class="cropButton">Crop Image</button>
+      <h6 class="cropped-heading">Cropped Image Preview 2</h6>
+      <div class="cropped-preview"></div>
+    </div>
+  </div>
+
+  <div class="input-container">
+    <div class="image-container">
+      <h3 class="heading">Image-2 </h3>
+      <input type="file" class="inputImage" accept="image/*">
+      <div class="image-preview"></div>
+      <button class="cropButton">Crop Image</button>
+      <h6 class="cropped-heading">Cropped Image Preview 3</h6>
+      <div class="cropped-preview"></div>
+    </div>
+  </div>
+
                        
                     </div>
                     
                 </div>
-               <div class="col-lg-6">
-           <div id="imagePreview">
-        <!-- Image previews will be displayed here -->
-          </div>
-          </div> 
-    <!-- Image preview will be displayed here -->
+
+         
+
+                    
+
+ 
+
+             
+           
             </div>
             </div>
             </div>
@@ -149,45 +194,29 @@
             .form-control.error:not(#search-form-control){
         border-color: red;}
 
-          #imagePreview {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%; /* Ensure the container fills its parent's height */
+        .image-container {
+      margin-bottom: 20px;
     }
-
     .image-preview {
-        max-width: 100%; /* Ensure the image doesn't exceed the container width */
-        max-height: 100%; /* Ensure the image doesn't exceed the container height */
+      width: 400px;
+      height: 300px;
+      overflow: hidden;
+      display: none; /* Initially hide image preview */
+    }
+    .cropped-preview {
+      width: 600px;
+      height: 600px;
+      
+      display: none; /* Initially hide cropped image preview */
+    }
+    .cropButton, .heading {
+      display: none; /* Initially hide crop button and heading */
     }
 
     
         </style>
 
-        <script>
-function displaySelectedImage(input) {
-    const imagePreview = document.getElementById('imagePreview');
-
-    // Clear previous image preview
-    imagePreview.innerHTML = '';
-
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-
-        reader.onload = function(e) {
-            const image = document.createElement('img');
-            image.src = e.target.result;
-            image.classList.add('img-fluid');
-          
-           
-              imagePreview.appendChild(image);
-        };
-
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-</script>
-
+   
 <style>
     .numOnly::-webkit-inner-spin-button,
 .numOnly::-webkit-outer-spin-button {
