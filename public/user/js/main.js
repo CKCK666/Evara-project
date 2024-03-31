@@ -428,6 +428,9 @@ $.ajax({
 
 $("#place-order-btn").click(async function(e){
   e.preventDefault()
+  const razorpayRadioButton = document.querySelector('#razorpayOption');
+ 
+  
   const radioButtons = document.querySelectorAll('input[type="radio"][name="shipping-address"]');
   let pkAddressId;
 
@@ -455,36 +458,80 @@ $("#place-order-btn").click(async function(e){
     $('#errorMessage').text('Select a shipping address');
     return
   }
+  if(razorpayRadioButton.checked){
+    $.ajax({
+      type: 'POST', 
+      url: '/checkOutRazorPay',
+      data:{
+        pkAddressId
+      },
+      success: function(response) {
+          if (response.razorpay) {
+            var options = {
+              key: "rzp_test_N10HdSb3UEKLbM",
+              amount: 50000, // Amount in paise (change to your desired amount)
+              currency: 'INR',
+              name: 'Your Company Name',
+              description: 'Payment for Order',
+              image: 'https://example.com/logo.png',
+              handler: function (response){
+                  // Handle Razorpay response
+                  fetch('/payment/success', {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify(response),
+                  }).then(function(response) {
+                      window.location.href = '/success';
+                  });
+              }
+          };
+          var rzp = new Razorpay(options);
+          rzp.open();
+          } else {
+              $('#errorMessage').text(response.message)
+          }
+         
+      },
+      error: function(error) {
+        $('#errorMessage').text(error.message)
+          console.error('Error:', error);
+      }
+  });
+  }
+  else{
+    $.ajax({
+      type: 'POST', 
+      url: '/checkOut',
+      data:{
+        pkAddressId
+      },
+      success: function(response) {
+          if (response.success) {
+              Swal.fire({
+                  position: 'top-end',
+                  icon: 'success',
+                  title: 'Successfully ordered',
+                  showConfirmButton: false,
+                  timer: 1500,
+                  didClose:()=>{
+                window.location.href = '/';
+                  }
+                })
+              console.log('success:', response.message);
+          } else {
+              $('#errorMessage').text(response.message)
+          }
+         
+      },
+      error: function(error) {
+        $('#errorMessage').text(error.message)
+          console.error('Error:', error);
+      }
+  });
   
- $.ajax({
-    type: 'POST', 
-    url: '/checkOut',
-    data:{
-      pkAddressId
-    },
-    success: function(response) {
-        if (response.success) {
-            Swal.fire({
-                position: 'top-end',
-                icon: 'success',
-                title: 'Successfully ordered',
-                showConfirmButton: false,
-                timer: 1500,
-                didClose:()=>{
-              window.location.href = '/';
-                }
-              })
-            console.log('success:', response.message);
-        } else {
-            $('#errorMessage').text(response.message)
-        }
-       
-    },
-    error: function(error) {
-      $('#errorMessage').text(error.message)
-        console.error('Error:', error);
-    }
-});
+  }
 
 
  
@@ -601,12 +648,13 @@ $.ajax({
     
         
       } else {
+        
           $('#errorMessage').text(response.message)
       }
      
   },
   error: function(error) {
-      
+    $('#errorMessage').text(error.message)
       console.error('Error:', error);
   }
 });
@@ -999,7 +1047,39 @@ $.ajax({
    
 })
 
+let productName
+let pkOrderId
+document.getElementById('searchForm').addEventListener('submit', function(event) {
+  event.preventDefault(); // Prevent default form submission behavior
 
+  var category = document.querySelector('.select-active').value;
+  var searchQuery = document.getElementById('searchInput').value;
+
+  console.log('Category:', category);
+  console.log('Search Query:', searchQuery);
+
+  // Clear the input fields if needed
+  document.getElementById('searchInput').value = '';
+
+   productName=searchQuery
+   pkCategoryId=category
+
+  
+
+
+   
+});
+
+document.getElementById('searchInput').addEventListener('keydown', async function(event) {
+  if (event.key === 'Enter') {
+      event.preventDefault(); // Prevent default Enter key behavior (form submission)
+
+      // Trigger the form submission by clicking the submit button
+      document.getElementById('submitButton').click();
+      const url = `/search?pkCategoryId=${pkCategoryId}&productName=${productName}`;
+      window.location.href=url
+  }
+});
 
 
 

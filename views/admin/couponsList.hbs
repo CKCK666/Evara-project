@@ -1,0 +1,63 @@
+ <section class="content-main">
+    <div class="content-header">
+      <h2 class="content-title">Coupon Management</h2>
+      <div>
+        <a href="/admin/getCreateCoupon" class="btn btn-primary">Create new</a>
+      </div>
+    </div>
+    <div class="card" id="space">
+      <div class="card-body">
+        <div class="row">
+
+  
+    <div class="col-md-12">
+
+     
+        <div class="mt-4">
+          <table id="myTable" class="table table-hover">
+            <thead>
+              <tr>
+               
+                <th>No</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>Coupon code</th>
+                <th>Coupon discount</th>
+                <th>Expiry Date</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+                 {{#if coupons}}
+                 {{#each coupons}}
+                <tr>
+                  <td>{{index}}</td>
+                  <td>{{name}}</td>
+                  <td>{{status}}</td>
+                  <td>{{code}}</td>
+                  <td>{{discount}}</td>
+                  <td>{{endDate}}</td>
+                  <td class="d-flex flex-row text-center">
+                    <a class="dropdown-item w-50 p-0"  href="/admin/getCouponEdit?_id={{_id}}">Edit</a>
+                    <a class="dropdown-item w-50 p-0 text-danger delete" href="#" onclick="handleBlockCoupon('{{_id}}','{{status}}')" >
+                  {{#eq status 'Blocked'}}Unblock{{else}}Block{{/eq}}
+              
+                    </a>
+             
+                   </td>
+                  
+              
+                  
+                  
+                </tr>
+                {{/each}}
+               {{/if}}
+            </tbody>
+          </table>
+     
+    </div>
+</div>
+</div>
+</div>
+    <!-- card end// -->
+  </section>

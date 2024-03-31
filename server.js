@@ -9,12 +9,17 @@ const colors = require('colors')
 const  session=require('express-session')
 const adminRoutes =require("./routes/adminRoutes")
 const handlebars = require('handlebars');
-var logger = require("morgan");
+var logger = require("morgan"); 
 const passport = require('./middlewares/passport-setup');
-
+const moment = require('moment');
 connectDB()
 handlebars.registerHelper('eq', function(arg1, arg2, options) {
   return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
+});
+handlebars.registerHelper('formatDate', function(startDate) {
+  const formattedStartDate = `${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}`
+  console.log(formattedStartDate);
+  return  formattedStartDate;
 });
 app.set("views",path.join(__dirname,"views"))
 const hbs = exphbs.create({

@@ -34,6 +34,7 @@ const addToCart=async(req,res)=>{
                 $inc: { "arrProducts.$.intQuantity": 1 },
              
               };
+           
               const result = await Cart.updateOne({pkUserId,"arrProducts.pkProductId":pkProductId,strStatus:"Active"}, update);
                if(result.modifiedCount>0){
                 let aggregatePipeline = [

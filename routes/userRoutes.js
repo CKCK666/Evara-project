@@ -4,7 +4,7 @@ const {verifyLogin}=require("../middlewares/verifications")
 const { getSingleProductPage,sortProducts}=require("../controller/productController")
 const {addToCart, getCartPage, changeQuantity, removeFromCart,}=require("../controller/cartController")
 const {editAddress, getEditAddressPage, setAsDefaultAddress,deleteAddress, getAddressPage, addNewAddress}=require("../controller/addressController")
-const {changeOrderStatus, getCheckoutPage, checkOut, getOrderDetailsPage}=require("../controller/orderController")
+const {changeOrderStatus, getCheckoutPage, checkOut, getOrderDetailsPage, checkOutRazorPay}=require("../controller/orderController")
 const router =express.Router()
 const passport = require('passport');
 //get signup page
@@ -87,6 +87,8 @@ router.get("/getCheckoutPage",verifyLogin,getCheckoutPage)
 //checkout
 
 router.post("/checkOut",checkOut)
+
+router.post("/checkOutRazorPay",checkOutRazorPay)
 
 //change quantity
 

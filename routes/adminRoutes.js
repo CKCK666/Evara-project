@@ -30,6 +30,7 @@ const cloudinary = require('cloudinary').v2;
   });
   const uploads = multer({ storage: storage });
 const { isAdmin } = require('../middlewares/verifications');
+const { listCoupons, getCreateCoupons,createCoupon, blockCoupon, getEditCoupon, couponEdit } = require('../controller/couponController');
 
 
 //get home page
@@ -104,8 +105,29 @@ router.get("/orderList",isAdmin,getOrderListAdmin)
 //order details page
 router.get("/orderDetailsPage",isAdmin,getOrderDetailsPageAdmin)
 
+//change order status
 router.post("/orderStatusChange",changeOrderStatus)
 
+//edit image page
 router.get("/getProductImageEdit",getProductImageEditPage)
+
+//get list coupons
+router.get("/listCoupons",listCoupons)
+
+//get Create coupon page
+
+router.get("/getCreateCoupon",getCreateCoupons)
+
+//create coupon
+router.post("/createCoupon",createCoupon)
+
+//block/active coupon
+router.patch("/blockCoupon",blockCoupon)
+
+//get Edit coupon page
+
+router.get("/getCouponEdit",getEditCoupon)
+
+router.post("/couponEdit",couponEdit)
 
 module.exports=router

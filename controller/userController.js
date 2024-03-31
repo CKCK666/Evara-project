@@ -11,7 +11,7 @@ const otpGenerator = require('otp-generator');
 const twilio = require('twilio');
 const Address = require('../models/addressModel');
 const Order = require('../models/orderModel');
-
+const Category=require("../models/categoryModel")
 // Initialize Twilio client with your credentials
 const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_TOKEN;
@@ -95,7 +95,8 @@ const getHome = async (req, res) => {
         ...product._doc
       }
     })
-    let categories =await User.find({strStatus:"Active"})
+    
+    let categories =await Category.aggregate([{$match:{strStatus:"Active"}}])
     let cartCount= await getCartCount(req.session.user.pkUserId)
     res.render('user/homePage', {layout:"user_layout",user:true,products,categories,pkUserId:req.session.user.pkUserId,cartCount});
   } else {

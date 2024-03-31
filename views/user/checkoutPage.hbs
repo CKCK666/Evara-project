@@ -9,7 +9,51 @@
         </div>
         <section class="mt-50 mb-50">
             <div class="container">
+                <div class="col-lg-6">
+                        <div class="toggle_info">
+                            <span><i class="fi-rs-label mr-10"></i><span class="text-muted"></span> <a href="#coupon" data-bs-toggle="collapse" class="collapsed" aria-expanded="false">Apply coupon</a></span>
+                        </div>
+                        <div class="panel-collapse collapse coupon_form " id="coupon">
+                               <div class="card-body">
+                                    <div class="single-form d-flex flex-col gap-3">
+                                      {{#if coupons}}
+                                      {{#each coupons}}
+                                        <div class="col-lg-4">
+                                            <div class="coupon" id="couponContainer">
+                                                
+                                                <h4>{{code}}</h4>
+                                                <h5>{{name}}</h5>
+                                                <p>Discount: {{discount}} %</p>
+                                                <p></p>
+                                          
+                                                    <button type="button" class="copy-btn btn btn-primary btn-sm rounded" id="applyBtn<%= index %>" onclick="useCode('<%= coupon._id %>','<%= index %>')">Apply Coupon</button>
+                                                    <button type="button" class="remove-btn" hidden id="removeBtn<%= index %>"  onclick="removeCoupon('<%= coupon._id %>','<%= index %>')">Remove </button>
+                                                
+                                            </div>
+                                        </div>
+                                        {{/each}}
+                                        {{/if}}
+
+                                     
+                                    
+                                    <!-- </div>
+                                </div>
+                            -->
+                            </div>
+                        
+                    </div>
+                        </div>
+                    </div>
                 <div class="row">
+                    {{!-- <p class="info-header">
+                    <i class="fa fa-exclamation-circle"></i> 
+                    <a data-bs-toggle="collapse" href="#coupon">Apply Coupon</a>
+                </p> --}}
+                 <div class="collapse" id="coupon">
+                 
+                </div>
+                
+
                     <div class="col-lg-6 mb-sm-15">
                          
                        {{#if userAddress}}
@@ -90,16 +134,23 @@
                                 <div class="mb-25">
                                     <h5>Payment</h5>
                                 </div>
-                                <div class="payment_option">
-                                    <div class="custome-radio">
-                                        <input class="form-check-input" required="" type="radio" name="payment_option" id="exampleRadios3" checked="">
-                                        <label class="form-check-label" for="exampleRadios3" data-bs-toggle="collapse" data-target="#bankTranfer" aria-controls="bankTranfer">COD</label>
-                                        <div class="form-group collapse in" id="bankTranfer">
-                                            <p class="text-muted mt-5">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration. </p>
-                                        </div>
-                                    </div>
-                                   
-                                </div>
+                              <div class="payment_option">
+    <div class="custome-radio">
+        <input class="form-check-input" required="" type="radio" name="payment_option" id="codOption" checked="">
+        <label class="form-check-label" for="codOption" data-bs-toggle="collapse" data-target="#codCollapse" aria-controls="codCollapse">COD</label>
+        <div class="form-group collapse in" id="codCollapse">
+            <p class="text-muted mt-5">There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration.</p>
+        </div>
+    </div>
+    <div class="custome-radio">
+        <input class="form-check-input" required="" type="radio" name="payment_option" id="razorpayOption">
+        <label class="form-check-label" for="razorpayOption" data-bs-toggle="collapse" data-target="#razorpayCollapse" aria-controls="razorpayCollapse">Razorpay</label>
+        <div class="form-group collapse in" id="razorpayCollapse">
+            <!-- Razorpay button -->
+            <button id="razorpay-button" class="btn btn-primary">Pay with Razorpay</button>
+        </div>
+    </div>
+</div>
                             </div>
                           
                              <button id="place-order-btn" class='btn btn-fill-out submit' name='submit' value='Submit'>Order submit</button>

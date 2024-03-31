@@ -527,16 +527,19 @@
 
     /*====== SidebarSearch ======*/
     function sidebarSearch() {
+  
         var searchTrigger = $('.search-active'),
             endTriggersearch = $('.search-close'),
             container = $('.main-search-active');
 
         searchTrigger.on('click', function(e) {
+            
             e.preventDefault();
             container.addClass('search-visible');
         });
 
         endTriggersearch.on('click', function() {
+         
             container.removeClass('search-visible');
         });
 

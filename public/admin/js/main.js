@@ -151,6 +151,7 @@ if (category_id) {
                 })
               console.log('success:', response.message);
           } else {
+              
               $('#errorMessage').text(response.message)
           }
          
@@ -464,7 +465,7 @@ document.querySelectorAll('.inputImage').forEach(function(input, index) {
       $("input[name='intPrice']").addClass('error')   
       return false;
      }
-     if (intStock.includes('.') || intStock <= 0){
+     if ( intStock <= 0){
       $('#errorMessage').text('Invaild product stock');
       $("input[name='intStock']").addClass('error')   
       return false;
@@ -604,14 +605,204 @@ $.ajax({
 
 
 
+if(window.location.pathname === "/admin/createCoupon"){
+  document.getElementById("couponType").addEventListener("change", function () {
+    var couponType = this.value;
+    if (couponType === "products") {
+      document.getElementById("categories").value = "none";
+      document.getElementById("productsSection").style.display = "inline-block";
+      document.getElementById("categoriesSection").style.display = "none";
+    } else if (couponType === "categories") {
+      document.getElementById("products").value = "none";
+      document.getElementById("productsSection").style.display = "none";
+      document.getElementById("categoriesSection").style.display =
+        "inline-block";
+    }
+  });
+
+  document
+    .getElementById("generateCodeBtn")
+    .addEventListener("click", function () {
+      const randomCode = generateRandomCode();
+      document.getElementById("code").value = randomCode;
+    });
+  }
+
+  if (window.location.pathname.startsWith("/admin/getCouponEdit")) {
+    document
+      .getElementById("generateCodeBtn")
+      .addEventListener("click", function () {
+        const randomCode = generateRandomCode();
+        document.getElementById("code").value = randomCode;
+      });
+  
+    const product = document.getElementById("productValue").value;
+    const category = document.getElementById("categoriesValue").value;
+    const couponTypeSelect = document.getElementById("couponType");
+    if (!product) {
+      couponTypeSelect.value = "categories";
+      document.getElementById("categories").value = category;
+      document.getElementById("productsSection").style.display = "none";
+      document.getElementById("categoriesSection").style.display = "inline-block";
+    } else if (!category) {
+      couponTypeSelect.value = "products";
+      document.getElementById("products").value = product;
+      document.getElementById("productsSection").style.display = "inline-block";
+      document.getElementById("categoriesSection").style.display = "none";
+    }
+  
+    document.getElementById("couponType").addEventListener("change", function () {
+      var couponType = this.value;
+      if (couponType === "products") {
+        document.getElementById("categories").value = "none";
+        document.getElementById("productsSection").style.display = "inline-block";
+        document.getElementById("categoriesSection").style.display = "none";
+      } else if (couponType === "categories") {
+        document.getElementById("products").value = "none";
+        document.getElementById("productsSection").style.display = "none";
+        document.getElementById("categoriesSection").style.display =
+          "inline-block";
+      }
+    });
+  }
 
 
+function generateRandomCode() {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  const codeLength = 8;
+  let randomCode = "";
+  for (let i = 0; i < codeLength; i++) {
+    randomCode += characters.charAt(
+      Math.floor(Math.random() * characters.length)
+    );
+  }
+  return randomCode;
+}
+
+//coupon submit
+$('#couponCreateForm button[type="submit"]').click(function () {
+
+  // Collect form data
+  let formData = {
+    name: $("#name").val(),
+    code: $("#code").val(),
+    description: $("#description").val(),
+    discount: $("#discount").val(),
+    minAmount: $("#minAmount").val(),
+    maxDiscount: $("#maxDiscount").val(),
+    startDate: $("#startDate").val(),
+    endDate: $("#endDate").val(),
+    usageLimit: $("#usageLimit").val(),
+    couponType: $("#couponType").val(),
+    products: $("#products").val(),
+    categories: $("#categories").val(),
+  };
+
+  $.ajax({
+    type: "POST",
+    url: "/admin/createCoupon",
+    data: formData,
+    success: function (response) {
+      if (response.success) {
+        Swal.fire({
+          icon: "success",
+          title: `Coupon created`,
+        }).then(function () {
+          window.location.href = `/admin/getCreateCoupon`;
+        });
+      } else if (response.validation) {
+        Swal.fire({
+          icon: "info",
+          title: `Invalid entry`,
+        });
+      } else if (response.filled) {
+        Swal.fire({
+          icon: "info",
+          title: `Required fields contain only blank spaces`,
+        });
+      } else if (response.duplicate) {
+        Swal.fire({
+          icon: "info",
+          title: `Duplicate Entry`,
+        });
+      }
+    },
+    error: function (xhr, status, error) {
+      Swal.fire({
+        icon: "info",
+        title: `Some error occured`,
+      });
+      console.error("Error:", error);
+    },
+  });
+  return false;
+});
 
 
+//edit coupon
+$('#couponUpdateForm button[type="submit"]').click(function () {
+ let coupnId= $("#coupnId").val()
+  // Collect form data
+  let formData = {
+    coupnId: $("#coupnId").val(),
+    name: $("#name").val(),
+    code: $("#code").val(),
+    description: $("#description").val(),
+    discount: $("#discount").val(),
+    minAmount: $("#minAmount").val(),
+    maxDiscount: $("#maxDiscount").val(),
+    startDate: $("#startDate").val(),
+    endDate: $("#endDate").val(),
+    usageLimit: $("#usageLimit").val(),
+    couponType: $("#couponType").val(),
+    products: $("#products").val(),
+    categories: $("#categories").val(),
+  };
 
+  console.log(formData);
 
+  $.ajax({
+    type: "POST",
+    url: "/admin/couponEdit",
+    data: formData,
+    success: function (response) {
+      console.log(response);
+      if (response.success) {
+        Swal.fire({
+          icon: "success",
+          title: `Coupon updated`,
+        }).then(function () {
+          window.location.href=`/admin/getCouponEdit?_id=${coupnId}`;
+        });
+      } else if (response.validation) {
+        Swal.fire({
+          icon: "info",
+          title: `Invalid entry`,
+        });
+      } else if (response.filled) {
+        Swal.fire({
+          icon: "info",
+          title: `Required fields contain only blank spaces`,
+        });
+      } else if (response.duplicate) {
+        Swal.fire({
+          icon: "info",
+          title: `Duplicate Entry`,
+        });
+      }
 
-
+      console.log("Response:", response);
+    },
+    error: function (xhr, status, error) {
+      Swal.fire({
+        icon: "info",
+        title: `Some error occured`,
+      });
+      console.error("Error:", error);
+    },
+  });
+  return false;
+});
 
 
 
@@ -777,3 +968,76 @@ const handleDelete=(id,name)=>{
         }
 
 
+        const handleBlockCoupon=(id,strStatus)=>{
+     
+           
+          let status=strStatus=="Active"?"block":"unblock"
+          let url="/admin/blockCoupon"
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                  confirmButton: 'btn btn-success',
+                  cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+              })
+              
+              swalWithBootstrapButtons.fire({
+                title: `Want to ${status}  this Coupon??`,
+                // text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: `Yes, ${status} it!`,
+                cancelButtonText: 'No, cancel!',
+                reverseButtons: true
+              }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'PATCH', 
+                        url: url,
+                         data: {
+                            id,
+                            strStatus
+                         }, 
+                        success: function(response) {
+                            if (response.success) {
+                                swalWithBootstrapButtons.fire(
+                                    `Success!`,
+                                    `Coupon is  ${status}.`,
+                                    'success'
+                                  ).then(()=>{
+                                   
+                                   
+                                       window.location.href = '/admin/listCoupons'
+                                    
+                                  })
+                                 
+                                console.log('success:', response.message);
+                            } else {
+                                swalWithBootstrapButtons.fire(
+                                    'Cancelled',
+                                    
+                                  )
+                            }
+                           
+                        },
+                        error: function(error) {
+                            
+                            console.error('Error:', error);
+                        }
+                    });
+                  
+                } else if (
+                  /* Read more about handling dismissals below */
+                  result.dismiss === Swal.DismissReason.cancel
+                ) {
+                  swalWithBootstrapButtons.fire(
+                    'Cancelled',
+                    
+                  )
+                }
+              })
+            }
+
+    
+      
+        

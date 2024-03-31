@@ -294,7 +294,7 @@ const getProductList=async(req,res)=>{
       }
    }
  
-   //block category
+   //block product
    const blockProduct=async(req,res)=>{
      let {id,strStatus}=req.body
       let status=strStatus=="Active"?"Blocked":"Active"
@@ -331,10 +331,10 @@ const getProductList=async(req,res)=>{
         let product=productFind.map((pro)=>{
            return{...pro._doc}
         })
-        
+        let categories=await Category.aggregate([{$match:{strStatus:"Active"}}])
           if(product.length){
             
-          res.render("user/productSingle",{layout:"user_layout",user:true,product,imageUrl1:product[0].arrayOtherImages[0].imageUrl1,imageUrl2:product[0].arrayOtherImages[1].imageUrl2,pkUserId,cartCount})
+          res.render("user/productSingle",{layout:"user_layout",user:true,product,imageUrl1:product[0].arrayOtherImages[0].imageUrl1,imageUrl2:product[0].arrayOtherImages[1].imageUrl2,pkUserId,cartCount,categories})
           }
           else{
             res.json({success:false,message:"product  not found"})
@@ -348,6 +348,7 @@ const getProductList=async(req,res)=>{
     }
   }
   const sortProducts=async(req,res)=>{
+    console.log(req.query);
     try {
       let sort={createdDate:-1}
        let search={strStatus: 'Active'}
@@ -374,14 +375,28 @@ const getProductList=async(req,res)=>{
       }
   
       }
+      if(req.query.pkCategoryId && req.query.productName && req.query.pkCategoryId!="All Categories"){
+        let productName=req.query.productName
+        let fkcategoryId=new ObjectId(req.query.pkCategoryId)
+        search={
+          $and: [
+            { strProductName: { $regex:productName, $options: 'i' } }, 
+            {fkcategoryId},
+            { ...search },
+            {intStock:{$ne:0}}
+        ] 
+        }
+    
+
+      }
       let findResult=await Product.find(search).sort(sort)
       let result=findResult.map((product)=>{
         return {
           ...product._doc
         }
       })
-      console.log(result);
-      res.render("user/filterProducts",{layout:"user_layout",user:true,result})
+      let categories=await Category.aggregate([{$match:{strStatus:"Active"}}])
+      res.render("user/filterProducts",{layout:"user_layout",user:true,result,categories})
     } catch (error) {
       res.json({success:true,message:error.message})
     }

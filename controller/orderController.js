@@ -11,8 +11,9 @@ const otpGenerator = require('otp-generator');
 const twilio = require('twilio');
 const Address = require('../models/addressModel');
 const Order = require('../models/orderModel');
-
-
+const Coupon= require("../models/couponModel")
+const Razorpay = require("razorpay");
+const crypto = require("crypto");
 
   // change order status
   const changeOrderStatus=async(req,res)=>{
@@ -146,8 +147,18 @@ const Order = require('../models/orderModel');
           return {...obj,intTotalPrice:intTotalPrice}
            
         })
+        
+        let findResult=await Coupon.find({})
       
-         res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,pkUserId,cartDetails,cartCount ,message:"successfully loaded cart page",user:true})
+     let coupons=findResult.map((item)=>{
+  
+      return{
+         ...item._doc,
+      
+      }
+    })
+      
+         res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,pkUserId,cartDetails,cartCount ,coupons,message:"successfully loaded cart page",user:true})
        } else {
         res.redirect("/")
        }
@@ -188,7 +199,7 @@ const Order = require('../models/orderModel');
         arrProductsDetails:cartProducts[0].arrProducts,
         arrDeliveryAddress:arrAddress,
         intTotalOrderPrice:cartProducts[0].total_cart_price,
-        strPaymentStatus:"Success",
+        strPaymentStatus:"Pending",
         strPaymentMethod:"COD",
         strOrderStatus:"Processing",
         createdDate:new Date(),
@@ -243,6 +254,99 @@ const Order = require('../models/orderModel');
       res.json({success:t=false,message:error.message})
     }
   }
+
+   //procced to checkout
+   const checkOutRazorPay=async (req,res)=>{
+    try {
+    
+      let pkUserId=req.session.user.pkUserId
+      if(!req.body.pkAddressId){
+       return res.json({success:false,message:"Required address id"})
+      }
+      let arrAddress=[]
+      let matchAddress={
+        $match:{
+          pkAddressId:new ObjectId(req.body.pkAddressId),
+          strStatus:"Active"
+        }
+      }
+      let userAddress=await Address.aggregate([matchAddress])
+      if(userAddress.length){
+         arrAddress=[...userAddress]
+      }
+      
+      
+    
+      let cartProducts=await Cart.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
+    
+
+
+
+     
+      let dataToAdd=new Order({
+        pkOrderId:new ObjectId(),
+        pkUserId:new ObjectId(pkUserId),
+        arrProductsDetails:cartProducts[0].arrProducts,
+        arrDeliveryAddress:arrAddress,
+        intTotalOrderPrice:cartProducts[0].total_cart_price,
+        strPaymentStatus:"Pending",
+        strPaymentMethod:"RAZORPAY",
+        strOrderStatus:"Pending",
+        createdDate:new Date(),
+        updatedDate:null
+      })
+     let result =await dataToAdd.save()
+
+     if(result._id){
+      let match={
+        $match:{
+          _id:new ObjectId(result._id),
+          strStatus:"Active"
+        }
+      }
+    //  let findOrder=await Order.aggregate([match])
+    const instance = new Razorpay({
+      key_id: process.env.KEY_ID,
+      key_secret: process.env.KEY_SECRET,
+    });
+    
+  let amount=parseInt(cartProducts[0].total_cart_price)*100
+      const options = {
+        amount: amount,
+        currency: "INR",
+        receipt: "" + result._id,
+      };
+
+      const razorpayOrder = await new Promise((resolve, reject) => {
+        instance.orders.create(options, async function (err, order) {
+          if (err) {
+            console.log(err);
+            res.json({success:false,message:"Order failed"})
+            reject(err);
+          } else {
+            console.log(order);
+            resolve(order);
+          }
+        });
+      });
+      return res.json({
+        status: "Success",
+        message: razorpayOrder,
+        orderId: result._id,
+        razorpay: true,
+      });
+      
+     }
+     else{
+      res.json({success:false,message:"Order failed"})
+     }
+  
+    } catch (error) {
+      res.json({success:t=false,message:error.message})
+    }
+  }
+
+
 
   const getOrderDetailsPageAdmin=async(req,res)=>{
    
@@ -354,5 +458,6 @@ const Order = require('../models/orderModel');
     getCheckoutPage,
     checkOut,
     getOrderDetailsPageAdmin,
-    getOrderListAdmin
+    getOrderListAdmin,
+    checkOutRazorPay
   }

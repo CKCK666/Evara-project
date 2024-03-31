@@ -9,11 +9,18 @@ const OrderSchema = new Schema({
     arrProductsDetails:Array,
     arrDeliveryAddress: Array,
     intTotalOrderPrice: Number,
-    strPaymentStatus: String,
-    strPaymentMethod: String,
+    strPaymentStatus: {
+        type: String,
+        enum: ['Success','Failed',"Pending"],
+       
+    },
+    strPaymentMethod:{
+        type: String,
+        enum: ["RAZORPAY","COD"],
+    },
     strOrderStatus: {
         type: String,
-        enum: ['Processing','Confirmed','Shipped','Delivered','Cancelled'],
+        enum: ['Processing','Confirmed','Shipped','Delivered','Cancelled',"Pending"],
         default: 'Active'
     },
     strStatus: {
