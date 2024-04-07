@@ -811,6 +811,7 @@ $('#couponUpdateForm button[type="submit"]').click(function () {
 
 
 
+
 });
 
 
@@ -1039,5 +1040,156 @@ const handleDelete=(id,name)=>{
             }
 
     
-      
+            function reportTypeChanged() {
+              var selectElement = document.querySelector('.sales-report');
+              var selectedOptionValue = selectElement.value;
+              console.log(selectedOptionValue);
+              // Perform action based on the selected option
+              switch (selectedOptionValue) {
+                  case "daily":
+                      daily();
+                      break;
+                  case "weekly":
+                      weekly();
+                      break;
+                  case "yearly":
+                      yearly();
+                      break;
+                  case "custom":
+                      customDate();
+                      break;
+                      case "all":
+                        all();
+                        break;
+                  
+                    
+                  default:
+                      // Default action
+                      window.location.href="/admin"
+              }
+          }
+                     
+
+
+          function daily() {
+         window.location.href="/admin/?sort=daily"
+        }
         
+        function weekly() {
+          window.location.href="/admin/?sort=weekly"
+        }
+        
+        function yearly() {
+          window.location.href="/admin/?sort=yearly"
+        }
+        
+        function customDate() {
+          let elements = document.querySelectorAll(".custom-date");
+
+          // Loop through each element
+          elements.forEach(function(element) {
+              // Change the style to display inline-block
+              element.style.display = "inline-block";
+          });
+          // document.querySelector(".custom_select").style.display="none"
+          document.querySelector(".custom-search").style.display="inline-block"
+
+
+        }
+    
+
+
+
+        function all(){
+         
+          window.location.href="/admin/"
+        }
+      
+        function updateHref() {
+          var startDate = document.getElementById("start-date").value;
+          var endDateInput = document.getElementById("end-date");
+          var endDate = endDateInput.value;
+          
+         
+          endDateInput.min = startDate;
+          
+    
+          if (endDate < startDate) {
+              endDateInput.value = startDate;
+          }
+          
+          let searchLink = document.getElementById("search-link");
+          searchLink.href = "/admin?start=" + startDate + "&end=" + endDate;
+        }
+        
+//pdf generater
+        async function pdfReport(){
+          const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+         let sort = urlParams.get('sort');
+         let start = urlParams.get('start');
+         let end = urlParams.get('end');
+         let fetchUrl='/admin/api/reports/pdf'
+         if(sort!=null && sort!=""){
+          fetchUrl=`/admin/api/reports/pdf?sort=${sort}`
+         }
+        if(start!=null && start!="" && end!=null && end!=""){
+          fetchUrl=`/admin/api/reports/pdf?start=${start}&end=${end}`
+        }
+        
+          try {
+            const response = await fetch(fetchUrl);
+            if (response.ok) {
+              // If successful response, download the generated PDF
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "sales-report.pdf";
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              window.URL.revokeObjectURL(url);
+            } else {
+              console.error("Failed to generate PDF report:", response.statusText);
+            }
+          } catch (error) {
+            console.error("Error generating PDF report:", error);
+          }
+        }
+        
+
+        async function excelReport() {
+          const queryString = window.location.search;
+          const urlParams = new URLSearchParams(queryString);
+           let sort = urlParams.get('sort');
+           let start = urlParams.get('start');
+           let end = urlParams.get('end');
+           let fetchUrl='/admin/api/reports/excel'
+           if(sort!=null && sort!=""){
+            fetchUrl=`/admin/api/reports/excel?sort=${sort}`
+           }
+          if(start!=null && start!="" && end!=null && end!=""){
+            fetchUrl=`/admin/api/reports/excel?start=${start}&end=${end}`
+          }
+          
+          try {
+            const response = await fetch(fetchUrl);
+            if (response.ok) {
+              // If successful response, download the generated Excel file
+              const blob = await response.blob();
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "sales-report.xlsx"; // Adjust the file name if needed
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              window.URL.revokeObjectURL(url);
+            } else {
+              console.error("Failed to generate Excel report:", response.statusText);
+            }
+          } catch (error) {
+            console.error("Error generating Excel report:", error);
+          }
+        }

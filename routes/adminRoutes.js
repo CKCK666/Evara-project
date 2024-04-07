@@ -31,6 +31,8 @@ const cloudinary = require('cloudinary').v2;
   const uploads = multer({ storage: storage });
 const { isAdmin } = require('../middlewares/verifications');
 const { listCoupons, getCreateCoupons,createCoupon, blockCoupon, getEditCoupon, couponEdit } = require('../controller/couponController');
+const { generatePDFReport, generateExcelReport } = require('../controller/reportController');
+
 
 
 //get home page
@@ -129,5 +131,10 @@ router.patch("/blockCoupon",blockCoupon)
 router.get("/getCouponEdit",getEditCoupon)
 
 router.post("/couponEdit",couponEdit)
+
+//generate pdf 
+router.get('/api/reports/pdf',generatePDFReport);
+
+router.get('/api/reports/excel',generateExcelReport);
 
 module.exports=router

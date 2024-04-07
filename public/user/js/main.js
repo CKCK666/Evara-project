@@ -429,7 +429,11 @@ $.ajax({
 $("#place-order-btn").click(async function(e){
   e.preventDefault()
   const razorpayRadioButton = document.querySelector('#razorpayOption');
- 
+  var spanElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
+
+  // Access the text content of the span
+  var totalAmountAfterDiscount = spanElement.textContent;
+  
   
   const radioButtons = document.querySelectorAll('input[type="radio"][name="shipping-address"]');
   let pkAddressId;
@@ -463,32 +467,58 @@ $("#place-order-btn").click(async function(e){
       type: 'POST', 
       url: '/checkOutRazorPay',
       data:{
-        pkAddressId
+        pkAddressId,
+        totalAmountAfterDiscount
       },
       success: function(response) {
           if (response.razorpay) {
+            const order = response.message;
+            const user = response.user;
+            const orderId = response.orderId;
+
             var options = {
               key: "rzp_test_N10HdSb3UEKLbM",
-              amount: 50000, // Amount in paise (change to your desired amount)
+              amount:order.amount, // Amount in paise (change to your desired amount)
               currency: 'INR',
               name: 'Your Company Name',
               description: 'Payment for Order',
               image: 'https://example.com/logo.png',
+              order_id: order.id,
               handler: function (response){
-                  // Handle Razorpay response
-                  fetch('/payment/success', {
-                      method: 'POST',
-                      headers: {
-                          'Content-Type': 'application/json',
-                      },
-                      body: JSON.stringify(response),
-                  }).then(function(response) {
-                      window.location.href = '/success';
+                console.log(response.razorpay_order_id,response.razorpay_signature);
+                  $.ajax({
+                url: "/payment/success",
+                method: "POST",
+                data: {
+                  orderId: orderId,
+                  payment_id: response.razorpay_payment_id,
+                  order_id: response.razorpay_order_id,
+                  signature: response.razorpay_signature,
+                },
+                success: function (data) {
+                  if (data.success) {
+                    window.location.href ="/";
+                    Swal.fire({
+                      icon: "Success",
+                      title: "payment success",
+                    });
+                  }
+                },
+                error: function (xhr, status, error) {
+                  console.error(error);
+                  Swal.fire({
+                    icon: "Success",
+                    title: "payment failed",
                   });
+                  
+                },
+              });
               }
           };
           var rzp = new Razorpay(options);
           rzp.open();
+
+
           } else {
               $('#errorMessage').text(response.message)
           }
@@ -497,6 +527,11 @@ $("#place-order-btn").click(async function(e){
       error: function(error) {
         $('#errorMessage').text(error.message)
           console.error('Error:', error);
+          console.error(error);
+                  Swal.fire({
+                    icon: "Success",
+                    title: "payment failed",
+                  });
       }
   });
   }
@@ -505,7 +540,8 @@ $("#place-order-btn").click(async function(e){
       type: 'POST', 
       url: '/checkOut',
       data:{
-        pkAddressId
+        pkAddressId,
+        totalAmountAfterDiscount
       },
       success: function(response) {
           if (response.success) {
@@ -1081,6 +1117,59 @@ document.getElementById('searchInput').addEventListener('keydown', async functio
   }
 });
 
+let couponApplied=false
+document.addEventListener('click', function(event) {
+  
+  if (event.target.classList.contains('apply-btn')) {
+    if(couponApplied){
+      return alert("coupon already applied")
+    }
+    let totalCartPriceElement= document.querySelector(".product-subtotal.totalAmt")
+    let grandTotalElement=document.querySelector('td.product-subtotal.grandTotalAmt span')
+    let grandTotal=parseFloat(grandTotalElement.textContent)
+    var totalCartPrice = parseFloat( totalCartPriceElement.textContent.substring(1))
+    // Select the button element
+var button = document.querySelector('.copy-btn');
+
+// Get data using getAttribute method
+var id = button.getAttribute('data-id');
+var minAmount = parseFloat(button.getAttribute('data-minAmount'))
+var maxDiscount = parseFloat(button.getAttribute('data-maxDiscount'))
+var discount =parseFloat( button.getAttribute('data-discount'))
+
+  if(totalCartPrice*(discount/100)<maxDiscount && totalCartPrice*(discount/100)>minAmount ){
+    grandTotalElement.textContent=totalCartPrice-totalCartPrice*(discount/100)
+  }else{
+    grandTotalElement.textContent= totalCartPrice-maxDiscount
+  }
+      event.target.textContent = "Applied";
+    
+    // Show Remove Coupon button when Apply Coupon button is clicked
+    const buttonGroup = event.target.closest('.button-group');
+    const removeBtn = buttonGroup.querySelector('.remove-btn');
+    event.target.disabled = true
+    removeBtn.style.display = 'inline-block';
+    couponApplied=true
+  }
+});
+
+
+document.addEventListener('click', function(event) {
+  if (event.target.classList.contains('remove-btn')) {
+    couponApplied=false
+      // Reset Apply Coupon button text to its original state
+      const buttonGroup = event.target.closest('.button-group');
+      const applyBtn = buttonGroup.querySelector('.apply-btn');
+      applyBtn.textContent = "Apply";
+      let grandTotalElement=document.querySelector('td.product-subtotal.grandTotalAmt span')
+      let totalCartPriceElement= document.querySelector(".product-subtotal.totalAmt")
+      var totalCartPrice = parseFloat( totalCartPriceElement.textContent.substring(1))
+      grandTotalElement.textContent= totalCartPrice
+      applyBtn.disabled = false;
+      // Hide Remove Coupon button when clicked
+      event.target.style.display = 'none';
+  }
+});
 
 
 

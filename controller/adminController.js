@@ -9,6 +9,7 @@ const { ObjectId} = require('mongodb');
 const {USER_COLLECTION,ADMIN_COLLECTION, CATEGORY_COLLECTION, PRODUCTS_COLLECTION, ORDER_COLLECTION}=require("../config/collections");
 const { log, logger } = require("handlebars");
 const User = require("../models/userModel")
+const Order = require("../models/orderModel")
 
 //post login
 const adminLogin=async(req,res)=>{
@@ -47,7 +48,70 @@ const adminLogin=async(req,res)=>{
 
 //get admin home page
 const getAdminHome=async(req,res)=>{
-res.render("admin/homePage",{layout:"admin_layout",admin:true})
+  try {
+   
+    const currentDate = new Date();
+    let matchQuery={}
+
+    if(req.query.sort=='daily'){
+        matchQuery={
+          createdDate: {
+            $gte: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()),
+            $lt: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1)
+          }
+        }
+    }
+     if(req.query.sort=='weekly'){
+      const sevenDaysAgo = new Date(currentDate);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      matchQuery={
+         createdDate: { $gte: sevenDaysAgo, $lt: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()) } 
+      }
+    }
+
+    if(req.query.sort=='yearly'){
+      matchQuery={
+      createdDate: {
+        $gte: new Date(currentDate.getFullYear(), 0, 1), // Start of the current year
+        $lt: new Date(currentDate.getFullYear() + 1, 0, 1) // Start of the next year
+    }}
+    }
+    if(req.query.start && req.query.end ){
+      const startDateString = req.query.start
+const endDateString = req.query.end
+
+const startDate = new Date(startDateString);
+const endDate = new Date(endDateString);
+
+endDate.setHours(23, 59, 59, 999); 
+
+matchQuery={
+  createdDate: {
+    $gte:startDate,
+    $lte: endDate
+}}
+
+
+    }
+
+     
+    
+    let findOrder=await Order.find({
+    ...matchQuery
+    }).sort({createdDate:-1})
+
+   let salesOrder=findOrder.map((order)=>{
+        return{
+         ...order._doc
+        }
+   })
+
+  res.render("admin/homePage",{layout:"admin_layout",admin:true,salesOrder})
+    
+  } catch (error) {
+    console.log(error.message);
+  }
+
 }
   
 

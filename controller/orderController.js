@@ -147,18 +147,44 @@ const crypto = require("crypto");
           return {...obj,intTotalPrice:intTotalPrice}
            
         })
+      
+        const productAndCategoryIdsInOrder = cartDetails[0].arrProducts.map((item) => ({
+          productId: item.pkProductId,
+          categoryId: item.fkcategoryId,
+        }));
+        const productIdsInOrder = productAndCategoryIdsInOrder.map(
+          (item) => item.productId
+        );
+        const categoryIdsInOrder = productAndCategoryIdsInOrder.map(
+          (item) => item.categoryId
+        );
         
-        let findResult=await Coupon.find({})
-      
-     let coupons=findResult.map((item)=>{
-  
-      return{
-         ...item._doc,
-      
-      }
-    })
-      
-         res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,pkUserId,cartDetails,cartCount ,coupons,message:"successfully loaded cart page",user:true})
+        const currentDate = new Date();
+
+        const findCoupons = await Coupon.find({
+            $and: [
+                { status: "Active" },
+                {
+                    $or: [
+                        { products: productIdsInOrder },
+                        { categories:categoryIdsInOrder },
+                    ],
+                },
+                { 
+                    $or: [
+                        { usageLimit: { $gt: 0 } }, // Check if usage limit is greater than 0
+                        { endDate: { $gt: currentDate } }, // Check if expiry date is greater than current date
+                    ]          
+                }
+            ],
+        });
+        let coupons=findCoupons.map((coupon)=>{
+          return{
+            ...coupon._doc
+          }
+        })
+        
+       res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,pkUserId,cartDetails,cartCount ,coupons,message:"successfully loaded cart page",user:true})
        } else {
         res.redirect("/")
        }
@@ -199,6 +225,7 @@ const crypto = require("crypto");
         arrProductsDetails:cartProducts[0].arrProducts,
         arrDeliveryAddress:arrAddress,
         intTotalOrderPrice:cartProducts[0].total_cart_price,
+        totalAmountAfterDiscount:parseFloat(req.body.totalAmountAfterDiscount),
         strPaymentStatus:"Pending",
         strPaymentMethod:"COD",
         strOrderStatus:"Processing",
@@ -289,6 +316,7 @@ const crypto = require("crypto");
         arrProductsDetails:cartProducts[0].arrProducts,
         arrDeliveryAddress:arrAddress,
         intTotalOrderPrice:cartProducts[0].total_cart_price,
+        totalAmountAfterDiscount:parseFloat(req.body.totalAmountAfterDiscount),
         strPaymentStatus:"Pending",
         strPaymentMethod:"RAZORPAY",
         strOrderStatus:"Pending",
@@ -329,6 +357,9 @@ const crypto = require("crypto");
           }
         });
       });
+
+      console.log(razorpayOrder);
+
       return res.json({
         status: "Success",
         message: razorpayOrder,
@@ -345,6 +376,47 @@ const crypto = require("crypto");
       res.json({success:t=false,message:error.message})
     }
   }
+
+  function hmac_sha256(data, key) {
+    return crypto.createHmac("sha256", key).update(data).digest("hex");
+  }
+  
+  const verifyPayment = async (req, res) => {
+    const { orderId, payment_id, order_id, signature } = req.body;
+    
+    const order = await Order.findOne({ _id:new ObjectId( orderId )});
+   
+    try {
+      const secret = process.env.KEY_SECRET;
+      const generated_signature = hmac_sha256(
+        order_id + "|" + payment_id,
+        secret
+      );
+  
+      if (generated_signature === signature) {
+        
+        order.strPaymentStatus = "Success";
+        order.strOrderStatus="Processing"
+        order.save();
+       
+        res.json({ success: true, message: orderId });
+      } else {
+        order.strPaymentStatus = "Failed";
+        order.strStatus='Deleted'
+        order.save();
+        console.error("Invalid payment signature");
+        res
+          .status(400)
+          .json({ success: false, error: "Invalid payment signature" });
+      }
+    } catch (error) {
+      order.strPaymentStatus = "Failed";
+      order.strStatus='Deleted'
+      order.save();
+      console.error("Error handling payment success:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  };
 
 
 
@@ -459,5 +531,6 @@ const crypto = require("crypto");
     checkOut,
     getOrderDetailsPageAdmin,
     getOrderListAdmin,
-    checkOutRazorPay
+    checkOutRazorPay,
+    verifyPayment
   }
