@@ -11,7 +11,9 @@ const otpGenerator = require('otp-generator');
 const twilio = require('twilio');
 const Address = require('../models/addressModel');
 const Order = require('../models/orderModel');
-const Category=require("../models/categoryModel")
+const Category=require("../models/categoryModel");
+const Wishlist = require('../models/wishListModel');
+const Wallet =require("../models/walletModel")
 // Initialize Twilio client with your credentials
 const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_TOKEN;
@@ -95,10 +97,22 @@ const getHome = async (req, res) => {
         ...product._doc
       }
     })
-    
+   
     let categories =await Category.aggregate([{$match:{strStatus:"Active"}}])
     let cartCount= await getCartCount(req.session.user.pkUserId)
-    res.render('user/homePage', {layout:"user_layout",user:true,products,categories,pkUserId:req.session.user.pkUserId,cartCount});
+    let wishListCount=0
+   let wishlist=  await Wishlist.aggregate([{$match:{pkUserId:objectIdToFind,strStatus:"Active"}}, {
+    $project: {
+        _id: 1,
+        itemCount: { $size: "$arrProducts" }
+    }
+}])
+if(wishlist.length){
+  wishListCount=wishlist[0].itemCount
+}
+   
+    
+    res.render('user/homePage', {layout:"user_layout",user:true,products,categories,pkUserId:req.session.user.pkUserId,cartCount,wishListCount});
   } else {
      console.log("not userExist");
     req.session.destroy();
@@ -121,6 +135,7 @@ const login = async(req,res) => {
       if (result) {
         req.session.loggedIn = true;
         req.session.user = user;
+       
 
         res.json({ success: true, message: 'Form submitted successfully!' });
       } else {
@@ -285,7 +300,8 @@ const getUserSetting=async(req,res)=>{
           }
         }
         
-      
+      let wallet=await Wallet.aggregate([{$match:{userId:new ObjectId(req.query.pkUserId)}}])
+      console.log(wallet);
 
         let userCart=await Cart.find({pkUserId:new ObjectId(req.query.pkUserId)})
         let cartCount= await getCartCount(req.query.pkUserId)
@@ -304,7 +320,7 @@ const getUserSetting=async(req,res)=>{
           
           })
       
-          res.render("user/userSettings",{layout:"user_layout",user:true,arrAddress,pkUserId:req.query.pkUserId,cartCount,userDetails,userOrders})
+          res.render("user/userSettings",{layout:"user_layout",user:true,arrAddress,pkUserId:req.query.pkUserId,cartCount,userDetails,userOrders,wallet})
        }else{
         return res.json({success:false,message:"Failed to fetch user data"})
        }

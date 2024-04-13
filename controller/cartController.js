@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 const mongoose=require('mongoose')
 const User =require("../models/userModel")
 const Product =require("../models/productModel")
-const {USER_COLLECTION, PRODUCTS_COLLECTION, CATEGORY_COLLECTION, CART_COLLECTION, ORDER_COLLECTION} =require("../config/collections")
+
 const { ObjectId } = require('mongodb');
 const router = require('../routes/userRoutes');
 const otpGenerator = require('otp-generator');
@@ -30,6 +30,11 @@ const addToCart=async(req,res)=>{
             let productInCart=await Cart.find({pkUserId,"arrProducts.pkProductId":pkProductId,strStatus:"Active"})
             
             if(productInCart.length){
+             let availableStock=product[0].intStock
+             let quantityInCart=productInCart[0].arrProducts.find(pro => pro.pkProductId.equals(pkProductId));
+           
+
+              if(quantityInCart.intQuantity < availableStock){
               const update = {
                 $inc: { "arrProducts.$.intQuantity": 1 },
              
@@ -69,11 +74,14 @@ const addToCart=async(req,res)=>{
                 res.json({success:false,message:"Failed to increase quantity"})
                }
               
-            
+              }else{
+
+                res.json({success:false,message:"Quantity in cart exceeds available stock."})
+              }
+               
   
   
-  
-  
+   
   
   
   

@@ -3,6 +3,7 @@ const { getSignUp, signUp, getHome, login,logout, generateOtp, getOtpPage, verif
 const {verifyLogin}=require("../middlewares/verifications")
 const { getSingleProductPage,sortProducts}=require("../controller/productController")
 const {addToCart, getCartPage, changeQuantity, removeFromCart,}=require("../controller/cartController")
+const {addToWishList, getWishListPage, removeFromWishList}=require("../controller/wishListController")
 const {editAddress, getEditAddressPage, setAsDefaultAddress,deleteAddress, getAddressPage, addNewAddress}=require("../controller/addressController")
 const {changeOrderStatus, getCheckoutPage, checkOut, getOrderDetailsPage, checkOutRazorPay, verifyPayment}=require("../controller/orderController")
 const router =express.Router()
@@ -73,12 +74,30 @@ router.post("/setAsDefault",setAsDefaultAddress)
 
 router.post("/addToCart",addToCart)
 
+
 //get Cart page
 
 router.get("/getCartPage",verifyLogin,getCartPage)
 
 //remove from cart
 router.post("/removeFromCart",removeFromCart)
+
+
+//addToWishList
+
+router.post("/addToWishList",addToWishList)
+
+
+
+//get  wish list page
+
+router.get("/getWishListPage",verifyLogin,getWishListPage)
+
+//remove from wish list
+router.post("/removeFromWishList",removeFromWishList)
+
+
+
 
 //get checkout page
 

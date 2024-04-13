@@ -1,0 +1,77 @@
+  <div class="page-header breadcrumb-wrap">
+            <div class="container">
+                <div class="breadcrumb">
+                    <a href="/" rel="nofollow">Home</a>
+                    <span></span> Shop
+                    <span></span> Your Wist list
+                </div>         
+            </div>
+        </div>
+          <h1 class="text-center" >Wishlist</span></h1>
+        <section class="mt-25 mb-50">
+            <div class="container">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="table-responsive">
+                            <table class="table shopping-summery text-center clean">
+                                <thead>
+                                    <tr class="main-heading">
+                                        <th scope="col">Image</th>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Price</th>
+                                     
+                                        <th scope="col"></th>
+                                        <th scope="col"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                   
+                                    {{#if wishListProducts}}
+                                    {{#each wishListProducts}}
+                                    <tr class="cart-product-details">
+                                        <input type="hidden" id="pkProductId" value={{pkProductId}}>
+                                        <input type="hidden" id="intStock" value={{intStock}}>
+                                        <td class="image product-thumbnail"><img src={{mainProductUrl}} alt="#"></td>
+                                        <td class="product-des product-name">
+                                            <h5 class="product-name"><a href="shop-product-right.html">{{strProductName}}</a></h5>
+                                            <p class="font-xs">{{strDescription}}<br> .
+                                            </p>
+                                        </td>
+                                        <td class="price" data-title="Price"><span>{{intPrice}}</span></td>
+                                        
+                                        <td class="text-right" data-title="Cart">
+                                             <button type="button" class="remove-btn btn btn-success btn-sm rounded">Add to Cart</button>  
+                                        </td>
+                                        <td class="action" data-title="Remove"><a href="#"  class="text-muted removeFromWishList"
+                                        data-pk-wishlist-id="{{pkWishListId}}" data-pk-product-id="{{pkProductId}}" 
+                                        ><i class="fi-rs-trash"
+                                         ></i></a></td>
+                                       
+                                    </tr>
+                                    {{/each}}
+                                     {{/if}}
+
+                                    {{#if wishListProducts}}
+                                    <tr>
+                                        <td colspan="6" class="text-end">
+                                            {{!-- <a href="#" class="text-muted"> <i class="fi-rs-cross-small"></i> Clear Cart</a> --}}
+                                        </td>
+                                    </tr>
+                                    {{/if}}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="cart-action text-end">
+                          
+                        </div>
+                        <div class="divider center_icon mt-50 mb-50"><i class="fi-rs-fingerprint"></i></div>
+                        <div class="row mb-50">
+                            <div class="col-lg-6 col-md-12">
+                            
+                            </div>
+                           
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>

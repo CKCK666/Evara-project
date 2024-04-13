@@ -49,6 +49,17 @@
                     aria-selected='false'
                   ><i class='fi-rs-shopping-bag mr-10'></i>Orders</a>
                 </li>
+                 <li class='nav-item'>
+                  <a
+                    class='nav-link'
+                    id='wallet-tab'
+                    data-bs-toggle='tab'
+                    href='#wallet'
+                    role='tab'
+                    aria-controls='wallet'
+                    aria-selected='false'
+                  ><i class='fi-rs-shopping-bag mr-10'></i>Wallet</a>
+                </li>
 
               </ul>
             </div>
@@ -296,6 +307,83 @@
                 
                 </div>
               </div>
+               
+              <div
+                class='tab-pane fade'
+                id='wallet'
+                role='tabpanel'
+                aria-labelledby='wallet-tab'
+              >
+                <div class='card'>
+                  <div class='card-header'>
+                    <h4 class='mb-1'>Wallet</h4>
+                    <h5 class='mb-0'>Account balance: 
+                      {{#if wallet}}
+                      <span>{{wallet.[0].balance}}</span>
+                      {{/if}}
+                    </h5>
+                  </div>
+                  <div class='card-body'>
+                    <div class='table-responsive'>
+                      <table class='table'>
+                        <thead>
+                          <tr>
+                            <th>Order</th>
+                            <th>Date</th>
+                            {{!-- <th>Status</th> --}}
+                            <th>Amt</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {{#if userOrders}}
+                          {{#each userOrders}}
+                          <tr>
+                            <td>{{pkOrderId}}</td>
+                            <td>{{createdDate}}</td>
+                            {{!-- <td {{#eq strOrderStatus 'Processing'}}style="color: orange"
+                            {{else}}{{#eq strOrderStatus 'Delivered'}}style="color: green"
+                           {{else}}{{#eq strOrderStatus 'Cancelled'}}style="color: red",
+                           {{else}}style="color: orange"
+                             {{/eq}}
+                             {{/eq}}
+                            {{/eq}}>
+                             {{strOrderStatus}}
+                             </td> --}}
+                             
+                            <td {{#eq strOrderStatus 'Cancelled'}}style="color: green"  {{else}}style="color: red" {{/eq}}>
+                             {{#eq strOrderStatus 'Cancelled'}}+ {{else}}-{{/eq}}
+                            
+                            {{intTotalOrderPrice}}</td>
+                            <td>
+                            
+                                 {{!-- <a style="color: red;"
+                                href='#' data-pk-order-id="{{pkOrderId}}" data-pk-user-id="{{pkUserId}}" data-order-status-change="Cancelled"
+                                class='btn-small d-block cancel-order-btn'
+                              >Cancel Order</a> --}}
+                                  <a 
+                                href='/getOrderDetails?pkOrderId={{pkOrderId}}&pkUserId={{pkUserId}}'
+                                class='btn-small d-block'
+                              >View details</a>
+                               
+                              </td>
+                           
+
+                              
+                             
+                              </td>
+                          </tr>
+                          {{/each}}
+                           {{/if}}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+
             </div>
           </div>
         </div>

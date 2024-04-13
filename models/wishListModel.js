@@ -21,7 +21,7 @@ const productSchema = new Schema({
 });
 
 const cartSchema = new Schema({
-    pkCartId: Schema.Types.ObjectId,
+    pkWishListId: Schema.Types.ObjectId,
     pkUserId: Schema.Types.ObjectId,
     arrProducts: [productSchema],
     strStatus: {

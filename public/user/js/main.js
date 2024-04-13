@@ -426,16 +426,19 @@ $.ajax({
    
 })
 
+
+
+
 $("#place-order-btn").click(async function(e){
   e.preventDefault()
-  const razorpayRadioButton = document.querySelector('#razorpayOption');
-  var spanElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
-
-  // Access the text content of the span
-  var totalAmountAfterDiscount = spanElement.textContent;
-  
+  let razorpayRadioButton = document.querySelector('#razorpayOption');
+ 
+  let spanElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
+ let discountAmt= spanElement.textContent;
+ var totalAmountAfterDiscount =discountAmt.slice(1)
   
   const radioButtons = document.querySelectorAll('input[type="radio"][name="shipping-address"]');
+
   let pkAddressId;
 
   //get default addressId
@@ -458,11 +461,14 @@ $("#place-order-btn").click(async function(e){
       });
   });
 
+
+
   if(!pkAddressId.length){
     $('#errorMessage').text('Select a shipping address');
     return
   }
   if(razorpayRadioButton.checked){
+    
     $.ajax({
       type: 'POST', 
       url: '/checkOutRazorPay',
@@ -881,6 +887,41 @@ $(".removeFromCart").click(function(e){
 
 })
 
+//remove From WishList
+$(".removeFromWishList").click(function(e){
+  e.preventDefault()
+  let pkWishListId = $(this).data('pk-wishlist-id');
+  let pkProductId = $(this).data('pk-product-id');
+  console.log( pkWishListId,pkProductId);
+ 
+    
+        $.ajax({
+            type: 'POST', 
+            url: "/removeFromWishList",
+            data: {
+              pkWishListId,
+         pkProductId
+            }, 
+            success: function(response) {
+                if (response.success) {
+                    
+                     window.location.reload()
+                    console.log('success:', response.message);
+                } else {
+                  console.log('success:', response.message);
+                    
+                }
+               
+            },
+            error: function(error) {
+                
+                console.error('Error:', error);
+            }
+        });
+  
+
+
+})
  //Forget password sent OTP
  $('#sent-otp').click(function (e) {
   e.preventDefault()
@@ -1117,59 +1158,249 @@ document.getElementById('searchInput').addEventListener('keydown', async functio
   }
 });
 
-let couponApplied=false
-document.addEventListener('click', function(event) {
+// let couponApplied=false
+// let totalAmountAfterDiscount
+// let discountPrice
+// document.addEventListener('click', function(event) {
   
-  if (event.target.classList.contains('apply-btn')) {
-    if(couponApplied){
-      return alert("coupon already applied")
-    }
-    let totalCartPriceElement= document.querySelector(".product-subtotal.totalAmt")
-    let grandTotalElement=document.querySelector('td.product-subtotal.grandTotalAmt span')
-    let grandTotal=parseFloat(grandTotalElement.textContent)
-    var totalCartPrice = parseFloat( totalCartPriceElement.textContent.substring(1))
-    // Select the button element
-var button = document.querySelector('.copy-btn');
+//   if (event.target.classList.contains('apply-btn')) {
+//     if(couponApplied){
+//       return alert("coupon already applied")
+//     }
+//     let totalCartPriceElement= document.querySelector(".product-subtotal.totalAmt")
+//     let grandTotalElement=document.querySelector('td.product-subtotal.grandTotalAmt span')
+//     // let grandTotal=parseFloat(grandTotalElement.textContent.substring(1))
+//     var totalCartPrice = parseFloat( totalCartPriceElement.textContent.substring(1))
+//     // Select the button element
+// var button = document.querySelector('.copy-btn');
 
-// Get data using getAttribute method
-var id = button.getAttribute('data-id');
-var minAmount = parseFloat(button.getAttribute('data-minAmount'))
-var maxDiscount = parseFloat(button.getAttribute('data-maxDiscount'))
-var discount =parseFloat( button.getAttribute('data-discount'))
+// // Get data using getAttribute method
+// var id = button.getAttribute('data-id');
+// var minAmount = parseFloat(button.getAttribute('data-minAmount'))
+// var maxDiscount = parseFloat(button.getAttribute('data-maxDiscount'))
+//  let discount =parseFloat( button.getAttribute('data-discount'))
 
-  if(totalCartPrice*(discount/100)<maxDiscount && totalCartPrice*(discount/100)>minAmount ){
-    grandTotalElement.textContent=totalCartPrice-totalCartPrice*(discount/100)
-  }else{
-    grandTotalElement.textContent= totalCartPrice-maxDiscount
-  }
-      event.target.textContent = "Applied";
+//   if(totalCartPrice*(discount/100)<maxDiscount &&totalCartPrice*(discount/100)>minAmount ){
+   
+  
+//      totalPriceAfterDiscount  =parseFloat(totalAmountAfterDiscount)-parseFloat(totalCartPrice*(discount/100))
+//      alert("percent")
+//     grandTotalElement.textContent="₹" + totalPriceAfterDiscount
+//   }else{
     
-    // Show Remove Coupon button when Apply Coupon button is clicked
-    const buttonGroup = event.target.closest('.button-group');
-    const removeBtn = buttonGroup.querySelector('.remove-btn');
-    event.target.disabled = true
-    removeBtn.style.display = 'inline-block';
-    couponApplied=true
-  }
+//      totalPriceAfterDiscount =parseFloat( totalCartPrice - maxDiscount)
+//     grandTotalElement.textContent=  "₹" + totalPriceAfterDiscount
+//    discountPrice=maxDiscount
+ 
+//   }
+//       event.target.textContent = "Applied";
+    
+//     // Show Remove Coupon button when Apply Coupon button is clicked
+//     const buttonGroup = event.target.closest('.button-group');
+//     const removeBtn = buttonGroup.querySelector('.remove-btn');
+//     event.target.disabled = true
+//     removeBtn.style.display = 'inline-block';
+//     couponApplied=true
+//   }
+// });
+
+
+// if(window.location.pathname === "/getCheckoutPage"){
+//   // Selecting the radio buttons and wallet checkbox div
+//   const codOption = document.getElementById("codOption");
+//   const razorpayOption = document.getElementById("razorpayOption");
+//   const walletCheckboxDiv = document.querySelector(".form-check.wallet");
+//   const walletCheckbox = document.getElementById("walletCheck")
+//   let spanElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
+//    totalAmountAfterDiscount = parseFloat(spanElement.textContent.slice(1))
+  
+//   // Adding event listener to the radio buttons
+//   codOption.addEventListener("change", toggleWalletCheckbox);
+//   razorpayOption.addEventListener("change", toggleWalletCheckbox);
+//   walletCheckbox.addEventListener("change", handleWalletCheckboxChange)
+  
+  
+//   function toggleWalletCheckbox() {
+//       if (razorpayOption.checked) {
+  
+//           walletCheckboxDiv.style.display = "block";
+         
+//       } else {
+//           walletCheckboxDiv.style.display = "none";
+//       }
+//   }
+  
+//   // Initial call to set the initial state based on the default checked radio button
+//   toggleWalletCheckbox();
+//   function handleWalletCheckboxChange() {
+//     if (walletCheckbox.checked) {
+//         // Code to execute when the wallet checkbox is checked
+//         let walletBalanceUsed=parseFloat(totalAmountAfterDiscount-100)
+//         spanElement.textContent="₹"+walletBalanceUsed
+//         totalAmountAfterDiscount=walletBalanceUsed
+        
+//     } else {
+//       let walletBalanceUsed=parseFloat(totalAmountAfterDiscount+100)
+//       spanElement.textContent="₹"+walletBalanceUsed
+//       totalAmountAfterDiscount=walletBalanceUsed
+//         console.log("Wallet checkbox is unchecked");
+//     }
+//   }
+  
+  
+//   }
+
+
+
+
+// document.addEventListener('click', function(event) {
+//   if (event.target.classList.contains('remove-btn')) {
+//     couponApplied=false
+//       // Reset Apply Coupon button text to its original state
+//       const buttonGroup = event.target.closest('.button-group');
+//       const applyBtn = buttonGroup.querySelector('.apply-btn');
+//       applyBtn.textContent = "Apply";
+//       let grandTotalElement=document.querySelector('td.product-subtotal.grandTotalAmt span')
+//       // let totalCartPriceElement= document.querySelector(".product-subtotal.totalAmt")
+//       // var totalCartPrice = parseFloat( totalCartPriceElement.textContent.substring(1))
+//       totalAmountAfterDiscount=parseFloat(totalAmountAfterDiscount)+parseFloat(discountPrice)
+//       grandTotalElement.textContent="₹" +  totalAmountAfterDiscount
+//       applyBtn.disabled = false;
+//       // Hide Remove Coupon button when clicked
+//       event.target.style.display = 'none';
+//   }
+// });
+
+
+
+
+if (window.location.pathname === "/getCheckoutPage") {
+  let couponApplied = false;
+let totalAmountAfterDiscount;
+let discountPrice;
+
+    const codOption = document.getElementById("codOption");
+    const razorpayOption = document.getElementById("razorpayOption");
+    const walletCheckboxDiv = document.querySelector(".form-check.wallet");
+    const walletCheckbox = document.getElementById("walletCheck");
+    let spanElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
+    totalAmountAfterDiscount = parseFloat(spanElement.textContent.slice(1));
+
+    codOption.addEventListener("change", toggleWalletCheckbox);
+    razorpayOption.addEventListener("change", toggleWalletCheckbox);
+    walletCheckbox.addEventListener("change", handleWalletCheckboxChange);
+
+    function toggleWalletCheckbox() {
+        if (razorpayOption.checked) {
+            walletCheckboxDiv.style.display = "block";
+        } else {
+            walletCheckboxDiv.style.display = "none";
+        }
+      
+    }
+
+    toggleWalletCheckbox();
+
+    function handleWalletCheckboxChange() {
+        updateGrandTotal();
+    }
+
+    function updateGrandTotal() {
+        let newGrandTotal = totalAmountAfterDiscount;
+
+        if (couponApplied) {
+            newGrandTotal = parseFloat(document.querySelector('td.product-subtotal.grandTotalAmt span').textContent.slice(1));
+           
+        }
+
+        if (walletCheckbox.checked) {
+            newGrandTotal -= 100;
+           
+        }else{
+          newGrandTotal += 100;
+        
+        }
+        totalAmountAfterDiscount=newGrandTotal
+        spanElement.textContent = "₹" + newGrandTotal.toFixed(2);
+        console.log("Total amount after discount (updated):", newGrandTotal);
+    }
+
+    //apply coupon
+document.addEventListener('click', function(event) {
+
+    if (event.target.classList.contains('apply-btn')) {
+     
+        if (couponApplied) {
+            return alert("Coupon already applied");
+        }
+
+        let totalCartPriceElement = document.querySelector(".product-subtotal.totalAmt");
+        let grandTotalElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
+        let totalCartPrice = parseFloat(totalCartPriceElement.textContent.substring(1));
+
+        var button = document.querySelector('.copy-btn');
+        var id = button.getAttribute('data-id');
+        var minAmount = parseFloat(button.getAttribute('data-minAmount'));
+        var maxDiscount = parseFloat(button.getAttribute('data-maxDiscount'));
+        let discount = parseFloat(button.getAttribute('data-discount'));
+
+        if (totalCartPrice * (discount / 100) < maxDiscount && totalCartPrice * (discount / 100) > minAmount) {
+            totalPriceAfterDiscount = parseFloat(totalAmountAfterDiscount) - parseFloat(totalCartPrice * (discount / 100));
+            grandTotalElement.textContent = "₹" + totalPriceAfterDiscount;
+            discountPrice = maxDiscount;
+        } else {
+            totalPriceAfterDiscount = parseFloat(totalAmountAfterDiscount) - maxDiscount;
+            grandTotalElement.textContent = "₹" + totalPriceAfterDiscount;
+            discountPrice = maxDiscount;
+        }
+
+        event.target.textContent = "Applied";
+
+        const buttonGroup = event.target.closest('.button-group');
+        const removeBtn = buttonGroup.querySelector('.remove-btn');
+        event.target.disabled = true;
+        removeBtn.style.display = 'inline-block';
+        couponApplied = true;
+        totalAmountAfterDiscount = totalPriceAfterDiscount;
+        console.log("Total amount after discount (applied):", totalAmountAfterDiscount);
+    }
 });
 
-
+//remove coupon
 document.addEventListener('click', function(event) {
   if (event.target.classList.contains('remove-btn')) {
-    couponApplied=false
-      // Reset Apply Coupon button text to its original state
+      couponApplied = false;
       const buttonGroup = event.target.closest('.button-group');
       const applyBtn = buttonGroup.querySelector('.apply-btn');
+
       applyBtn.textContent = "Apply";
-      let grandTotalElement=document.querySelector('td.product-subtotal.grandTotalAmt span')
-      let totalCartPriceElement= document.querySelector(".product-subtotal.totalAmt")
-      var totalCartPrice = parseFloat( totalCartPriceElement.textContent.substring(1))
-      grandTotalElement.textContent= totalCartPrice
+      let grandTotalElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
+      totalAmountAfterDiscount = parseFloat(totalAmountAfterDiscount) + parseFloat(discountPrice);
+      grandTotalElement.textContent = "₹" + totalAmountAfterDiscount.toFixed(2);
       applyBtn.disabled = false;
-      // Hide Remove Coupon button when clicked
       event.target.style.display = 'none';
+      console.log("Total amount after discount (removed):", totalAmountAfterDiscount);
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+}
+
+
+
 
 
 
@@ -1254,7 +1485,7 @@ const deleteAddress=(addressId,userId,render)=>{
   }
 
   const handleAddToCart=(pkProductId,pkUserId)=>{
-    console.log(pkProductId,pkUserId);
+ 
     $.ajax({
       type: 'POST', 
       url: '/addToCart',
@@ -1267,13 +1498,99 @@ const deleteAddress=(addressId,userId,render)=>{
           if (response.success) {
           let cartCount=document.getElementById("cartCount").innerText
           document.getElementById("cartCount").innerText=parseInt(cartCount)+1
+          Toastify({
+            text: 'Item added to cart!',
+            duration: 3000, // Duration in milliseconds
+            close: true, // Whether to display a close button
+            gravity: 'top', // Toast position: 'top', 'bottom', 'center'
+            position: 'right', // Toast position: 'left', 'center', 'right'
+            backgroundColor: '#4CAF50', // Background color of the toast
+            stopOnFocus: true // Whether to close the toast when focused
+          }).showToast();
+      
             
           } else {
               $('#errorMessage').text(response.message)
+              Toastify({
+                text: response.message,
+                duration: 3000, // Duration in milliseconds
+                close: true, // Whether to display a close button
+                gravity: 'top', // Toast position: 'top', 'bottom', 'center'
+                position: 'right', // Toast position: 'left', 'center', 'right'
+                backgroundColor: '#4CAF50', // Background color of the toast
+                stopOnFocus: true // Whether to close the toast when focused
+              }).showToast();
+              
           }
          
       },
       error: function(error) {
+        Toastify({
+          text: "Failed add to cart",
+          duration: 3000, // Duration in milliseconds
+          close: true, // Whether to display a close button
+          gravity: 'top', // Toast position: 'top', 'bottom', 'center'
+          position: 'right', // Toast position: 'left', 'center', 'right'
+          backgroundColor: '#4CAF50', // Background color of the toast
+          stopOnFocus: true // Whether to close the toast when focused
+        }).showToast();
+          
+          console.error('Error:', error);
+      }
+    });
+  }
+
+
+  const handleAddToWishList=(pkProductId,pkUserId)=>{
+
+    $.ajax({
+      type: 'POST', 
+      url: '/addToWishList',
+      data: {
+        pkProductId,
+    
+    
+      }, 
+      success: function(response) {
+          if (response.success) {
+            let wishListCount=document.getElementById("wishListCount").innerText
+            document.getElementById("wishListCount").innerText=parseInt(wishListCount)+1
+          Toastify({
+            text: 'Item added to Wislist!',
+            duration: 3000, // Duration in milliseconds
+            close: true, // Whether to display a close button
+            gravity: 'top', // Toast position: 'top', 'bottom', 'center'
+            position: 'right', // Toast position: 'left', 'center', 'right'
+            backgroundColor: '#4CAF50', // Background color of the toast
+            stopOnFocus: true // Whether to close the toast when focused
+          }).showToast();
+      
+            
+          } else {
+              $('#errorMessage').text(response.message)
+              Toastify({
+                text: response.message,
+                duration: 3000, // Duration in milliseconds
+                close: true, // Whether to display a close button
+                gravity: 'top', // Toast position: 'top', 'bottom', 'center'
+                position: 'right', // Toast position: 'left', 'center', 'right'
+                backgroundColor: '#4CAF50', // Background color of the toast
+                stopOnFocus: true // Whether to close the toast when focused
+              }).showToast();
+              
+          }
+         
+      },
+      error: function(error) {
+        Toastify({
+          text: "Failed add to wishlist",
+          duration: 3000, // Duration in milliseconds
+          close: true, // Whether to display a close button
+          gravity: 'top', // Toast position: 'top', 'bottom', 'center'
+          position: 'right', // Toast position: 'left', 'center', 'right'
+          backgroundColor: '#4CAF50', // Background color of the toast
+          stopOnFocus: true // Whether to close the toast when focused
+        }).showToast();
           
           console.error('Error:', error);
       }

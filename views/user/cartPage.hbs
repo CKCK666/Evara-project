@@ -7,12 +7,18 @@
                 </div>         
             </div>
         </div>
-        <section class="mt-50 mb-50">
+        <h1 class="text-center" >Cart</span></h1>
+      
+        <section class="mt-25 mb-25">
+          
             <div class="container">
+                
                 <div class="row">
+                      
                     <div class="col-12">
                         <div class="table-responsive">
                             <table class="table shopping-summery text-center clean">
+                                 {{#if cartProducts}}
                                 <thead>
                                     <tr class="main-heading">
                                         <th scope="col">Image</th>
@@ -23,13 +29,14 @@
                                         <th scope="col">Remove</th>
                                     </tr>
                                 </thead>
+                                 {{/if}}
                                 <tbody>
                                    
                                     {{#if cartProducts}}
                                     {{#each cartProducts}}
                                     <tr class="cart-product-details">
                                         <input type="hidden" id="pkProductId" value={{pkProductId}}>
-                                        <input type="hidden" id="intStock" value={{intStock}}>
+                                        <input type="hidden" id="intStock" value={{intStock}} >
                                         <td class="image product-thumbnail"><img src={{mainProductUrl}} alt="#"></td>
                                         <td class="product-des product-name">
                                             <h5 class="product-name"><a href="shop-product-right.html">{{strProductName}}</a></h5>

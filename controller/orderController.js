@@ -14,6 +14,7 @@ const Order = require('../models/orderModel');
 const Coupon= require("../models/couponModel")
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const Wallet = require('../models/walletModel');
 
   // change order status
   const changeOrderStatus=async(req,res)=>{
@@ -24,7 +25,7 @@ const crypto = require("crypto");
        let pkUserId=new ObjectId(req.body.pkUserId)
        let orderStatus=req.body.orderStatusChange
      let result=await Order.updateOne({pkUserId,pkOrderId,strStatus:"Active"},{$set:{strOrderStatus:orderStatus,updatedDate:new Date()}})
-     let productArray = await Order.aggregate([
+     let orderArray = await Order.aggregate([
       {
         $match: {
          pkOrderId,
@@ -34,8 +35,11 @@ const crypto = require("crypto");
       },
       {
         $project: {
-          
-          arrProductsDetails: 1
+          pkOrderId:1,
+          strPaymentMethod:1,
+          arrProductsDetails: 1,
+          pkUserId:1,
+          totalAmountAfterDiscount:1
         }
       }
     ]);
@@ -43,13 +47,17 @@ const crypto = require("crypto");
      if (result.modifiedCount>0) {
       if(orderStatus=="Cancelled"){
        
-        productArray[0].arrProductsDetails.map(async(product)=>{
+        orderArray[0].arrProductsDetails.map(async(product)=>{
         
           let quantity=product.intQuantity
             let updateStock=await Product.updateOne({pkProductId:new ObjectId(product.pkProductId)},{$inc:{intStock:quantity}})
          
         })
-
+         if( orderArray[0].strPaymentMethod==='RAZORPAY'){
+          let totalAmt=parseFloat(orderArray[0].totalAmountAfterDiscount)
+        let updateWallent=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:totalAmt}})
+         
+      }
       }
        
        res.json({success:true,message: 'successfully status changed order!',userBlocked:true})
@@ -306,7 +314,7 @@ const crypto = require("crypto");
     
       let cartProducts=await Cart.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
     
-
+      console.log(req.body.totalAmountAfterDiscount);
 
 
      

@@ -21,9 +21,9 @@
                         <div class="header-action-right">
                             <div class="header-action-2">
                                 <div class="header-action-icon-2">
-                                    <a href="#">
+                                    <a href="/getWishListPage">
                                         <img class="svgInject" alt="Evara" src="user/imgs/theme/icons/icon-heart.svg">
-                                        <span class="pro-count blue">4</span>
+                                        <span  id="wishListCount" class="pro-count blue">{{wishListCount}}</span>
                                     </a>
                                 </div>
                                  
@@ -103,9 +103,9 @@
                                 </a>
                             </div>
                             <div class="header-action-icon-2">
-                                <a class="mini-cart-icon" href="shop-cart.html">
+                                <a class="mini-cart-icon" href="/getCartPage">
                                     <img alt="Evara" src="user/imgs/theme/icons/icon-cart.svg">
-                                    <span class="pro-count white">2</span>
+                                    <span class="pro-count white">{{cartCount}}</span>
                                 </a>
                                 <div class="cart-dropdown-wrap cart-dropdown-hm2">
                                     <ul>
