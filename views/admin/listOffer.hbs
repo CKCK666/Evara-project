@@ -1,0 +1,62 @@
+ <section class="content-main">
+    <div class="content-header">
+      <h2 class="content-title">Offer Management</h2>
+      <div>
+        <a href="/admin/getCreateOffer" class="btn btn-primary">Create new</a>
+      </div>
+    </div>
+    <div class="card" id="space">
+      <div class="card-body">
+        <div class="row">
+
+  
+    <div class="col-md-12">
+
+     
+        <div class="mt-4">
+          <table id="myTable" class="table table-hover">
+            <thead>
+              <tr>
+               
+                <th>No</th>
+                <th>Name</th>
+                <th>Status</th>
+                <th>offer discount</th>
+                <th>Expiry Date</th>
+                <th class="text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+                 {{#if offers}}
+                 {{#each offers}}
+                <tr>
+                  <td>{{index}}</td>
+                  <td>{{name}}</td>
+                  <td>{{status}}</td>
+                
+                  <td>{{discount}}%</td>
+                  <td>{{endDate}}</td>
+                  <td class="d-flex flex-row text-center">
+                    <a class="dropdown-item w-50 p-0"  href="/admin/getOfferEdit?_id={{_id}}">Edit</a>
+                    <a class="dropdown-item w-50 p-0 text-danger delete" href="#" onclick="handleBlockOffer('{{_id}}','{{status}}')" >
+                  {{#eq status 'Blocked'}}Unblock{{else}}Block{{/eq}}
+              
+                    </a>
+             
+                   </td>
+                  
+              
+                  
+                  
+                </tr>
+                {{/each}}
+               {{/if}}
+            </tbody>
+          </table>
+     
+    </div>
+</div>
+</div>
+</div>
+    <!-- card end// -->
+  </section>

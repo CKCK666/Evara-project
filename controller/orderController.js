@@ -111,7 +111,8 @@ const Wallet = require('../models/walletModel');
    //get chheckout page
    const getCheckoutPage=async(req,res)=>{
     try {
-      let pkUserId =new ObjectId(req.session.user.pkUserId)
+      let userId="65ead74f63b8a90a5a0dee7c"
+      let pkUserId =new ObjectId(userId)
 
       let match={
         $match:{
@@ -149,13 +150,17 @@ const Wallet = require('../models/walletModel');
       
       
       if (cartDetails && cartDetails.length) {
-        let cartCount= await getCartCount(req.session.user.pkUserId)
+         let grandTotal=0
+        let cartCount= await getCartCount(userId)
         let cartProducts=cartDetails[0].arrProducts.map(obj=>{
           let intTotalPrice=obj.intQuantity*obj.intPrice
-          return {...obj,intTotalPrice:intTotalPrice}
+          let totalOfferPrice=obj.intQuantity*obj.offerPrice
+          grandTotal+=obj.intQuantity*obj.offerPrice
+          let discount=obj.intQuantity*obj.offer
+          return {...obj,intTotalPrice:intTotalPrice, totalOfferPrice,discount}
            
         })
-      
+     
         const productAndCategoryIdsInOrder = cartDetails[0].arrProducts.map((item) => ({
           productId: item.pkProductId,
           categoryId: item.fkcategoryId,
@@ -191,8 +196,13 @@ const Wallet = require('../models/walletModel');
             ...coupon._doc
           }
         })
+         let walletBalance=0
+        let wallet=await Wallet.aggregate([{$match:{userId:pkUserId}}])
         
-       res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,pkUserId,cartDetails,cartCount ,coupons,message:"successfully loaded cart page",user:true})
+          if(wallet.length){
+            walletBalance= wallet[0].balance
+          }
+       res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,pkUserId,cartDetails,cartCount ,walletBalance,coupons,grandTotal,message:"successfully loaded cart page",user:true})
        } else {
         res.redirect("/")
        }
@@ -346,7 +356,7 @@ const Wallet = require('../models/walletModel');
       key_secret: process.env.KEY_SECRET,
     });
     
-  let amount=parseInt(cartProducts[0].total_cart_price)*100
+  let amount=parseFloat(req.body.totalAmountAfterDiscount)*100
       const options = {
         amount: amount,
         currency: "INR",
@@ -402,7 +412,13 @@ const Wallet = require('../models/walletModel');
       );
   
       if (generated_signature === signature) {
-        
+        let cartProducts=await Cart.updateOne({pkUserId:new ObjectId(pkUserId),strStatus:"Active"},{$set:{strStatus:"Deleted"}})
+        if(cartProducts.modifiedCount>0){
+          res.json({success:true,message:"Ordered successfully "})
+        }
+        else{
+          res.json({success:false,message:"Fail to delete cart"})
+        }
         order.strPaymentStatus = "Success";
         order.strOrderStatus="Processing"
         order.save();

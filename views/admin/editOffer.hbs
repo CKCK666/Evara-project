@@ -1,0 +1,103 @@
+  <section class="content-main">
+    <div class="content-header">
+      <h2 class="content-title">Offer Management</h2>
+    </div>
+    <div class="card" id="space">
+      <div class="card-body">
+        <div class="row">
+
+    <div class="col-md-12">
+    <div class="card mb-4">
+     
+      <header class="card-header">
+        <h4>Edit Coupon</h4>
+      </header>
+    </div>
+    <form id="offerUpdateForm" action="" method="">
+      <input type="text" id="offerId" name="id" value="{{offer.[0]._id}}" hidden>
+      <div class="form-inline">
+      <div class="form-groups col-md-4 mb-3 ">
+          <label for="name">Name</label>
+          <input type="text" class="form-control" value="{{offer.[0].name}}" id="name" name="name" required>
+      </div>
+    
+ 
+      <div class="form-group mb-3">
+          <label for="description">Description:</label>
+          <textarea class="form-control" id="description" name="description">{{offer.[0].description}}</textarea>
+      </div>
+  
+     
+  
+      <div class="form-groups mb-3">
+          <label for="discount">Discount:</label>
+          <input type="number" class="form-control" id="discount" value="{{offer.[0].discount}}" name="discount" required>
+      </div>
+  
+      <div class="form-groups mb-3">
+          <label for="minAmount">Minimum Amount:</label>
+          <input type="number" class="form-control" value="{{offer.[0].minAmount}}" id="minAmount" name="minAmount" required>
+      </div>
+  
+      <div class="form-groups mb-3">
+          <label for="maxDiscount">Maximum Discount:</label>
+          <input type="number" class="form-control" value="{{offer.[0].maxDiscount}}" id="maxDiscount" name="maxDiscount">
+      </div>
+  
+      <div class="form-groups col-md-3 mb-3">
+          <label for="startDate">Start Date:</label>
+          <input type="date" class="form-control" value="{{formatDate offer.[0].startDate}}" id="startDate" name="startDate" required>
+      </div>
+  
+      <div class="form-groups col-md-3 mb-3">
+          <label for="endDate">End Date:</label>
+          <input type="date" class="form-control" value="{{formatDate offer.[0].endDate}}" id="endDate" name="endDate" required>
+
+      </div>
+  
+      <input type="text" id="productValue" hidden value="{{offer.[0].products}}" >
+      <input id="categoriesValue" type="text" hidden value="{{offer.[0].categories}}" >
+
+    <div class="form-groups col-md-3 mb-3">
+      <label for="couponType">Offer Type:</label>
+      <select class="form-control" id="couponType" name="couponType">
+          <option value="products">Products</option>
+          <option value="categories">Categories</option>
+      </select>
+  </div>
+  
+  <div class="form-groups col-md-3 mb-3"  id="productsSection">
+      <label for="products">Select Products:</label>
+      <select class="form-control" id="products" name="products">
+          <option value="none">None</option>  
+       
+             
+                {{#if products}}  {{#each products}}  <option value="{{pkProductId}}">{{strProductName}}</option> {{/each}} {{/if}}
+        
+      </select>
+  </div>
+  
+  <div class="form-groups col-md-3 mb-3" id="categoriesSection" style="display: none;">
+      <label for="categories">Categories:</label>
+      <select class="form-control" id="categories" name="categories">
+          <option value="none">None</option>
+          
+             
+               {{#if categories}} {{#each categories}}   <option value="{{pkCategoryId}}">{{strCategoryName}}</option>{{/each}} {{/if}}
+         
+      </select>
+  </div>
+  
+      
+      <div class="form-group mb-3">
+      <button type="submit" class="btn btn-primary">Submit</button>
+      </div>
+    </div>  
+    </form>
+  
+  </div>
+ 
+</div>
+</div>
+    <!-- card end// -->
+  </section>

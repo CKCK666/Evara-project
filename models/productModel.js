@@ -45,6 +45,16 @@ const productSchema = new mongoose.Schema({
     updatedDate: {
         type: Date,
         default: null
+    },
+    offer:{
+        type:Number,
+        default:0
+    },
+    offerPrice:{
+        type:Number,
+        default: function () {
+            return this.intPrice - this.offer;
+        }
     }
 });
 

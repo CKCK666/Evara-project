@@ -32,6 +32,7 @@ const cloudinary = require('cloudinary').v2;
 const { isAdmin } = require('../middlewares/verifications');
 const { listCoupons, getCreateCoupons,createCoupon, blockCoupon, getEditCoupon, couponEdit } = require('../controller/couponController');
 const { generatePDFReport, generateExcelReport } = require('../controller/reportController');
+const { getCreateOffer, createOffer, listOffer, getEditOffer, offerEdit } = require('../controller/offerController');
 
 
 
@@ -136,5 +137,23 @@ router.post("/couponEdit",couponEdit)
 router.get('/api/reports/pdf',generatePDFReport);
 
 router.get('/api/reports/excel',generateExcelReport);
+
+//list offer page
+router.get("/listOffer",listOffer)
+
+//get create offer page
+router.get("/getCreateOffer",getCreateOffer)
+
+//create offer
+router.post("/createOffer",createOffer)
+
+
+//get Edit offer page
+
+router.get("/getofferEdit",getEditOffer)
+
+//edit offer
+router.post("/offerEdit",offerEdit)
+
 
 module.exports=router

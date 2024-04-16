@@ -195,11 +195,23 @@
       overflow: hidden;
       display: none; /* Initially hide image preview */
     }
-    .cropped-preview {
-      width: 600px;
-      height: 600px;
-      
-      display: none; /* Initially hide cropped image preview */
+       .cropped-preview {
+        width: 300px; /* Set the width of the div */
+        height: 400px; /* Set the height of the div */
+        border: 1px solid #ccc; /* Optional: Add a border for visualization */
+        overflow: hidden; /* Hide any content that overflows the div */
+        position: relative; /* Required for absolute positioning of child elements */
+    }
+
+      canvas {
+        max-width: 100%; /* Ensure the canvas doesn't exceed the div's width */
+        max-height: 100%; /* Ensure the canvas doesn't exceed the div's height */
+        position: absolute; /* Position the canvas relative to the div */
+        top: 0; /* Position the canvas at the top of the div */
+        left: 0; /* Position the canvas at the left of the div */
+        right: 0; /* Optionally, constrain the canvas's position to the right */
+        bottom: 0; /* Optionally, constrain the canvas's position to the bottom */
+        margin: auto; /* Center the canvas horizontally and vertically */
     }
     .cropButton, .heading {
       display: none; /* Initially hide crop button and heading */

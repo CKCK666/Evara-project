@@ -60,7 +60,10 @@ const signUp = async (req, res) => {
         req.session.user = findUser[0];
          
         req.session.otpVerified=false
-       
+       let wallet=new Wallet({
+        userId:new ObjectId(findUser[0].pkUserId)
+       })
+       await wallet.save()
         res.json({ success:true, message: 'Form submitted successfully!' });
       }else{
         res.json({ success: false, message: 'Failed to submitted !' });
@@ -301,7 +304,7 @@ const getUserSetting=async(req,res)=>{
         }
         
       let wallet=await Wallet.aggregate([{$match:{userId:new ObjectId(req.query.pkUserId)}}])
-      console.log(wallet);
+      
 
         let userCart=await Cart.find({pkUserId:new ObjectId(req.query.pkUserId)})
         let cartCount= await getCartCount(req.query.pkUserId)

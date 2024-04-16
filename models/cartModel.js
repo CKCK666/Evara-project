@@ -17,7 +17,9 @@ const productSchema = new Schema({
     ],
     
     
-    intQuantity: { type:Number, default: 1 }
+    intQuantity: { type:Number, default: 1 },
+    offer:Number,
+    offerPrice:Number
 });
 
 const cartSchema = new Schema({

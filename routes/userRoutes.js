@@ -101,7 +101,7 @@ router.post("/removeFromWishList",removeFromWishList)
 
 //get checkout page
 
-router.get("/getCheckoutPage",verifyLogin,getCheckoutPage)
+router.get("/getCheckoutPage",getCheckoutPage)
 
 //checkout
 

@@ -605,7 +605,7 @@ $.ajax({
 
 
 
-if(window.location.pathname === "/admin/createCoupon"){
+if(window.location.pathname === "/admin/getCreateCoupon"){
   document.getElementById("couponType").addEventListener("change", function () {
     var couponType = this.value;
     if (couponType === "products") {
@@ -806,14 +806,181 @@ $('#couponUpdateForm button[type="submit"]').click(function () {
 
 
 
+if(window.location.pathname === "/admin/getCreateOffer"){
+  document.getElementById("couponType").addEventListener("change", function () {
+    var couponType = this.value;
+    if (couponType === "products") {
+      document.getElementById("categories").value = "none";
+      document.getElementById("productsSection").style.display = "inline-block";
+      document.getElementById("categoriesSection").style.display = "none";
+    } else if (couponType === "categories") {
+      document.getElementById("products").value = "none";
+      document.getElementById("productsSection").style.display = "none";
+      document.getElementById("categoriesSection").style.display =
+        "inline-block";
+    }
+  });
+
+  }
 
 
+  if (window.location.pathname.startsWith("/admin/getOfferEdit")) {
+    
+  
+    const product = document.getElementById("productValue").value;
+    const category = document.getElementById("categoriesValue").value;
+    const couponTypeSelect = document.getElementById("couponType");
+    if (!product) {
+      couponTypeSelect.value = "categories";
+      document.getElementById("categories").value = category;
+      document.getElementById("productsSection").style.display = "none";
+      document.getElementById("categoriesSection").style.display = "inline-block";
+    } else if (!category) {
+      couponTypeSelect.value = "products";
+      document.getElementById("products").value = product;
+      document.getElementById("productsSection").style.display = "inline-block";
+      document.getElementById("categoriesSection").style.display = "none";
+    }
+  
+    document.getElementById("couponType").addEventListener("change", function () {
+      var couponType = this.value;
+      if (couponType === "products") {
+        document.getElementById("categories").value = "none";
+        document.getElementById("productsSection").style.display = "inline-block";
+        document.getElementById("categoriesSection").style.display = "none";
+      } else if (couponType === "categories") {
+        document.getElementById("products").value = "none";
+        document.getElementById("productsSection").style.display = "none";
+        document.getElementById("categoriesSection").style.display =
+          "inline-block";
+      }
+    });
+  }
 
 
+//offer submit
+$('#offerCreateForm button[type="submit"]').click(function () {
+console.log("hereeee");
+  // Collect form data
+  let formData = {
+    name: $("#name").val(),
+    description: $("#description").val(),
+    discount: $("#discount").val(),
+    minAmount: $("#minAmount").val(),
+    maxDiscount: $("#maxDiscount").val(),
+    startDate: $("#startDate").val(),
+    endDate: $("#endDate").val(),
+    offerType: $("#couponType").val(),
+    products: $("#products").val(),
+    categories: $("#categories").val(),
+  };
+ 
+  $.ajax({
+    type: "POST",
+    url: "/admin/createOffer",
+    data: formData,
+    success: function (response) {
+      if (response.success) {
+        Swal.fire({
+          icon: "success",
+          title: `Offer created`,
+        }).then(function () {
+          window.location.href = `/admin/getCreateOffer`;
+        });
+      } else if (response.validation) {
+        Swal.fire({
+          icon: "info",
+          title: `Invalid entry`,
+        });
+      } else if (response.filled) {
+        Swal.fire({
+          icon: "info",
+          title: `Required fields contain only blank spaces`,
+        });
+      } else if (response.duplicate) {
+        Swal.fire({
+          icon: "info",
+          title: `Duplicate Entry`,
+        });
+      }
+    },
+    error: function (xhr, status, error) {
+      Swal.fire({
+        icon: "info",
+        title: `Some error occured`,
+      });
+      console.error("Error:", error);
+    },
+  });
+  return false;
+});
 
 
 });
 
+
+//edit offer
+$('#offerUpdateForm button[type="submit"]').click(function () {
+ let offerId= $("#offerId").val()
+   // Collect form data
+   let formData = {
+     offerId: $("#offerId").val(),
+     name: $("#name").val(),
+     description: $("#description").val(),
+     discount: $("#discount").val(),
+     minAmount: $("#minAmount").val(),
+     maxDiscount: $("#maxDiscount").val(),
+     startDate: $("#startDate").val(),
+     endDate: $("#endDate").val(),
+     offerType: $("#couponType").val(),
+     products: $("#products").val(),
+     categories: $("#categories").val(),
+   };
+ 
+   console.log(formData);
+ 
+   $.ajax({
+     type: "POST",
+     url: "/admin/offerEdit",
+     data: formData,
+     success: function (response) {
+       console.log(response);
+       if (response.success) {
+         Swal.fire({
+           icon: "success",
+           title: `Offer updated`,
+         }).then(function () {
+           window.location.href=`/admin/getOfferEdit?_id=${offerId}`;
+         });
+       } else if (response.validation) {
+         Swal.fire({
+           icon: "info",
+           title: `Invalid entry`,
+         });
+       } else if (response.filled) {
+         Swal.fire({
+           icon: "info",
+           title: `Required fields contain only blank spaces`,
+         });
+       } else if (response.duplicate) {
+         Swal.fire({
+           icon: "info",
+           title: `Duplicate Entry`,
+         });
+       }
+ 
+       console.log("Response:", response);
+     },
+     error: function (xhr, status, error) {
+       Swal.fire({
+         icon: "info",
+         title: `Some error occured`,
+       });
+       console.error("Error:", error);
+     },
+   });
+   return false;
+ });
 
 
 
