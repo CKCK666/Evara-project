@@ -32,7 +32,7 @@ const User = require("../models/userModel")
         updatedDate:null
       })
     let result = await dataToAdd.save()
-    console.log(result);
+
      if(result._id){
       res.json({success:true,message:"successfully added category"})
      }
@@ -160,10 +160,11 @@ const User = require("../models/userModel")
     }
     if (req.body.category){
       const strCategoryName=req.body.category
+   
      
-     let findCate=await Category.find({strCategoryName:{$regex:req.body.category,$options:"i"},pkCategoryId:{$ne:objectIdToUpdate}})
-      console.log(typeof findCate);
-      if(findCate.length==0){
+     let findCate=await Category.find({pkCategoryId:{$ne:objectIdToUpdate},strStatus:"Active",strCategoryName:{$regex:strCategoryName,$options:"i"}})
+     console.log(findCate);
+      if(!findCate.length){
         dateToUpdate={
           ...dateToUpdate,
           strCategoryName:req.body.category

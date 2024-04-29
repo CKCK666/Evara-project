@@ -23,7 +23,7 @@ const verifyLogin=async(req,res,next)=>{
       let user=req.session.user
   
       if(user &&user.isAdmin){
-        console.log("inside admin");
+     
           next()
          }
          else{

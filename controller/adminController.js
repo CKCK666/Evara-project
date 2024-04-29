@@ -52,7 +52,7 @@ const getAdminHome=async(req,res)=>{
    
     const currentDate = new Date();
     let matchQuery={}
-
+     let orderSort="all"
     if(req.query.sort=='daily'){
         matchQuery={
           createdDate: {
@@ -60,6 +60,7 @@ const getAdminHome=async(req,res)=>{
             $lt: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1)
           }
         }
+        orderSort="daily"
     }
      if(req.query.sort=='weekly'){
       const sevenDaysAgo = new Date(currentDate);
@@ -67,6 +68,7 @@ const getAdminHome=async(req,res)=>{
       matchQuery={
          createdDate: { $gte: sevenDaysAgo, $lt: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()) } 
       }
+      orderSort="weekly"
     }
 
     if(req.query.sort=='yearly'){
@@ -75,6 +77,7 @@ const getAdminHome=async(req,res)=>{
         $gte: new Date(currentDate.getFullYear(), 0, 1), // Start of the current year
         $lt: new Date(currentDate.getFullYear() + 1, 0, 1) // Start of the next year
     }}
+    orderSort="yearly"
     }
     if(req.query.start && req.query.end ){
       const startDateString = req.query.start
@@ -90,7 +93,7 @@ matchQuery={
     $gte:startDate,
     $lte: endDate
 }}
-
+orderSort="custom"
 
     }
 
@@ -106,7 +109,7 @@ matchQuery={
         }
    })
 
-  res.render("admin/homePage",{layout:"admin_layout",admin:true,salesOrder})
+  res.render("admin/homePage",{layout:"admin_layout",admin:true,salesOrder,orderSort})
     
   } catch (error) {
     console.log(error.message);

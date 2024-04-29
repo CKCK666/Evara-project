@@ -13,27 +13,42 @@ const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 
-  cloudinary.config({
-    cloud_name:process.env.CLOUDINARY_NAME,
-    api_key:process.env.CLOUDINARY_API_KEY,
-    api_secret:process.env.CLOUDINARY_API_SECRET
-  });
+  // cloudinary.config({
+  //   cloud_name:process.env.CLOUDINARY_NAME,
+  //   api_key:process.env.CLOUDINARY_API_KEY,
+  //   api_secret:process.env.CLOUDINARY_API_SECRET
+  // });
   
-  // Set up Multer storage using Cloudinary
-  const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-      folder: 'Evara project', // Optional folder in Cloudinary
-      allowed_formats: ['jpg', 'jpeg', 'png'], // Allowed file formats
-      // Optionally, you can specify transformations or other parameters here
-    }
-  });
+  // // Set up Multer storage using Cloudinary
+  // const storage = new CloudinaryStorage({
+  //   cloudinary: cloudinary,
+  //   params: {
+  //     folder: 'Evara project', // Optional folder in Cloudinary
+  //     allowed_formats: ['jpg', 'jpeg', 'png'], // Allowed file formats
+  //     // Optionally, you can specify transformations or other parameters here
+  //   }
+  // });
+
+// Multer storage configuration
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'public/uploads/'); // Destination folder for uploaded files
+  },
+  filename: function (req, file, cb) {
+    // Use the current timestamp as the filename to avoid overwriting existing files
+    cb(null, Date.now() + '-' + file.originalname);
+  }
+});
+
+
+
+
   const uploads = multer({ storage: storage });
 const { isAdmin } = require('../middlewares/verifications');
 const { listCoupons, getCreateCoupons,createCoupon, blockCoupon, getEditCoupon, couponEdit } = require('../controller/couponController');
 const { generatePDFReport, generateExcelReport } = require('../controller/reportController');
 const { getCreateOffer, createOffer, listOffer, getEditOffer, offerEdit } = require('../controller/offerController');
-
+const {monthlyChart, dailyChart, yearlyChart, customChart, topProducts, topCategories}=require("../controller/chartController")
 
 
 //get home page
@@ -155,5 +170,22 @@ router.get("/getofferEdit",getEditOffer)
 //edit offer
 router.post("/offerEdit",offerEdit)
 
+//monthly chart
+router.get("/api/statistics/monthly",monthlyChart)
+
+//last 30 days
+router.get("/api/statistics",dailyChart)
+
+// yearly chart
+router.get("/api/statistics/yearly",yearlyChart)
+
+//custom chart
+router.get("/api/statistics/custom",customChart)
+
+//top products
+router.get("/api/topProducts",topProducts)
+
+// top Categories
+router.get("/api/topCategories",topCategories)
 
 module.exports=router

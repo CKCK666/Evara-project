@@ -361,6 +361,21 @@ $(".order-status-change-btn").click(function(e){
 
 document.querySelectorAll('.inputImage').forEach(function(input, index) {
   input.addEventListener('change', function (e) {
+    let inputName=input.name
+    let form = document.getElementById("edit-product-image-form")
+   
+    if (window.location.pathname === "/admin/getAddProduct") {
+      
+      form=document.getElementById("add-product-image-form")
+    }
+
+  
+    
+    if (!form) {
+      alert("Form element not found.");
+      return;
+  }
+
     var imageFile = e.target.files[0];
     var imageType = /^image\//;
 
@@ -389,7 +404,7 @@ document.querySelectorAll('.inputImage').forEach(function(input, index) {
 
         // Show crop button and heading
         input.parentElement.querySelector('.cropButton').style.display = 'block';
-        input.parentElement.querySelector('.heading').style.display = 'block';
+        // input.parentElement.querySelector('.heading').style.display = 'block';
 
         input.parentElement.querySelector('.cropButton').addEventListener('click', function () {
           var croppedCanvas = cropper.getCroppedCanvas();
@@ -399,14 +414,43 @@ document.querySelectorAll('.inputImage').forEach(function(input, index) {
           croppedPreview.appendChild(croppedCanvas);
 
           // Get the cropped image data
-          var croppedImageData = croppedCanvas.toDataURL();
-          var imageName = imageFile.name;
+          // var croppedImageData = croppedCanvas
+          croppedCanvas.toBlob((blob) => {
+            const fileName = Date.now();
+            const file = new File([blob], `${fileName}.jpg`, {
+              type: "image/jpeg",
+            });
+
+            let inputToRemove = form.querySelector(`input[name="${inputName}"]`);
+        
+        
+            if (inputToRemove) {
+              inputToRemove.remove();
+            
+            } 
+
+            if (window.FileList && window.DataTransfer) {
+              const dataTransfer = new DataTransfer();
+              dataTransfer.items.add(file);
+              const input = document.createElement("input");
+              input.type = "file";
+              input.name = inputName;
+              input.files = dataTransfer.files;
+              form.appendChild(input);
+              input.style.display = "none";
+            } else {
+              console.error(
+                "FileList and DataTransfer are not supported in this browser."
+              );
+            }
+          });
           
-          imageData.push({
-            croppedImageData,
-            imageName,
-            index:index+1
-          })
+          
+          // imageData.push({
+          //   croppedImageData,
+          //   // imageName,
+          //   index:index+1
+          // })
           // Send cropped image data and image name to backend
           // sendToBackend(croppedImageData, imageName, index + 1);
         });
@@ -423,15 +467,19 @@ document.querySelectorAll('.inputImage').forEach(function(input, index) {
   // add product 
   $('#product-submit').click(function (e) {
     e.preventDefault()
-
+  
    
     
     let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
     let data = new FormData($('#product-form')[0]);
-    
-    imageData.map((img)=>{
-      data.append(`Image_${img.index}`,img.croppedImageData)
-    })
+    let imageForm=new FormData($("#add-product-image-form")[0])
+    imageForm.forEach((value, key) => {
+      data.append(key, value);
+  });
+
+    // imageData.map((img)=>{
+    //   data.append(`Image_${img.index}`,img.croppedImageData)
+    // })
 
     console.log(data);
     
@@ -548,15 +596,12 @@ return false;
 $('.product-edit-image').click(function(e){
   e.preventDefault()
   // let pkProductId = $("input[name='pkProductId']").val()
+  const form = document.getElementById("edit-product-image-form");
   let pkProductId = $(this).data('product-id');
-  let imgName=$(this).data('image-name');
-  let data = new FormData();
-    
-  imageData.map((img)=>{
-    data.append('imageUrl',img.croppedImageData)
-  })
-  data.append('pkProductId',pkProductId)
-  data.append('imgName',imgName)
+   let data = new FormData(form);
+
+data.append('pkProductId',pkProductId)
+ 
 
 let swalLoader = Swal.fire({
   title: 'Loading...',
@@ -1211,13 +1256,14 @@ const handleDelete=(id,name)=>{
               var selectElement = document.querySelector('.sales-report');
               var selectedOptionValue = selectElement.value;
               console.log(selectedOptionValue);
+            
               // Perform action based on the selected option
               switch (selectedOptionValue) {
                   case "daily":
                       daily();
                       break;
                   case "weekly":
-                      weekly();
+                      // weekly();
                       break;
                   case "yearly":
                       yearly();
@@ -1239,18 +1285,23 @@ const handleDelete=(id,name)=>{
 
 
           function daily() {
+          
          window.location.href="/admin/?sort=daily"
         }
         
         function weekly() {
+        
           window.location.href="/admin/?sort=weekly"
         }
         
         function yearly() {
+         
           window.location.href="/admin/?sort=yearly"
+         
         }
         
         function customDate() {
+        
           let elements = document.querySelectorAll(".custom-date");
 
           // Loop through each element
@@ -1268,9 +1319,11 @@ const handleDelete=(id,name)=>{
 
 
         function all(){
-         
+          updateSelection("all");
           window.location.href="/admin/"
         }
+
+       
       
         function updateHref() {
           var startDate = document.getElementById("start-date").value;
@@ -1288,6 +1341,7 @@ const handleDelete=(id,name)=>{
           let searchLink = document.getElementById("search-link");
           searchLink.href = "/admin?start=" + startDate + "&end=" + endDate;
         }
+
         
 //pdf generater
         async function pdfReport(){

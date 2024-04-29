@@ -15,6 +15,7 @@ const Coupon= require("../models/couponModel")
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const Wallet = require('../models/walletModel');
+const { log } = require('console');
 
   // change order status
   const changeOrderStatus=async(req,res)=>{
@@ -151,7 +152,7 @@ const Wallet = require('../models/walletModel');
       
       if (cartDetails && cartDetails.length) {
          let grandTotal=0
-        let cartCount= await getCartCount(userId)
+        let cartCount= await getCartCount(userId) //change userid here also
         let cartProducts=cartDetails[0].arrProducts.map(obj=>{
           let intTotalPrice=obj.intQuantity*obj.intPrice
           let totalOfferPrice=obj.intQuantity*obj.offerPrice
@@ -233,7 +234,7 @@ const Wallet = require('../models/walletModel');
          arrAddress=[...userAddress]
       }
       
-      
+      let walletAmt=parseFloat(req.body.walletAmt)
     
       let cartProducts=await Cart.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
      
@@ -244,9 +245,10 @@ const Wallet = require('../models/walletModel');
         arrDeliveryAddress:arrAddress,
         intTotalOrderPrice:cartProducts[0].total_cart_price,
         totalAmountAfterDiscount:parseFloat(req.body.totalAmountAfterDiscount),
-        strPaymentStatus:"Pending",
-        strPaymentMethod:"COD",
+        strPaymentStatus:"Success",
+        strPaymentMethod:req.body.paymentMethod,
         strOrderStatus:"Processing",
+        walletCashUsed:walletAmt,
         createdDate:new Date(),
         updatedDate:null
       })
@@ -280,18 +282,36 @@ const Wallet = require('../models/walletModel');
         })
 
      let cartProducts=await Cart.updateOne({pkUserId:new ObjectId(pkUserId),strStatus:"Active"},{$set:{strStatus:"Deleted"}})
+     if(walletAmt>0){
+      let updateWallet=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:-walletAmt}})
+       if(updateWallet.modifiedCount>0){
+        console.log("updateWallet")
+       }
+      
+     }
+    
       if(cartProducts.modifiedCount>0){
         res.json({success:true,message:"Ordered successfully "})
       }
       else{
-        res.json({success:false,message:"Fail to delete cart"})
+        let updatedOrder = await Order.findById(result._id); // Assuming MongoDB auto-generates _id
+
+        // Update the order status
+        updatedOrder.strOrderStatus = "Pending";
+        updatedOrder.strPaymentStatus = "Pending";
+        
+        // Save the updated order
+        await updatedOrder.save();
+        res.json({success:false,message:"Fail to update cart and wallet Order failed "})
       }
         
       }
-
+     
+       
     
      }
      else{
+
       res.json({success:false,message:"Order failed"})
      }
   
@@ -376,13 +396,15 @@ const Wallet = require('../models/walletModel');
         });
       });
 
-      console.log(razorpayOrder);
+    
 
       return res.json({
         status: "Success",
         message: razorpayOrder,
         orderId: result._id,
         razorpay: true,
+        walletCashUsed:req.body.walletAmt,
+        pkUserId:result.pkUserId
       });
       
      }
@@ -400,7 +422,8 @@ const Wallet = require('../models/walletModel');
   }
   
   const verifyPayment = async (req, res) => {
-    const { orderId, payment_id, order_id, signature } = req.body;
+    const { orderId, payment_id, order_id, signature ,walletCashUsed,pkUserId} = req.body;
+    let walletAmt=parseFloat(walletCashUsed)
     
     const order = await Order.findOne({ _id:new ObjectId( orderId )});
    
@@ -412,15 +435,53 @@ const Wallet = require('../models/walletModel');
       );
   
       if (generated_signature === signature) {
-        let cartProducts=await Cart.updateOne({pkUserId:new ObjectId(pkUserId),strStatus:"Active"},{$set:{strStatus:"Deleted"}})
-        if(cartProducts.modifiedCount>0){
-          res.json({success:true,message:"Ordered successfully "})
+        let cartProducts=await Cart.updateMany({pkUserId:new ObjectId(pkUserId),strStatus:"Active"},{$set:{strStatus:"Deleted"}})
+        let updateWallet=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:-walletAmt}})
+        
+        if(cartProducts.modifiedCount==0 && updateWallet.modifiedCount==0){
+          return  res.json({success:false,message:"order failed"})
+           }
+             
+      let productArray = await Order.aggregate([
+        {
+          $match: {
+            _id:new ObjectId( orderId )
+            
+          }
+        },
+        {
+          $project: {
+            
+            arrProductsDetails: 1
+          }
         }
-        else{
-          res.json({success:false,message:"Fail to delete cart"})
-        }
+      ]);
+   
+    console.log(productArray);
+      
+      if(productArray.length && productArray[0].arrProductsDetails.length>0){
+      productArray[0].arrProductsDetails.map(async(product)=>{
+        
+          let quantity=product.intQuantity
+            let updateStock=await Product.updateOne({pkProductId:new ObjectId(product.pkProductId)},{$inc:{intStock:-quantity}})
+         
+        })
+      }else{
+        order.strPaymentStatus = "Failed";
+        order.strStatus='Deleted'
+        order.save();
+        console.error("Order fail due to product stock update");
+        res
+          .status(400)
+          .json({ success: false, error: "cant update product stock" });
+      }
+
+       
+        
         order.strPaymentStatus = "Success";
         order.strOrderStatus="Processing"
+        order.walletCashUsed=walletAmt
+      
         order.save();
        
         res.json({ success: true, message: orderId });

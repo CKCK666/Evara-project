@@ -44,7 +44,7 @@ const addToCart=async(req,res)=>{
                if(result.modifiedCount>0){
                 let aggregatePipeline = [
                   {
-                    $match: { pkUserId } // Match documents with the specified pkUserId
+                    $match: { pkUserId ,strStatus:"Active"} // Match documents with the specified pkUserId
                   },
                   {
                     $unwind: "$arrProducts" // Deconstruct the arrProducts array
@@ -128,7 +128,7 @@ const addToCart=async(req,res)=>{
                 }
               ];
                 let totalPriceResult = await Cart.aggregate(aggregatePipeline)
-                console.log(totalPriceResult);
+                
                 // Update total_cart_price for the cart
                 let updatedTotalPriceResult = await Cart.updateOne(matchQuery, { $set: { total_cart_price: totalPriceResult[0].total_cart_price } });
                 

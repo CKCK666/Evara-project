@@ -432,10 +432,10 @@ $.ajax({
 $("#place-order-btn").click(async function(e){
   e.preventDefault()
   let razorpayRadioButton = document.querySelector('#razorpayOption');
- 
-  let spanElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
- let discountAmt= spanElement.textContent;
- var totalAmountAfterDiscount =discountAmt.slice(1)
+  const codOption = document.getElementById("codOption");
+  let walletAmt=parseFloat(document.getElementById('walletBalanceSpan').textContent)
+  let  discountAmt =parseFloat( document.querySelector('td.product-subtotal.grandTotalAmt span').textContent.slice(1))
+  let totalAmountAfterDiscount=walletAmt<discountAmt?discountAmt-walletAmt:walletAmt-discountAmt
 
   const radioButtons = document.querySelectorAll('input[type="radio"][name="shipping-address"]');
 
@@ -471,6 +471,7 @@ $("#place-order-btn").click(async function(e){
    let bodyData={
     pkAddressId,
     totalAmountAfterDiscount,
+    walletAmt
    }
   
   
@@ -485,7 +486,8 @@ $("#place-order-btn").click(async function(e){
             const order = response.message;
             const user = response.user;
             const orderId = response.orderId;
-
+         const walletCashUsed=response.walletCashUsed
+         const pkUserId=response.pkUserId
             var options = {
               key: "rzp_test_N10HdSb3UEKLbM",
               amount:order.amount, // Amount in paise (change to your desired amount)
@@ -504,6 +506,8 @@ $("#place-order-btn").click(async function(e){
                   payment_id: response.razorpay_payment_id,
                   order_id: response.razorpay_order_id,
                   signature: response.razorpay_signature,
+                  walletCashUsed,
+                  pkUserId
                 },
                 success: function (data) {
                   if (data.success) {
@@ -546,12 +550,16 @@ $("#place-order-btn").click(async function(e){
   });
   }
   else{
+    let paymentMethod="COD"
+    codOption.checked==false?paymentMethod="WALLET":paymentMethod="COD"
     $.ajax({
       type: 'POST', 
       url: '/checkOut',
       data:{
         pkAddressId,
-        totalAmountAfterDiscount
+        totalAmountAfterDiscount,
+        walletAmt,
+        paymentMethod
       },
       success: function(response) {
           if (response.success) {
@@ -1130,37 +1138,37 @@ $.ajax({
 
 let productName
 let pkOrderId
-// document.getElementById('searchForm').addEventListener('submit', function(event) {
-//   event.preventDefault(); // Prevent default form submission behavior
+document.getElementById('searchForm').addEventListener('submit', function(event) {
+  event.preventDefault(); // Prevent default form submission behavior
 
-//   var category = document.querySelector('.select-active').value;
-//   var searchQuery = document.getElementById('searchInput').value;
+  var category = document.querySelector('.select-active').value;
+  var searchQuery = document.getElementById('searchInput').value;
 
-//   console.log('Category:', category);
-//   console.log('Search Query:', searchQuery);
+  console.log('Category:', category);
+  console.log('Search Query:', searchQuery);
 
-//   // Clear the input fields if needed
-//   document.getElementById('searchInput').value = '';
+  // Clear the input fields if needed
+  document.getElementById('searchInput').value = '';
 
-//    productName=searchQuery
-//    pkCategoryId=category
+   productName=searchQuery
+   pkCategoryId=category
 
   
 
 
    
-// });
+});
 
-// document.getElementById('searchInput').addEventListener('keydown', async function(event) {
-//   if (event.key === 'Enter') {
-//       event.preventDefault(); // Prevent default Enter key behavior (form submission)
+document.getElementById('searchInput').addEventListener('keydown', async function(event) {
+  if (event.key === 'Enter') {
+      event.preventDefault(); // Prevent default Enter key behavior (form submission)
 
-//       // Trigger the form submission by clicking the submit button
-//       document.getElementById('submitButton').click();
-//       const url = `/search?pkCategoryId=${pkCategoryId}&productName=${productName}`;
-//       window.location.href=url
-//   }
-// });
+      // Trigger the form submission by clicking the submit button
+      document.getElementById('submitButton').click();
+      const url = `/search?pkCategoryId=${pkCategoryId}&productName=${productName}`;
+      window.location.href=url
+  }
+});
 
 // let couponApplied=false
 // let totalAmountAfterDiscount
@@ -1293,16 +1301,29 @@ let totalCartPrice = parseFloat(totalCartPriceElement.textContent.substring(1));
    let walletBalanceString=document.getElementById('walletBalanceSpan').textContent
   let walletBalance=parseFloat(walletBalanceString)
 
-  // walletCheckbox.addEventListener("change",handleWalletCheckboxChange)
-  // function handleWalletCheckboxChange(){
-  //  if(walletCheckbox.checked){
-  //   let amt
-  //   if(totalAmountAfterDiscount>walletBalance){
-  //     amt=totalAmountAfterDiscount-walletBalance
-  //     spanElement.textContent="₹"+amt
-  //   }
-  //  }
-  // }
+  walletCheckbox.addEventListener("change",handleWalletCheckboxChange)
+
+  function handleWalletCheckboxChange(){
+    if(walletCheckbox.checked){
+      let spanElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
+     let totalAmountAfterDiscount = parseFloat(spanElement.textContent.slice(1));
+      if(walletBalance>totalAmountAfterDiscount){
+        razorpayOption.disabled=true
+        codOption.disabled=true
+        razorpayOption.checked=false
+        codOption.checked=false
+      }
+    }else{
+      razorpayOption.disabled=false
+      codOption.disabled=false
+       if(razorpayOption.checked){
+        razorpayOption.checked=true
+       }else{
+        codOption.checked=true
+       }
+        
+    }
+  }
 
 
    

@@ -5,7 +5,7 @@ const Product =require("../models/productModel")
 const Category =require("../models/categoryModel")
 const bcrypt=require("bcrypt")
 const jwt =require("jsonwebtoken")
-const { ObjectId} = require('mongodb');
+const { ObjectId, ReturnDocument} = require('mongodb');
 const { log, logger } = require("handlebars");
 const User = require("../models/userModel")
 const Cart = require("../models/cartModel")
@@ -83,13 +83,28 @@ const getProductList=async(req,res)=>{
   console.log("add to product router");
      try {
        let files=req.files
-       console.log(req.files);
-      console.log(req.body);
+       console.log(files);
+       if(!files.length || files.length!=3){
+        return   res.json({success:false,message:"Crop Images properly"})
+       }
+     
+
+       let mainProductUrl
+       let arrayOtherImages=[]
+
+       files.map((file)=>{
+        if (file.fieldname === 'Main-Image') {
+          mainProductUrl = file.filename;
+      } else if (file.fieldname === 'Image-1') {
+          arrayOtherImages.push({ imageUrl1: file.filename });
+      } else if (file.fieldname === 'Image-2') {
+          arrayOtherImages.push({ imageUrl2: file.filename });
+      }
+       })
    
-        let arrayOtherImages=[
-          {imageUrl1:req.body.Image_2},
-          {imageUrl2:req.body.Image_3}
-        ]
+      
+        
+        
       
      
    
@@ -105,8 +120,7 @@ const getProductList=async(req,res)=>{
          fkcategoryId:new ObjectId(req.body.pkCategoryId),
          intPrice:parseFloat(req.body.intPrice),
          intStock:parseInt(req.body.intStock),
-         mainProductUrl:req.body.Image_1,
-         arrayOtherImages:[],
+         mainProductUrl,
          arrayOtherImages,
          strStatus:"Active",
          createdDate:new Date(),
@@ -116,14 +130,14 @@ const getProductList=async(req,res)=>{
     
       if(result._id){
        
-       res.json({success:true,message:"successfully added product"})
+     return    res.json({success:true,message:"successfully added product"})
       }
       else{
-       res.json({success:false,message:"fail to  add product"})
+     return   res.json({success:false,message:"fail to  add product"})
       }
     
      } catch (error) {
-       res.json({success:false,message: error.message})
+      return res.json({success:false,message: error.message})
      }
      
       
@@ -214,31 +228,33 @@ const getProductList=async(req,res)=>{
    const editProductImages=async(req,res)=>{
    
      try {
-       console.log(req.body);
+       let file=req.files[0]
+
        if(req.body.pkProductId){
          let pkProductId= new ObjectId(req.body.pkProductId);
          let dataToUpdate={}
     
      
-      if(req.body.imgName=='Main Image'){
+      if(file.fieldname=='Main-Image'){
+       
        dataToUpdate={
       
-       mainProductUrl:req.body.imageUrl
+       mainProductUrl:file.filename
        }
  
      }
      
-        if (req.body.imgName=='Image-1') {
+        if (file.fieldname=='Image-1') {
           dataToUpdate={
            
-           "arrayOtherImages.0.imageUrl1":req.body.imageUrl,
+           "arrayOtherImages.0.imageUrl1":file.filename
           }
  
           } 
-          if (req.body.imgName=='Image-2') {
+          if (file.fieldname=='Image-2') {
            dataToUpdate={
          
-           "arrayOtherImages.1.imageUrl2": req.body.imageUrl
+           "arrayOtherImages.1.imageUrl2": file.filename
            }
        }
         
@@ -251,9 +267,9 @@ const getProductList=async(req,res)=>{
        }
     
      
-      console.log(dataToAdd);
-     let result = await Product.updateOne({pkProductId},{$set:dataToAdd})
-     console.log(result);
+   
+     let result = await Product.updateOne({pkProductId,strStatus: "Active"},{$set:dataToAdd})
+   
       if(result.modifiedCount>0){
        res.json({success:true,message:"successfully edited product"})
       }
@@ -420,7 +436,7 @@ const getProductImageEditPage=async(req,res)=>{
       let findProduct=await Product.aggregate([match,project])
       if(findProduct.length){
       let productImage
-      if(req.query.imgName=='Main Image'){
+      if(req.query.imgName=='Main-Image'){
         productImage=findProduct[0].mainProductUrl
       }
       if(req.query.imgName=='Image-1'){
