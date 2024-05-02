@@ -134,9 +134,9 @@ const  addToWishList=async(req,res)=>{
      let wishListProducts=wishListDetails[0].arrProducts.map(obj=>{
       
  
-       return {...obj._doc,pkWishListId:wishListDetails[0].pkWishListId}
+       return {...obj._doc,pkWishListId:wishListDetails[0].pkWishListId,pkUserId:wishListDetails[0].pkUserId}
      })
-     
+  console.log(wishListProducts)
       res.render("user/wishListPage",{layout:"user_layout",success:true,wishListDetails,wishListProducts,pkUserId,message:"successfully loaded cart page",user:true,cartCount,wishListCount})
     } else {
      res.render("user/wishListPage",{layout:"user_layout",success:true,user:true,pkUserId,cartCount,wishListCount})

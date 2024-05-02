@@ -187,8 +187,8 @@ const getProductList=async(req,res)=>{
        if(req.body.pkProductId){
  
      let pkProductId=new ObjectId(req.body.pkProductId)
- 
- 
+      let stock= parseInt(req.body.intStock)
+    
     
         const existingProduct= await Product.find({strProductName:req.body.strProductName,strStatus:{$ne:"Deleted"},pkProductId:{$ne:pkProductId}})
      
@@ -202,12 +202,73 @@ const getProductList=async(req,res)=>{
          strDescription:req.body.strDescription,
          fkcategoryId:req.body.pkCategoryId,
          intPrice:parseFloat(req.body.intPrice),
-         intStock:parseInt(req.body.intStock),
+         intStock:stock,
          updatedDate:new Date()
        }
      let result = await Product.updateOne({pkProductId},{$set:dataToAdd})
      console.log(result);
       if(result.modifiedCount>0){
+        //update cart 
+        await Cart.updateMany({ "arrProducts.pkProductId": pkProductId, "arrProducts.intQuantity": { $gt: stock } },
+        { $set: { "arrProducts.$.intQuantity": stock } },)
+
+      // Calculate total_cart_price for each document
+const carts = await Cart.aggregate([
+  {
+    $match: { "arrProducts.pkProductId": pkProductId } // Filter to match documents containing the specified product
+  },
+  {
+    $set: {
+      total_cart_price: {
+        $sum: {
+          $map: {
+            input: "$arrProducts",
+            as: "product",
+            in: { $multiply: ["$$product.intQuantity", "$$product.intPrice"] }
+          }
+        }
+      }
+    }
+  }
+])
+console.log(carts)
+// If no documents found, handle the scenario
+if (carts.length === 0) {
+  console.log("No documents found in Cart collection.");
+  return   res.json({success:true,message:"Successfully edited product"})
+}
+
+// Update documents with the calculated total_cart_price and updated intStock
+const updatePromises = carts.map(async cart => {
+  const updatedProducts = cart.arrProducts.map(product => {
+    if (product.pkProductId.equals(pkProductId)) {
+      product.intStock = stock;
+    }
+    return product;
+  });
+
+  await Cart.updateOne(
+    { _id: cart._id },
+    {
+      $set: {
+        arrProducts: updatedProducts,
+        total_cart_price: cart.total_cart_price
+      }
+    }
+  );
+});
+
+// Execute all update operations
+await Promise.all(updatePromises);
+
+
+
+
+      
+
+
+
+
        res.json({success:true,message:"Successfully edited product"})
       }
       else{

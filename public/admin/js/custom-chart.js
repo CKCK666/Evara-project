@@ -25,8 +25,51 @@
     });
      
     }   
-  
+    
+    if ($('#topCategories').length>0) {
+        $.ajax({
+            url: '/admin/api/topCategories',
+      method: 'GET',
+      success: function(response) {
+          const data = response.data
+        
+            // Process data as needed
+            const categoryName = data.map(order => order.categoryName);
+            const totalSold = data.map(order => order.totalSold);
+           
 
+            // Render the chart
+            renderPieChartCate(categoryName, totalSold);
+          
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching data:', error);
+        }
+    });
+     
+    }   
+    if ($('#topProducts').length>0) {
+        $.ajax({
+            url: '/admin/api/topProducts',
+      method: 'GET',
+      success: function(response) {
+          const data = response.data
+           
+            // Process data as needed
+            const productName = data.map(order => order.productName);
+            const totalSold = data.map(order => order.totalSold);
+           
+
+            // Render the chart
+            renderPieChartPro( productName, totalSold);
+          
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching data:', error);
+        }
+    });
+     
+    }  
     function renderChart(labels, values,values2,values3) {
         try {
             // Get the canvas element
@@ -34,7 +77,7 @@
       
             // Create the chart
             new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
@@ -78,7 +121,61 @@
             console.error('Error rendering chart:', error);
         }
       }
+      function renderPieChartCate(labels, values) {
+        const ctx = document.getElementById('topCategories').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        'red',
+                    'blue',
+                    'green',
+                    'orange',
+                    'purple', // Add more colors as needed
+                    'yellow',
+                    'cyan',
+                    'magenta',
+                    'brown'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+      }
 
+      function renderPieChartPro(labels, values) {
+        const ctx = document.getElementById('topProducts').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        'red',
+                    'blue',
+                    'green',
+                    'orange',
+                    'purple', // Add more colors as needed
+                    'yellow',
+                    'cyan',
+                    'magenta',
+                    'brown'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+      }
     
 })(jQuery);
 

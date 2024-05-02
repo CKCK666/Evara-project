@@ -112,7 +112,7 @@ const { log } = require('console');
    //get chheckout page
    const getCheckoutPage=async(req,res)=>{
     try {
-      let userId="65ead74f63b8a90a5a0dee7c"
+      let userId=req.session.user.pkUserId
       let pkUserId =new ObjectId(userId)
 
       let match={

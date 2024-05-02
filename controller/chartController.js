@@ -223,6 +223,7 @@ const monthlyChart = async (req, res) => {
 
   const  topCategories = async (req, res) => {
     try {
+        
       const data= await Order.aggregate([
         {$match: {
             strOrderStatus: { $nin: ["Pending", "Cancelled"] },
@@ -236,9 +237,9 @@ const monthlyChart = async (req, res) => {
             { $limit: 10 }, // Limit to the top 10 categories
             {
               $lookup: {
-                from: "categories", // Assuming your category collection is named "categories"
+                from: Category.collection.name, // Assuming your category collection is named "categories"
                 localField: "_id",
-                foreignField: "_id",
+                foreignField: "pkCategoryId",
                 as: "category"
               }
             },

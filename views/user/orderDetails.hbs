@@ -8,7 +8,9 @@
             </div>
         </div>
         <section class="mt-50 mb-50">
+         
             <div class="container">
+                
                 <div class="row">
                     <div class="col-lg-6 mb-sm-15">
                        {{#if deliveryAddress}}
@@ -29,7 +31,7 @@
                     {{/if}}
                    
                     </div>
-
+                      
                      <div class="col-md-6">
                         <div class="order_review">
                             <div class="mb-20">
@@ -100,9 +102,12 @@
                            
                             {{/eq}}
                             {{/eq}}
+                             {{#eq orderDetails.[0].strOrderStatus 'Delivered'}}
+                               <button onclick="pdfInvoice()" class="btn btn-md rounded font-sm hover-up"><i class="text-muted material-icons md-post_add"></i>Invoice download</button>
+                               {{/eq}}
                         </div>
                     </div>
-                    
+                                        
                 </div>
               
             

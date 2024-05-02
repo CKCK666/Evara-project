@@ -31,7 +31,7 @@
                                     <tr class="cart-product-details">
                                         <input type="hidden" id="pkProductId" value={{pkProductId}}>
                                         <input type="hidden" id="intStock" value={{intStock}}>
-                                        <td class="image product-thumbnail"><img src={{mainProductUrl}} alt="#"></td>
+                                        <td class="image product-thumbnail"><img  src="/uploads/{{mainProductUrl}}" height="70px" alt="#"></td>
                                         <td class="product-des product-name">
                                             <h5 class="product-name"><a href="shop-product-right.html">{{strProductName}}</a></h5>
                                             <p class="font-xs">{{strDescription}}<br> .
@@ -40,7 +40,7 @@
                                         <td class="price" data-title="Price"><span>{{intPrice}}</span></td>
                                         
                                         <td class="text-right" data-title="Cart">
-                                             <button type="button" class="remove-btn btn btn-success btn-sm rounded">Add to Cart</button>  
+                                             <button  onclick="handleAddToCart('{{pkProductId}}','{{pkUserId}}')"  type="button" class="remove-btn btn btn-success btn-sm rounded">Add to Cart</button>  
                                         </td>
                                         <td class="action" data-title="Remove"><a href="#"  class="text-muted removeFromWishList"
                                         data-pk-wishlist-id="{{pkWishListId}}" data-pk-product-id="{{pkProductId}}" 

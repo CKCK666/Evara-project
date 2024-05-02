@@ -198,7 +198,7 @@ const addToCart=async(req,res)=>{
   
     let cartCount= await getCartCount(pkUserId)
     
-  
+   console.log(cartDetails)
     let cartProducts=cartDetails[0].arrProducts.map(obj=>{
       let intTotalPrice=obj.intQuantity*obj.intPrice
 

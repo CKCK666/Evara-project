@@ -23,9 +23,10 @@ const otpStorage = new Map();
 const getSignUp =(req, res) => {
  
   if (req.session.user || req.session.passport) {
-   
+   console.log(req.session.user);
     res.redirect('/');
   } else {
+    console.log("2");
     req.session.destroy();
     res.render('user/signupPage',{layout:"user_layout"});
   }
@@ -113,7 +114,7 @@ const getHome = async (req, res) => {
 if(wishlist.length){
   wishListCount=wishlist[0].itemCount
 }
-   
+ 
     
     res.render('user/homePage', {layout:"user_layout",user:true,products,categories,pkUserId:req.session.user.pkUserId,cartCount,wishListCount});
   } else {
@@ -572,7 +573,8 @@ async function getCartCount(userId) {
     let totalQuantity=await Cart.aggregate([
      {
        $match:{
-         pkUserId:new ObjectId(userId)
+         pkUserId:new ObjectId(userId),
+         strStatus:"Active"
        }
      },
      {

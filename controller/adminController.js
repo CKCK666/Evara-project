@@ -108,8 +108,28 @@ orderSort="custom"
          ...order._doc
         }
    })
+   let orderSalesDetails=await Order.aggregate([
+    {
+      $match: {
+      
+        "strOrderStatus": { $nin: ["Pending","Cancelled" ]} ,
+       
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        totalOrders: { $sum: 1 }, 
+        totalSalesAmt: { $sum: { $sum: "$arrProductsDetails.intPrice" } }, 
+        totalDiscountAfterAmount: { $sum: "$totalAmountAfterDiscount" } ,
+        totalDiscountAmount: { $sum: { $subtract: ["$intTotalOrderPrice", "$totalAmountAfterDiscount"] } }
+      }
+    }
+  ])
+  
+  
 
-  res.render("admin/homePage",{layout:"admin_layout",admin:true,salesOrder,orderSort})
+  res.render("admin/homePage",{layout:"admin_layout",admin:true,salesOrder,orderSort,orderSalesDetails})
     
   } catch (error) {
     console.log(error.message);
