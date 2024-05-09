@@ -9,15 +9,19 @@ const otpGenerator = require('otp-generator');
 const twilio = require('twilio');
 const Address=require("../models/addressModel");
 const { log } = require('handlebars/runtime');
+const {getCartCount}=require("../utils/cart")
+const {getWishListCount}=require("../utils/wishlist")
 //get add address page
 const getAddressPage=async(req,res)=>{
     try {
      let pkUserId=req.query.pkUserId
       let addressCount=await Address.countDocuments({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
     
-       
+      let cartCount= await getCartCount(req.query.pkUserId)
+        
+      let wishListCount=await getWishListCount(req.query.pkUserId)
   
-      res.render("user/addAddress",{layout:"user_layout",pkUserId,addressCount,user:true})
+      res.render("user/addAddress",{layout:"user_layout",pkUserId,addressCount,user:true,cartCount,wishListCount})
     } catch (error) {
       res.json({success:false,message:"fail to render add  address page"})
     }

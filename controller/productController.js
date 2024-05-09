@@ -10,7 +10,9 @@ const { log, logger } = require("handlebars");
 const User = require("../models/userModel")
 const Cart = require("../models/cartModel")
 
-
+const {getCartCount}=require("../utils/cart")
+const {getWishListCount}=require("../utils/wishlist")
+const Wishlist = require("../models/wishListModel")
 
 //product list page
 const getProductList=async(req,res)=>{
@@ -206,8 +208,73 @@ const getProductList=async(req,res)=>{
          updatedDate:new Date()
        }
      let result = await Product.updateOne({pkProductId},{$set:dataToAdd})
-     console.log(result);
+      
       if(result.modifiedCount>0){
+      
+        let productObj=await Product.findOne({pkProductId})
+        
+      //     {
+      //         $match: {
+      //             "arrProducts.pkProductId": pkProductId,
+      //             "strStatus": "Active"
+      //         }
+      //     },
+      //     {
+      //         $addFields: {
+      //             arrProducts: {
+      //                 $filter: {
+      //                     input: "$arrProducts",
+      //                     as: "product",
+      //                     cond: { $ne: ["$$product.pkProductId",pkProductId] }
+      //                 }
+      //             }
+      //         }
+      //     },
+      //     {
+      //         $push: {
+      //             arrProducts: {
+      //               $each: productArray
+      //             }
+      //         }
+      //     }
+      // ]);
+
+
+// Find all wishlists that contain the product to be updated
+const wishlists = await Wishlist.find({ "arrProducts.pkProductId": pkProductId, "strStatus": "Active" });
+
+// Loop through each wishlist and update it individually
+for (const wishlist of wishlists) {
+    // Pull the existing product from arrProducts
+    await Wishlist.updateOne(
+        { _id: wishlist._id },
+        { $pull: { "arrProducts": { "pkProductId": pkProductId } } }
+    );
+
+    // Push the new product into arrProducts
+    wishlist.arrProducts.push({
+      pkProductId: productObj.pkProductId,
+        strProductName: productObj.strProductName,
+        strDescription: productObj.strDescription,
+        fkcategoryId: productObj.fkcategoryId,
+        intPrice: productObj.intPrice,
+        intStock: productObj.intStock,
+        mainProductUrl: productObj.mainProductUrl,
+        arrayOtherImages: productObj.arrayOtherImages,
+        intQuantity: productObj.intQuantity
+
+
+
+
+
+    });
+
+    // Save the updated wishlist
+    await wishlist.save();
+}
+
+
+
         //update cart 
         await Cart.updateMany({ "arrProducts.pkProductId": pkProductId, "arrProducts.intQuantity": { $gt: stock } },
         { $set: { "arrProducts.$.intQuantity": stock } },)
@@ -403,7 +470,8 @@ await Promise.all(updatePromises);
          let pkUserId=req.session.user.pkUserId
         
          let cartCount=  await getCartCount(pkUserId)
-       
+      
+           let wishListCount=await getWishListCount(pkUserId)
         let productFind =await Product.find({pkProductId:pkProductId,strStatus:"Active"})
         let product=productFind.map((pro)=>{
            return{...pro._doc}
@@ -411,7 +479,7 @@ await Promise.all(updatePromises);
         let categories=await Category.aggregate([{$match:{strStatus:"Active"}}])
           if(product.length){
             
-          res.render("user/productSingle",{layout:"user_layout",user:true,product,imageUrl1:product[0].arrayOtherImages[0].imageUrl1,imageUrl2:product[0].arrayOtherImages[1].imageUrl2,pkUserId,cartCount,categories})
+          res.render("user/productSingle",{layout:"user_layout",user:true,product,imageUrl1:product[0].arrayOtherImages[0].imageUrl1,imageUrl2:product[0].arrayOtherImages[1].imageUrl2,pkUserId,cartCount,categories,wishListCount})
           }
           else{
             res.json({success:false,message:"product  not found"})
@@ -425,8 +493,9 @@ await Promise.all(updatePromises);
     }
   }
   const sortProducts=async(req,res)=>{
-    console.log(req.query);
+    let pkUserId=req.session.user.pkUserId
     try {
+      
       let sort={createdDate:-1}
        let search={strStatus: 'Active'}
       if(req.query.lowToHigh){
@@ -473,7 +542,10 @@ await Promise.all(updatePromises);
         }
       })
       let categories=await Category.aggregate([{$match:{strStatus:"Active"}}])
-      res.render("user/filterProducts",{layout:"user_layout",user:true,result,categories})
+      let cartCount= await getCartCount(pkUserId)
+        
+      let wishListCount=await getWishListCount(pkUserId)
+      res.render("user/filterProducts",{layout:"user_layout",user:true,result,categories,cartCount,wishListCount})
     } catch (error) {
       res.json({success:true,message:error.message})
     }
@@ -542,33 +614,4 @@ const getProductImageEditPage=async(req,res)=>{
   
   }
 
-  async function getCartCount(userId) {
-
-    let userCart=await Cart.find({pkUserId:new ObjectId(userId),strStatus:"Active"})
-    let cartCount=0
-    if(userCart && userCart.length){
-      let totalQuantity=await Cart.aggregate([
-       {
-         $match:{
-           pkUserId:new ObjectId(userId),
-           strStatus:"Active"
-         }
-       },
-       {
-         $unwind: "$arrProducts" // Unwind the arrProducts array to deconstruct the array
-       },
-       {
-         $group: {
-           _id: null,
-           totalItems: { $sum: "$arrProducts.intQuantity" }
-         }
-       }
-     ])
-     cartCount=totalQuantity[0].totalItems
-     return cartCount
-    }
-    else{
-      return cartCount
-    }
-    
-  }
+ 

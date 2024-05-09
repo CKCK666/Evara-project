@@ -3,7 +3,6 @@ const bcrypt = require('bcrypt');
 const mongoose=require('mongoose')
 const User =require("../models/userModel")
 const Product =require("../models/productModel")
-const {USER_COLLECTION, PRODUCTS_COLLECTION, CATEGORY_COLLECTION, CART_COLLECTION, ORDER_COLLECTION} =require("../config/collections")
 const Cart =require("../models/cartModel")
 const { ObjectId } = require('mongodb');
 const router = require('../routes/userRoutes');
@@ -19,15 +18,19 @@ const accountSid = process.env.TWILIO_SID;
 const authToken = process.env.TWILIO_TOKEN;
 const twilioClient = twilio(accountSid, authToken);
 const otpStorage = new Map();
+const {getCartCount}=require("../utils/cart")
+const {getWishListCount}=require("../utils/wishlist")
 // get signup page
 const getSignUp =(req, res) => {
- 
-  if (req.session.user || req.session.passport) {
-   console.log(req.session.user);
-    res.redirect('/');
+
+  if (req.session.otpVerified || req.session.passport) {
+      res.redirect('/');
+   
   } else {
-    console.log("2");
-    req.session.destroy();
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    req.session.otpVerified=false
     res.render('user/signupPage',{layout:"user_layout"});
   }
 };
@@ -60,7 +63,7 @@ const signUp = async (req, res) => {
         let findUser=await User.find({_id},{strPassword:0,strProfileImg:0})
         req.session.user = findUser[0];
          
-        req.session.otpVerified=false
+     
        let wallet=new Wallet({
         userId:new ObjectId(findUser[0].pkUserId)
        })
@@ -104,23 +107,18 @@ const getHome = async (req, res) => {
    
     let categories =await Category.aggregate([{$match:{strStatus:"Active"}}])
     let cartCount= await getCartCount(req.session.user.pkUserId)
-    let wishListCount=0
-   let wishlist=  await Wishlist.aggregate([{$match:{pkUserId:objectIdToFind,strStatus:"Active"}}, {
-    $project: {
-        _id: 1,
-        itemCount: { $size: "$arrProducts" }
-    }
-}])
-if(wishlist.length){
-  wishListCount=wishlist[0].itemCount
-}
- 
+    let wishListCount=await getWishListCount(req.session.user.pkUserId)
+
     
     res.render('user/homePage', {layout:"user_layout",user:true,products,categories,pkUserId:req.session.user.pkUserId,cartCount,wishListCount});
   } else {
      console.log("not userExist");
-    req.session.destroy();
+    req.session.otpVerified=false;
+    console.log(req,session);
     res.clearCookie('passport')
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.render('user/loginPage',{layout:"user_layout"});
   }
 };
@@ -137,7 +135,7 @@ const login = async(req,res) => {
     if (user) {
       let result = await bcrypt.compare(password, user.strPassword);
       if (result) {
-        req.session.loggedIn = true;
+        req.session.otpVerified = true;
         req.session.user = user;
        
 
@@ -184,7 +182,7 @@ console.log(otpStorage);
           to: phoneNumber
       })
       .then(() => {
-        req.session.accessOtpPage=true
+     
        res.json({success:true,message:'OTP sent successfully',phoneNumber})
       })
       .catch(error => {
@@ -194,11 +192,26 @@ console.log(otpStorage);
 }
 
 const getOtpPage=(req,res)=>{
-     if(req.session.accessOtpPage){
-      req.session.accessOtpPage=false
+
+     if(req.session.otpVerified && req.session.user ){
+      res.redirect("/")
+      
+     }else if((req.session.user && !req.session.otpVerified) || req.session.accessOtpPage ){
+        // Prevent caching of the OTP page
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
+    
       res.render("user/otpPage",{layout:"otp_layout"})
      }else{
-      res.redirect("/")
+           // Prevent caching of the OTP page
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
+    
+    res.redirect("/")
      }
       
   }
@@ -229,7 +242,6 @@ const verifyOTP=async(req,res)=>{
     req.session.otpVerified=true
   }
 
-  req.session.accessOtpPage=false
   // Delete OTP from storage once verified
   otpStorage.delete(phoneNumber);
    if(req.session.user){
@@ -309,6 +321,8 @@ const getUserSetting=async(req,res)=>{
 
         let userCart=await Cart.find({pkUserId:new ObjectId(req.query.pkUserId)})
         let cartCount= await getCartCount(req.query.pkUserId)
+        
+        let wishListCount=await getWishListCount(req.query.pkUserId)
         let  arrAddress=await Address.aggregate([match,addField,sort,projectAddress])
          let findOrders=await Order.aggregate([match,orderSort,orderProject])
          
@@ -324,7 +338,7 @@ const getUserSetting=async(req,res)=>{
           
           })
       
-          res.render("user/userSettings",{layout:"user_layout",user:true,arrAddress,pkUserId:req.query.pkUserId,cartCount,userDetails,userOrders,wallet})
+          res.render("user/userSettings",{layout:"user_layout",user:true,arrAddress,pkUserId:req.query.pkUserId,cartCount,wishListCount,userDetails,userOrders,wallet})
        }else{
         return res.json({success:false,message:"Failed to fetch user data"})
        }
@@ -495,6 +509,10 @@ const forgotPasswordPage=(req,res)=>{
     if(req.session.user){
       res.redirect('/')
     }else{
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+      req.session.accessOtpPage =false
       res.render("user/forgotPasswordPage",{layout:"user_layout"})
     }
     
@@ -529,6 +547,10 @@ const verfiyUser=async(req,res)=>{
 const getResetPassword=(req,res)=>{
   try {
     if( req.session.resetPageAccess){
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    req.session.accessOtpPage =false
       req.session.resetPageAccess=false
       res.render("user/resetPasswordPage",{layout:"user_layout"})
     }else{
@@ -565,36 +587,6 @@ const resetPassword=async(req,res)=>{
 }
 
 
-async function getCartCount(userId) {
-
-  let userCart=await Cart.find({pkUserId:new ObjectId(userId),strStatus:"Active"})
-  let cartCount=0
-  if(userCart && userCart.length){
-    let totalQuantity=await Cart.aggregate([
-     {
-       $match:{
-         pkUserId:new ObjectId(userId),
-         strStatus:"Active"
-       }
-     },
-     {
-       $unwind: "$arrProducts" // Unwind the arrProducts array to deconstruct the array
-     },
-     {
-       $group: {
-         _id: null,
-         totalItems: { $sum: "$arrProducts.intQuantity" }
-       }
-     }
-   ])
-   cartCount=totalQuantity[0].totalItems
-   return cartCount
-  }
-  else{
-    return cartCount
-  }
-  
-}
 
 
 

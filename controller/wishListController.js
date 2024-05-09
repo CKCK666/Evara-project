@@ -110,8 +110,9 @@ const  addToWishList=async(req,res)=>{
     try {
      let pkUserId =req.session.user.pkUserId
      
-     let cartCount=0
+    
      let wishListCount=0
+     let cartCount= await getCartCount(pkUserId)
     let wishListDetailsFind=await Wishlist.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
     let wishListDetails=wishListDetailsFind.map((wish)=>{
         return{...wish._doc}
@@ -136,7 +137,7 @@ const  addToWishList=async(req,res)=>{
  
        return {...obj._doc,pkWishListId:wishListDetails[0].pkWishListId,pkUserId:wishListDetails[0].pkUserId}
      })
-  console.log(wishListProducts)
+
       res.render("user/wishListPage",{layout:"user_layout",success:true,wishListDetails,wishListProducts,pkUserId,message:"successfully loaded cart page",user:true,cartCount,wishListCount})
     } else {
      res.render("user/wishListPage",{layout:"user_layout",success:true,user:true,pkUserId,cartCount,wishListCount})

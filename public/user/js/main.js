@@ -442,24 +442,38 @@ $("#place-order-btn").click(async function(e){
   let pkAddressId;
 
   //get default addressId
-  radioButtons.forEach(function(radioButton) {
-    if (radioButton.checked) {
-        // const pkAddressIdInput = radioButton.parentNode.nextElementSibling.querySelector('input[name="pkAddressId"]');
-        pkAddressId = radioButton.dataset.pkAddressId
-    }
-});
-
-
-  // get the address when radio button change event
-  radioButtons.forEach(function(radioButton) {
-      radioButton.addEventListener('change', function(event) {
-          if (event.target.checked) {
-               pkAddressId = event.target.dataset.pkAddressId;
-              console.log('pkAddressId:', pkAddressId);
-             
-          }
-      });
+  if (radioButtons.length > 0) {
+    radioButtons.forEach(function(radioButton) {
+      if (radioButton.checked) {
+          // const pkAddressIdInput = radioButton.parentNode.nextElementSibling.querySelector('input[name="pkAddressId"]');
+          pkAddressId = radioButton.dataset.pkAddressId
+      }
   });
+  
+  
+    // get the address when radio button change event
+    radioButtons.forEach(function(radioButton) {
+        radioButton.addEventListener('change', function(event) {
+            if (event.target.checked) {
+                 pkAddressId = event.target.dataset.pkAddressId;
+                console.log('pkAddressId:', pkAddressId);
+               
+            }
+        });
+    });
+  
+} else {
+  Toastify({
+    text: "Add the address",
+    duration: 3000, // Duration in milliseconds
+    close: true, // Whether to display a close button
+    gravity: 'top', // Toast position: 'top', 'bottom', 'center'
+    position: 'right', // Toast position: 'left', 'center', 'right'
+    backgroundColor: '#4CAF50', // Background color of the toast
+    stopOnFocus: true // Whether to close the toast when focused
+  }).showToast();
+}
+
 
 
 
@@ -552,6 +566,7 @@ $("#place-order-btn").click(async function(e){
   else{
     let paymentMethod="COD"
     codOption.checked==false?paymentMethod="WALLET":paymentMethod="COD"
+ 
     $.ajax({
       type: 'POST', 
       url: '/checkOut',
@@ -1293,6 +1308,11 @@ let discountPrice;
 let totalCartPriceElement = document.querySelector(".product-subtotal.totalAmt");
 let totalCartPrice = parseFloat(totalCartPriceElement.textContent.substring(1));
     const codOption = document.getElementById("codOption");
+    var labelElementCod = document.querySelector('label.form-check-label[for="codOption"]');
+
+// Get the span element within the label
+var spanElementCod = labelElementCod.querySelector('span');
+
     
     const razorpayOption = document.getElementById("razorpayOption");
     const walletCheckbox = document.getElementById("walletCheck");
@@ -1300,7 +1320,16 @@ let totalCartPrice = parseFloat(totalCartPriceElement.textContent.substring(1));
     totalAmountAfterDiscount = parseFloat(spanElement.textContent.slice(1));
    let walletBalanceString=document.getElementById('walletBalanceSpan').textContent
   let walletBalance=parseFloat(walletBalanceString)
-
+  if(totalAmountAfterDiscount>1000){
+    spanElementCod.style.display = 'inline';
+    codOption.disabled=true
+    codOption.checked=false
+    razorpayOption.checked=true
+  }
+  if(walletBalance==0){
+    walletCheckbox.disabled=true
+    
+  }
   walletCheckbox.addEventListener("change",handleWalletCheckboxChange)
 
   function handleWalletCheckboxChange(){
@@ -1313,6 +1342,7 @@ let totalCartPrice = parseFloat(totalCartPriceElement.textContent.substring(1));
         razorpayOption.checked=false
         codOption.checked=false
       }
+    
     }else{
       razorpayOption.disabled=false
       codOption.disabled=false
@@ -1488,7 +1518,7 @@ const deleteAddress=(addressId,userId,render)=>{
   }
 
   const handleAddToCart=(pkProductId,pkUserId)=>{
- 
+
     $.ajax({
       type: 'POST', 
       url: '/addToCart',
@@ -1601,4 +1631,31 @@ const deleteAddress=(addressId,userId,render)=>{
   }
 
 
+
+  function generateInvoice() {
+    let fetchUrl = '/api/printInvoice';
+
+    $.ajax({
+        url: fetchUrl,
+        method: 'GET',
+        xhrFields: {
+            responseType: 'blob'
+        },
+        success: function(blob) {
+            // If successful response, download the generated PDF
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "sales-report.pdf";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        },
+        error: function(xhr, status, error) {
+            console.error("Failed to generate PDF report:", error);
+        }
+    });
+}
+        
 

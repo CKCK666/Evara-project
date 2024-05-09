@@ -1,7 +1,8 @@
 const Order = require('../models/orderModel');
 const generatePDFReports = require('../services/pdfReportGenerator');
 const generateExcelReports = require('../services/excelReportGenerator');
-
+const generateInvoice= require('../services/invoiceGenerator');
+const { ObjectId } = require('mongodb');
 
 // app.get('/api/download-pdf', 
 const generatePDFReport = async (req, res) => {
@@ -165,7 +166,26 @@ const generateExcelReport = async (req, res) => {
     }
 }
  
+const printInvoice = async (req, res) => {
+
+      try {
+  
+        const orderId = new ObjectId("6638c6f54c36010cead6ff5e")
+       
+        const orderData = await Order.aggregate([{$match:{pkOrderId:orderId}}])
+         console.log(orderData);
+
+        const { fileName, pdfBuffer } = await generateInvoice(orderData[0]);
+          res.setHeader('Content-disposition', `attachment; filename="${fileName}"`);
+          res.setHeader('Content-type', 'application/pdf');
+          res.send(pdfBuffer);
+  
+  } catch (error) {
+    console.log(error);
+      console.error('Error generating PDF report:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+  }
 
 
-
-module.exports = { generatePDFReport, generateExcelReport };
+module.exports = { generatePDFReport, generateExcelReport,printInvoice };

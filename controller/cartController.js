@@ -9,14 +9,15 @@ const router = require('../routes/userRoutes');
 const otpGenerator = require('otp-generator');
 const twilio = require('twilio');
 const Cart = require('../models/cartModel');
-
+const {getCartCount}=require("../utils/cart")
+const {getWishListCount}=require("../utils/wishlist")
 
 
 const addToCart=async(req,res)=>{
     try {
     
-        if(req.body.pkUserId){
-          let pkUserId =new ObjectId(req.body.pkUserId)
+        if(req.session.user.pkUserId){
+          let pkUserId =new ObjectId(req.session.user.pkUserId)
         let productFind=await Product.find({pkProductId:new ObjectId(req.body.pkProductId),strStatus:"Active"},{createdDate:0,updatedDate:0})
           let product=productFind.map((pro)=>{
             return{...pro._doc}
@@ -31,10 +32,12 @@ const addToCart=async(req,res)=>{
             
             if(productInCart.length){
              let availableStock=product[0].intStock
+             let limit=availableStock<10?availableStock:10
+             let message=availableStock<10?"Quantity in cart exceeds available stock.":"Purchase limit exceeded. Maximum allowed quantity is 10."
              let quantityInCart=productInCart[0].arrProducts.find(pro => pro.pkProductId.equals(pkProductId));
            
 
-              if(quantityInCart.intQuantity < availableStock){
+              if(quantityInCart.intQuantity < limit){
               const update = {
                 $inc: { "arrProducts.$.intQuantity": 1 },
              
@@ -76,7 +79,7 @@ const addToCart=async(req,res)=>{
               
               }else{
 
-                res.json({success:false,message:"Quantity in cart exceeds available stock."})
+                res.json({success:false,message:message})
               }
                
   
@@ -88,7 +91,7 @@ const addToCart=async(req,res)=>{
           
             }else{
               let matchQuery = {
-                pkUserId: new ObjectId(req.body.pkUserId),
+                pkUserId,
                 strStatus:"Active"
                
               };
@@ -111,7 +114,7 @@ const addToCart=async(req,res)=>{
               let aggregatePipeline = [
                 {
                   $match: {
-                    pkUserId: new ObjectId(req.body.pkUserId), // Match documents with the specified user ID
+                    pkUserId, // Match documents with the specified user ID
                     strStatus:"Active"
                   }
                 },
@@ -152,7 +155,7 @@ const addToCart=async(req,res)=>{
             
             let dataToAdd=new Cart({
               pkCartId:new ObjectId(),
-              pkUserId:new ObjectId(pkUserId),
+              pkUserId:new ObjectId(req.session.user.pkUserId),
               arrProducts:[
                 ...product,
                 
@@ -188,26 +191,26 @@ const addToCart=async(req,res)=>{
    try {
     let pkUserId =req.session.user.pkUserId
     
-    let cartCount=0
+  
    let cartDetailsFind=await Cart.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
    let cartDetails=cartDetailsFind.map((cart)=>{
        return{...cart._doc}
    })
-  
+   let cartCount= await getCartCount(pkUserId)
+   let wishListCount=await getWishListCount(pkUserId)
    if (cartDetails && cartDetails.length) {
   
-    let cartCount= await getCartCount(pkUserId)
-    
-   console.log(cartDetails)
+   
+   
     let cartProducts=cartDetails[0].arrProducts.map(obj=>{
       let intTotalPrice=obj.intQuantity*obj.intPrice
 
       return {...obj._doc,intTotalPrice:intTotalPrice,pkCartId:cartDetails[0].pkCartId}
     })
     
-     res.render("user/cartPage",{layout:"user_layout",success:true,cartDetails,cartProducts,pkUserId,message:"successfully loaded cart page",user:true,cartCount})
+     res.render("user/cartPage",{layout:"user_layout",success:true,cartDetails,cartProducts,pkUserId, wishListCount,message:"successfully loaded cart page",user:true,cartCount})
    } else {
-    res.render("user/cartPage",{layout:"user_layout",success:true,user:true,pkUserId,cartCount})
+    res.render("user/cartPage",{layout:"user_layout",success:true,user:true,pkUserId,cartCount, wishListCount})
    }
    } catch (error) {
     res.json({success:false,message:error.message})
@@ -238,7 +241,7 @@ const addToCart=async(req,res)=>{
           
           let aggregatePipeline = [
             {
-              $match: { pkUserId:new ObjectId(pkUserId) } // Match documents with the specified pkUserId
+              $match: { pkUserId:new ObjectId(pkUserId),strStatus:"Active" } // Match documents with the specified pkUserId
             },
             {
               $unwind: "$arrProducts" // Deconstruct the arrProducts array
@@ -379,33 +382,3 @@ const addToCart=async(req,res)=>{
      changeQuantity
   };
 
-  async function getCartCount(userId) {
-
-    let userCart=await Cart.find({pkUserId:new ObjectId(userId),strStatus:"Active"})
-    let cartCount=0
-    if(userCart && userCart.length){
-      let totalQuantity=await Cart.aggregate([
-       {
-         $match:{
-           pkUserId:new ObjectId(userId),
-           strStatus:"Active"
-         }
-       },
-       {
-         $unwind: "$arrProducts" // Unwind the arrProducts array to deconstruct the array
-       },
-       {
-         $group: {
-           _id: null,
-           totalItems: { $sum: "$arrProducts.intQuantity" }
-         }
-       }
-     ])
-     cartCount=totalQuantity[0].totalItems
-     return cartCount
-    }
-    else{
-      return cartCount
-    }
-    
-  }

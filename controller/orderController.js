@@ -3,7 +3,6 @@ const bcrypt = require('bcrypt');
 const mongoose=require('mongoose')
 const User =require("../models/userModel")
 const Product =require("../models/productModel")
-const {USER_COLLECTION, PRODUCTS_COLLECTION, CATEGORY_COLLECTION, CART_COLLECTION, ORDER_COLLECTION} =require("../config/collections")
 const Cart =require("../models/cartModel")
 const { ObjectId } = require('mongodb');
 const router = require('../routes/userRoutes');
@@ -16,6 +15,8 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const Wallet = require('../models/walletModel');
 const { log } = require('console');
+const {getCartCount}=require("../utils/cart")
+const {getWishListCount}=require("../utils/wishlist")
 
   // change order status
   const changeOrderStatus=async(req,res)=>{
@@ -95,7 +96,7 @@ const { log } = require('console');
             
          })
          
-          res.render("user/orderDetails",{layout:"user_layout",success:true,deliveryAddress:orderDetails[0].arrDeliveryAddress,orderProducts,orderDetails,cartCount ,message:"successfully loaded cart page",user:true})
+          res.render("user/orderDetails",{layout:"user_layout",success:true,deliveryAddress:orderDetails[0].arrDeliveryAddress,orderProducts,orderDetails,pkUserId,cartCount ,message:"successfully loaded cart page",user:true})
         } else {
          res.render("user/orderDetails",{layout:"user_layout",success:true,user:true,pkUserId,cartCount})
         }
@@ -152,7 +153,8 @@ const { log } = require('console');
       
       if (cartDetails && cartDetails.length) {
          let grandTotal=0
-        let cartCount= await getCartCount(userId) //change userid here also
+        let cartCount= await getCartCount(userId) 
+        let wishListCount=await getWishListCount(userId)
         let cartProducts=cartDetails[0].arrProducts.map(obj=>{
           let intTotalPrice=obj.intQuantity*obj.intPrice
           let totalOfferPrice=obj.intQuantity*obj.offerPrice
@@ -203,7 +205,7 @@ const { log } = require('console');
           if(wallet.length){
             walletBalance= wallet[0].balance
           }
-       res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,pkUserId,cartDetails,cartCount ,walletBalance,coupons,grandTotal,message:"successfully loaded cart page",user:true})
+       res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,wishListCount,pkUserId,cartDetails,cartCount ,walletBalance,coupons,grandTotal,message:"successfully loaded cart page",user:true})
        } else {
         res.redirect("/")
        }
@@ -550,7 +552,7 @@ const { log } = require('console');
     //get order list
     const getOrderListAdmin=async(req,res)=>{
       try {
-        let result = await Order.find({}).sort({ updatedDate: -1, createdDate: -1 });
+        let result = await Order.find({}).sort({createdDate: -1 });
          if(result.length){
          let usersOrders= result.map((order,index)=>{
           const isoDate = order.createdDate;
@@ -577,37 +579,6 @@ const { log } = require('console');
     
     }
   
-
-   async function getCartCount(userId) {
-
-    let userCart=await Cart.find({pkUserId:new ObjectId(userId),strStatus:"Active"})
-    let cartCount=0
-    if(userCart && userCart.length){
-      let totalQuantity=await Cart.aggregate([
-       {
-         $match:{
-           pkUserId:new ObjectId(userId),
-           strStatus:"Active"
-         }
-       },
-       {
-         $unwind: "$arrProducts" // Unwind the arrProducts array to deconstruct the array
-       },
-       {
-         $group: {
-           _id: null,
-           totalItems: { $sum: "$arrProducts.intQuantity" }
-         }
-       }
-     ])
-     cartCount=totalQuantity[0].totalItems
-     return cartCount
-    }
-    else{
-      return cartCount
-    }
-    
-  }
   
   module.exports = {
     getOrderDetailsPage,

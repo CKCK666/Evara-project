@@ -26,7 +26,6 @@
                                               <figure class="border-radius-10">
                                             <img src="/uploads/{{imageUrl1}}"alt="product image">
                                             </figure>
-                                           
                                             
                                         </div>
                                         <!-- THUMBNAILS -->
@@ -93,7 +92,7 @@
                                             </div> --}}
                                             <div class="product-extra-link2">
                                                 <button onclick="handleAddToCart('{{product.[0].pkProductId}}','{{pkUserId}}')" class="button button-add-to-cart">Add to cart</button>
-                                                <a aria-label="Add To Wishlist" class="action-btn hover-up" href="shop-wishlist.html"><i class="fi-rs-heart"></i></a>
+                                                <a aria-label="Add To Wishlist" onclick="handleAddToWishList('{{product.[0].pkProductId}}','{{pkUserId}}')" class="action-btn hover-up"><i class="fi-rs-heart"></i></a>
                                                 <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
                                             </div>
                                         </div>

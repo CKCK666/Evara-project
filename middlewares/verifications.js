@@ -5,14 +5,18 @@ const { ObjectId } = require('mongodb');
 const { required } = require("nodemon/lib/config");
 const verifyLogin=async(req,res,next)=>{
     
-    if(req.session.loggedIn || req.session.otpVerified || req.session.passport){
-       
+    if( req.session.otpVerified || req.session.passport){
+      
      
      next()
       }
       else{
       
-        req.session.destroy();
+        req.session.otpVerified=false;
+  
+    res.clearCookie('passport')
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
          res.render("user/loginPage",{layout:"user_layout"})
      
       }

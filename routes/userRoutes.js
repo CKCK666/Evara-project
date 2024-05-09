@@ -8,6 +8,7 @@ const {editAddress, getEditAddressPage, setAsDefaultAddress,deleteAddress, getAd
 const {changeOrderStatus, getCheckoutPage, checkOut, getOrderDetailsPage, checkOutRazorPay, verifyPayment}=require("../controller/orderController")
 const router =express.Router()
 const passport = require('passport');
+const { printInvoice } = require('../controller/reportController');
 //get signup page
 router.get("/signUp",getSignUp)
 
@@ -141,5 +142,8 @@ router.get("/getResetPassword",getResetPassword)
 router.post("/resetPassword",resetPassword)
 //post logout
 router.get('/logout',logout)
+
+//generate invoice
+router.get("/api/printInvoice",printInvoice);
 
 module.exports=router
