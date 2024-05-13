@@ -47,7 +47,7 @@ const storage = multer.diskStorage({
 const { isAdmin } = require('../middlewares/verifications');
 const { listCoupons, getCreateCoupons,createCoupon, blockCoupon, getEditCoupon, couponEdit } = require('../controller/couponController');
 const { generatePDFReport, generateExcelReport } = require('../controller/reportController');
-const { getCreateOffer, createOffer, listOffer, getEditOffer, offerEdit } = require('../controller/offerController');
+const { getCreateOffer, createOffer, listOffer, getEditOffer, offerEdit, blockOffer } = require('../controller/offerController');
 const {monthlyChart, dailyChart, yearlyChart, customChart, topProducts, topCategories}=require("../controller/chartController")
 
 
@@ -169,6 +169,9 @@ router.get("/getofferEdit",getEditOffer)
 
 //edit offer
 router.post("/offerEdit",offerEdit)
+
+//block offer
+router.patch("/blockOffer",blockOffer)
 
 //monthly chart
 router.get("/api/statistics/monthly",monthlyChart)

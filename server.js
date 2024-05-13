@@ -18,8 +18,19 @@ handlebars.registerHelper('eq', function(arg1, arg2, options) {
 });
 handlebars.registerHelper('formatDate', function(startDate) {
   const formattedStartDate = `${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}`
-  console.log(formattedStartDate);
+ 
   return  formattedStartDate;
+});
+handlebars.registerHelper('dateStatus', function(startDate) {
+  const today = moment(); // Get current date and time
+  const start = moment(startDate);
+  if (start.isAfter(today, 'day')) { // Check if start date is after today's date
+      return "Upcoming";
+  } else {
+    const formattedStartDate = `${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}`
+ 
+    return  formattedStartDate;
+  }
 });
 app.set("views",path.join(__dirname,"views"))
 const hbs = exphbs.create({

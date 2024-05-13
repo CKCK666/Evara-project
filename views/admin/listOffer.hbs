@@ -20,9 +20,11 @@
                
                 <th>No</th>
                 <th>Name</th>
+                <th>starting Date</th>
+                <th>Expiry Date</th>
                 <th>Status</th>
                 <th>offer discount</th>
-                <th>Expiry Date</th>
+                
                 <th class="text-center">Action</th>
               </tr>
             </thead>
@@ -32,14 +34,16 @@
                 <tr>
                   <td>{{index}}</td>
                   <td>{{name}}</td>
-                  <td>{{status}}</td>
+                  <td>{{dateStatus startingDate}}</td>
+                   <td>{{formatDate expiryDate}}</td>
+                 {{#if status}} <td>Active</td> {{else}} <td>Blocked</td> {{/if}}
                 
-                  <td>{{discount}}%</td>
-                  <td>{{endDate}}</td>
+                  <td>{{percentage}}%</td>
+                 
                   <td class="d-flex flex-row text-center">
                     <a class="dropdown-item w-50 p-0"  href="/admin/getOfferEdit?_id={{_id}}">Edit</a>
                     <a class="dropdown-item w-50 p-0 text-danger delete" href="#" onclick="handleBlockOffer('{{_id}}','{{status}}')" >
-                  {{#eq status 'Blocked'}}Unblock{{else}}Block{{/eq}}
+                  {{#if status}}Block{{else}}UnBlock{{/if}}
               
                     </a>
              

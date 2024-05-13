@@ -851,75 +851,72 @@ $('#couponUpdateForm button[type="submit"]').click(function () {
 
 
 
-if(window.location.pathname === "/admin/getCreateOffer"){
-  document.getElementById("couponType").addEventListener("change", function () {
-    var couponType = this.value;
-    if (couponType === "products") {
-      document.getElementById("categories").value = "none";
-      document.getElementById("productsSection").style.display = "inline-block";
-      document.getElementById("categoriesSection").style.display = "none";
-    } else if (couponType === "categories") {
-      document.getElementById("products").value = "none";
-      document.getElementById("productsSection").style.display = "none";
-      document.getElementById("categoriesSection").style.display =
-        "inline-block";
-    }
-  });
+// if(window.location.pathname === "/admin/getCreateOffer"){
+//   document.getElementById("couponType").addEventListener("change", function () {
+//     var couponType = this.value;
+//     if (couponType === "products") {
+//       document.getElementById("categories").value = "none";
+//       document.getElementById("productsSection").style.display = "inline-block";
+//       document.getElementById("categoriesSection").style.display = "none";
+//     } else if (couponType === "categories") {
+//       document.getElementById("products").value = "none";
+//       document.getElementById("productsSection").style.display = "none";
+//       document.getElementById("categoriesSection").style.display =
+//         "inline-block";
+//     }
+//   });
 
-  }
+//   }
 
 
-  if (window.location.pathname.startsWith("/admin/getOfferEdit")) {
+  // if (window.location.pathname.startsWith("/admin/getOfferEdit")) {
     
   
-    const product = document.getElementById("productValue").value;
-    const category = document.getElementById("categoriesValue").value;
-    const couponTypeSelect = document.getElementById("couponType");
-    if (!product) {
-      couponTypeSelect.value = "categories";
-      document.getElementById("categories").value = category;
-      document.getElementById("productsSection").style.display = "none";
-      document.getElementById("categoriesSection").style.display = "inline-block";
-    } else if (!category) {
-      couponTypeSelect.value = "products";
-      document.getElementById("products").value = product;
-      document.getElementById("productsSection").style.display = "inline-block";
-      document.getElementById("categoriesSection").style.display = "none";
-    }
+  //   const product = document.getElementById("productValue").value;
+  //   const category = document.getElementById("categoriesValue").value;
+  //   const couponTypeSelect = document.getElementById("couponType");
+  //   if (!product) {
+  //     couponTypeSelect.value = "categories";
+  //     document.getElementById("categories").value = category;
+  //     document.getElementById("productsSection").style.display = "none";
+  //     document.getElementById("categoriesSection").style.display = "inline-block";
+  //   } else if (!category) {
+  //     couponTypeSelect.value = "products";
+  //     document.getElementById("products").value = product;
+  //     document.getElementById("productsSection").style.display = "inline-block";
+  //     document.getElementById("categoriesSection").style.display = "none";
+  //   }
   
-    document.getElementById("couponType").addEventListener("change", function () {
-      var couponType = this.value;
-      if (couponType === "products") {
-        document.getElementById("categories").value = "none";
-        document.getElementById("productsSection").style.display = "inline-block";
-        document.getElementById("categoriesSection").style.display = "none";
-      } else if (couponType === "categories") {
-        document.getElementById("products").value = "none";
-        document.getElementById("productsSection").style.display = "none";
-        document.getElementById("categoriesSection").style.display =
-          "inline-block";
-      }
-    });
-  }
+  //   document.getElementById("couponType").addEventListener("change", function () {
+  //     var couponType = this.value;
+  //     if (couponType === "products") {
+  //       document.getElementById("categories").value = "none";
+  //       document.getElementById("productsSection").style.display = "inline-block";
+  //       document.getElementById("categoriesSection").style.display = "none";
+  //     } else if (couponType === "categories") {
+  //       document.getElementById("products").value = "none";
+  //       document.getElementById("productsSection").style.display = "none";
+  //       document.getElementById("categoriesSection").style.display =
+  //         "inline-block";
+  //     }
+  //   });
+  // }
 
 
 //offer submit
-$('#offerCreateForm button[type="submit"]').click(function () {
-console.log("hereeee");
+$('#offerCreateForm button[type="submit"]').click(function (e) {
+ e.preventDefault()
   // Collect form data
   let formData = {
     name: $("#name").val(),
     description: $("#description").val(),
-    discount: $("#discount").val(),
-    minAmount: $("#minAmount").val(),
-    maxDiscount: $("#maxDiscount").val(),
-    startDate: $("#startDate").val(),
-    endDate: $("#endDate").val(),
-    offerType: $("#couponType").val(),
-    products: $("#products").val(),
-    categories: $("#categories").val(),
-  };
+    percentage :$("#percentage").val(),
+    startingDate: $("#startingDate").val(),
+    expiryDate: $("#expiryDate").val(),
  
+  };
+console.log(formData)
+
   $.ajax({
     type: "POST",
     url: "/admin/createOffer",
@@ -930,6 +927,7 @@ console.log("hereeee");
           icon: "success",
           title: `Offer created`,
         }).then(function () {
+   
           window.location.href = `/admin/getCreateOffer`;
         });
       } else if (response.validation) {
@@ -940,7 +938,7 @@ console.log("hereeee");
       } else if (response.filled) {
         Swal.fire({
           icon: "info",
-          title: `Required fields contain only blank spaces`,
+          title: response.message,
         });
       } else if (response.duplicate) {
         Swal.fire({
@@ -961,10 +959,10 @@ console.log("hereeee");
 });
 
 
-});
+})
 
 
-//edit offer
+// edit offer
 $('#offerUpdateForm button[type="submit"]').click(function () {
  let offerId= $("#offerId").val()
    // Collect form data
@@ -972,14 +970,10 @@ $('#offerUpdateForm button[type="submit"]').click(function () {
      offerId: $("#offerId").val(),
      name: $("#name").val(),
      description: $("#description").val(),
-     discount: $("#discount").val(),
-     minAmount: $("#minAmount").val(),
-     maxDiscount: $("#maxDiscount").val(),
-     startDate: $("#startDate").val(),
-     endDate: $("#endDate").val(),
-     offerType: $("#couponType").val(),
-     products: $("#products").val(),
-     categories: $("#categories").val(),
+     percentage :$("#percentage").val(),
+     startingDate: $("#startingDate").val(),
+     expiryDate: $("#expiryDate").val(),
+  
    };
  
    console.log(formData);
@@ -1005,7 +999,7 @@ $('#offerUpdateForm button[type="submit"]').click(function () {
        } else if (response.filled) {
          Swal.fire({
            icon: "info",
-           title: `Required fields contain only blank spaces`,
+           title: response.message,
          });
        } else if (response.duplicate) {
          Swal.fire({
@@ -1414,3 +1408,74 @@ const handleDelete=(id,name)=>{
             console.error("Error generating Excel report:", error);
           }
         }
+
+
+        const handleBlockOffer=(id,strStatus)=>{
+     
+           
+          let status=strStatus=="true"?"block":"unblock"
+          let url="/admin/blockOffer"
+            const swalWithBootstrapButtons = Swal.mixin({
+                customClass: {
+                  confirmButton: 'btn btn-success',
+                  cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+              })
+              
+              swalWithBootstrapButtons.fire({
+                title: `Want to ${status}  this offer??`,
+                // text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: `Yes, ${status} it!`,
+                cancelButtonText: 'No, cancel!',
+                reverseButtons: true
+              }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        type: 'PATCH', 
+                        url: url,
+                         data: {
+                            id,
+                            strStatus
+                         }, 
+                        success: function(response) {
+                            if (response.success) {
+                                swalWithBootstrapButtons.fire(
+                                    `Success!`,
+                                    `Offer is  ${status}.`,
+                                    'success'
+                                  ).then(()=>{
+                                   
+                                   
+                                       window.location.href = '/admin/listOffer'
+                                    
+                                  })
+                                 
+                                console.log('success:', response.message);
+                            } else {
+                                swalWithBootstrapButtons.fire(
+                                    'Cancelled',
+                                    
+                                  )
+                            }
+                           
+                        },
+                        error: function(error) {
+                            
+                            console.error('Error:', error);
+                        }
+                    });
+                  
+                } else if (
+                  /* Read more about handling dismissals below */
+                  result.dismiss === Swal.DismissReason.cancel
+                ) {
+                  swalWithBootstrapButtons.fire(
+                    'Cancelled',
+                    
+                  )
+                }
+              })
+            }

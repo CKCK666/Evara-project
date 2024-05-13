@@ -12,15 +12,15 @@ const { sortProducts } = require("./productController")
 
 const listOffer=async(req,res)=>{
     try {
-        let findResult=await Offer.aggregate([{$match:{status:true}},{$sort:{updatedAt:-1}}])
+        let findResult=await Offer.aggregate([{$sort:{startingDate:1}}])
        let offers=findResult.map((offer,index)=>{
-        const isoDate = offer.endDate;
-        const date = new Date(isoDate);
-        const formattedDate = date.toString().substring(0, 15)
+        // const isoDate = offer.endDate;
+        // const date = new Date(isoDate);
+        // const formattedDate = date.toString().substring(0, 15)
         return {
           ...offer,
           index:index+1,
-          endDate : formattedDate
+          // endDate : formattedDate
          }
         
         })
@@ -47,81 +47,49 @@ const getCreateOffer=async(req,res)=>{
 
 
 const createOffer = async (req, res) => {
-  
+
     let {
         name,
-        description,
-        discount,
-        minAmount,
-        maxDiscount,
-        startDate,
-        endDate,
-        offerType,
-        products,
-        categories,
-        status
+        startingDate,
+        expiryDate,
+        percentage,
+        description
     } = req.body;
-  
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
+
+   let percent=parseFloat(percentage)
+
+    
     
     try {
-      if (!name.trim()  || !discount || !minAmount || !startDate || !endDate ) {
-        return res.json({ status: 'error', message: 'Required fields contain only blank spaces',filled:true });
+      const regex = /[a-zA-Z]{3,}/;
+      if (!name.trim() || !description.trim() || !percentage.trim() || !startingDate.trim() || !expiryDate.trim()) {
+        return res.json({ status: 'error', message: 'Required fields contain only blank spaces', filled: true });
     }
+     if(percent<0  || percent>100){
+      return res.json({ status: 'error', message: 'Invalid percentage',filled:true });
+     }
+     const modifiedName = name.toUpperCase().replace(/\s+/g, '');
+     if(!regex.test(modifiedName)){
+      return res.json({ status: 'error', message: "Name must contain at least three alphabetic characters.",filled:true });
+     }
+     const existingOffer= await Offer.find({name:modifiedName,status:{$ne:false}})
+    
+     if (existingOffer.length>0) {
+      return res.json({ status: 'error', message: 'Offer with this name already exists.', filled: true });
+  }
     
         const offer = new Offer({
-            name,
+          name: modifiedName,
             description,
-            discount,
-            minAmount,
-            maxDiscount,
-            startDate,
-            endDate: end,
-            products: offerType === 'products' ? products : null,
-            categories: offerType === 'categories' ? categories : null,
-            status
+            percentage:percent,
+             startingDate,
+             expiryDate
         });
         
         await offer.save();
 
-        if (offerType === 'products') {
-          let product=await Product.aggregate([{$match:{pkProductId:new ObjectId(products)}}])
-          discount=parseInt(discount)
-          minAmount=parseInt(minAmount)
-          maxDiscount=parseInt(maxDiscount)
-          let intPrice=parseInt(product[0].intPrice)
-
-          let discountAmount = (discount*intPrice) / 100;
-          
-
-     
-        if(discountAmount>maxDiscount){
-          discountAmount = maxDiscount 
-        }
-        if (discountAmount <minAmount) {
-            discountAmount = minAmount;
-        }
-
-   let offerAmt = discountAmount;
-    let   offerPrice =intPrice - discountAmount
-    const productId = new ObjectId(products);
-
-   
-    const updateProduct = await Product.updateOne(
-      { pkProductId: productId }, // Filter to match the document
-      { $set: { offer: offerAmt,  offerPrice:offerPrice} } // Update to apply
-  );
-  
-    if(updateProduct.modifiedCount>0){
       res.status(200).json({ status: 'success', message: 'offer created successfully', success:true });
-    }else{
-      res.status(200).json({ status: 'error', message: 'fail to create offer ', success:false });
-    }
-    
-      
 
-    }
     } catch (error) {
         if (error instanceof mongoose.Error.ValidationError) {
           console.log(error);
@@ -139,21 +107,22 @@ const createOffer = async (req, res) => {
     }
   };
 
-   //block coupon
-   const blockCoupon=async(req,res)=>{
+   //block offer
+   const blockOffer=async(req,res)=>{
     let {id,strStatus}=req.body
-    console.log(req.body);
-     let status=strStatus=="Active"?"Blocked":"Active"
+    let status=strStatus=="true"?false:true
+    console.log("block offer");
+    
    try {
     const objectIdToUpdate = new ObjectId(id);
-    let result=await Coupon.updateOne({_id:objectIdToUpdate,status:strStatus},{$set:{status:status,updatedAt:new Date()}})
+    let result=await Offer.updateOne({_id:objectIdToUpdate},{$set:{status:status}})
      console.log(result);
     if (result.modifiedCount>0) {
       console.log("blocked/unblock");
       res.json({success:true,message: 'successfully  updated!'})
     }
     else{
-      console.log("not deleted");
+      
       res.json({success:false,message: 'failed to update!'})
     }
     
@@ -170,13 +139,8 @@ const createOffer = async (req, res) => {
         if(req.query._id){
            let findResult=await Offer.find({_id:new ObjectId(req.query._id)})
 
-           let queryMatch={
-            $match:{
-                strStatus:"Active"
-            }
-        }
-        let products=await Product.aggregate([queryMatch])
-        let categories=await Category.aggregate([queryMatch])
+          
+    
         let offer=findResult.map((item)=>{
   
           return{
@@ -185,7 +149,7 @@ const createOffer = async (req, res) => {
           }
         })
        
-           res.render("admin/editOffer",{layout:"admin_layout",admin:true,offer,products,categories})
+           res.render("admin/editOffer",{layout:"admin_layout",admin:true,offer})
         }
         else{
             res.json({success:false,message:"offer id not found"})
@@ -202,36 +166,46 @@ const createOffer = async (req, res) => {
     const {
       offerId,
       name,
-      description,
-      discount,
-      minAmount,
-      maxDiscount,
-      startDate,
-      endDate,
-      offerType,
-      products,
-      categories,
+      startingDate,
+      expiryDate,
+      percentage,
+      description
   
   } = req.body;
-  const end =  new Date(endDate)
-  end.setHours(23, 59, 59, 999);
+  console.log(req.body);
+  let percent=parseFloat(percentage)
+  let findId=new ObjectId(offerId)
   try {
   
-    if (!name.trim()  || !discount || !minAmount || !startDate || !endDate ) {
-      return res.json({ status: 'error', message: 'Required fields contain only blank spaces',filled:true });
+    const regex = /[a-zA-Z]{3,}/;
+    if (!name.trim() || !description.trim() || !percentage.trim() || !startingDate.trim() || !expiryDate.trim()) {
+      return res.json({ status: 'error', message: 'Required fields contain only blank spaces', filled: true });
   }
+
+  const modifiedName = name.toUpperCase().replace(/\s+/g, '');
+  if(!regex.test(modifiedName)){
+   return res.json({ status: 'error', message: "Name must contain at least three alphabetic characters.",filled:true });
+  }
+  const existingOffer= await Offer.find({_id:{$ne:findId},name:modifiedName,status:{$ne:false}})
+ 
+  if (existingOffer.length>0) {
+   return res.json({ status: 'error', message: 'Offer with this name already exists.', filled: true });
+}
+
+   if(percent<0  || percent>100){
+    return res.json({ status: 'error', message: 'Invalid percentage',filled:true });
+   }
+   if(!regex.test(name)){
+    return res.json({ status: 'error', message: "Name must contain at least three alphabetic characters.",filled:true });
+   }
+  
   console.log(req.body);
     await Offer.findByIdAndUpdate(offerId,{
-      name,
-      description,
-      discount,
-      minAmount,
-      maxDiscount,
-      startDate,
-      endDate:end,
-      products: offerType === 'products' ? products : null,
-      categories: offerType === 'categories' ? categories : null,
-      updatedAt: Date.now()
+             name: modifiedName,
+            description,
+            percentage:percent,
+             startingDate,
+             expiryDate
     },{
       runValidators: true,
       new: true,
@@ -259,7 +233,7 @@ module.exports={
    listOffer,
     createOffer,
     getCreateOffer,
-    blockCoupon,
+    blockOffer,
     getEditOffer,
     offerEdit
 }
