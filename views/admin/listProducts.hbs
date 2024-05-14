@@ -49,7 +49,9 @@
                     <th>Name</th>
                     <th>Price</th>
                     <th>Status</th>
-                    <th>Date</th>
+                    {{!-- <th>Date</th> --}}
+                    <th>Offer</th>
+                    <th></th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -57,14 +59,15 @@
                 
                
                 {{#each products}}
-                <tr>
+                <tr data-product-id="{{_id}}">
                     <td>{{index}}</td>
                     <td><img src="/uploads/{{mainProductUrl}}" class="img-sm img-thumbnail" alt="Item"></td>
                     <td><a href="#">{{strProductName}}</a></td>
                     <td>{{intPrice}}</td>
                     <td><span id="statusId" class="badge rounded-pill {{#eq strStatus 'Blocked'}}alert-warning{{else}}{{#eq strStatus 'Active'}}alert-success{{else}}{{/eq}}{{/eq}}">{{strStatus}}</span></td>
-                    <td>{{createdDate}}</td>
-                    <td>
+                      <td>{{#if offer}}{{offerPercentage}}% {{else}}NO OFFER{{/if}}</td>
+                   <td>{{#if offer}}{{offerName}}{{else}} {{/if}} </td>
+                    <td >
 
                         <a href="/admin/getProductEdit?pkProductId={{pkProductId}}" class="btn btn-md rounded font-sm">
                             <i class="fas fa-edit"></i> Edit
@@ -73,10 +76,20 @@
                          <a href="#" onclick="handleBlock('{{pkProductId}}','{{strStatus}}','product')" class="btn btn-md rounded font-sm" style="width: 95px;">
                             <i class="{{#eq strStatus 'Blocked'}}fas fa-check-circle{{else}}fas fa-ban{{/eq}}"></i>{{#eq strStatus 'Blocked'}}Unblock{{else}}Block{{/eq}}
                         </a>
-                        <a href="#" onclick="handleDelete('{{pkProductId}}', 'product')" class="btn btn-md rounded font-sm">
+                        {{!-- <a href="#" onclick="handleDelete('{{pkProductId}}', 'product')" class="btn btn-md rounded font-sm">
                             <i class="fas fa-trash-alt"></i> Delete
+                        </a> --}}
+                        {{#if offer}}
+                          <a  onclick="removeOffer('{{pkProductId}}', 'product')" class="btn btn-md rounded font-sm">
+                            <i class=""></i> Remove Offer
                         </a>
-                       
+
+                         {{else}}
+                        <a href="#" onclick="showModal('{{_id}}', 'product')" class="btn btn-md rounded font-sm">
+                            <i class=""></i> Apply Offer
+                        </a>
+
+                       {{/if}} 
                     </td>
                 </tr>
                 
@@ -108,4 +121,30 @@
                     </ul>
                 </nav>
             </div> --}}
+
+            
+        <div class="modal fade" id="discountModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" >
+          <div class="modal-dialog" role="document">
+            
+                 {{#if availableOffers}}
+                 {{#each availableOffers}}
+                  <div class="modal-content rounded-0">
+                    <div data-offerid="{{_id}}" style="cursor: pointer;" class="modal-body text-center" aria-hidden="true">
+                          <div class="icon text-danger">
+                              <i style="font-size: 20px;" class="fas fa-gift"></i>
+                          </div>
+                          <div class="notice">  
+                      
+                                  <h2>{{name}}</h2>                          
+                                  <h4>{{percentage}}% Discount</h4>
+                              <p>Valid from {{formatDate startingDate}} to {{formatDate expiryDate}} </p>
+                          </div>
+                          <div class="code"></div>
+                      </div>
+                  </div>
+                  {{/each}}
+               {{/if}}
+          </div>
+        </div>
 </section>
+

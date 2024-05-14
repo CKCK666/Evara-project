@@ -1479,3 +1479,73 @@ const handleDelete=(id,name)=>{
                 }
               })
             }
+
+         
+  function showModal(productId) {
+        $('#discountModal').modal('show');
+        const offerElements = document.querySelectorAll('.modal-body.text-center');
+        offerElements.forEach((element) => {
+            element.onclick = function() {
+                const offerId = this.getAttribute('data-offerid');
+                enterOffer(offerId, productId); 
+            };
+        });
+    }
+
+     async function enterOffer(offerId, productId) {
+      $('#discountModal').modal('hide');
+        const response = await axios.patch( '/admin/apply_offer', { offerId, productId })
+        if( response.data.success ) {
+          
+          Swal.fire('Offer applied')
+          // updateOfferContent(productId, response.data.offer)
+          window.location.reload()
+        }else{
+          Swal.fire('Category offer has greater discount')
+        }
+    }
+
+     async function removeOffer(productId) {
+  try {
+    const confirmation = await Swal.fire({
+      title: 'Confirm Removal',
+      text: 'Are you sure you want to remove the offer?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, remove it!',
+      cancelButtonText: 'Cancel'
+    });
+
+    if (confirmation.isConfirmed) {
+      const response = await axios.patch('/admin/remove_offer', { productId });
+      if (response.data.success) {
+        // updateOfferContent(productId, null);
+        Swal.fire('Offer Removed', '', 'success');
+        window.location.reload()
+      }
+    }
+  } catch (error) {
+    console.log(error.message);
+  }
+} 
+
+    function updateOfferContent(productId, offer) {
+  const offerCell = $(`tr[data-product-id="${productId}"] td:nth-child(6)`); // Update to the correct column index
+  const actionCell = $(`tr[data-product-id="${productId}"] td:nth-child(8)`);
+
+  if (offer) {
+    offerCell.html(`${offer.name} (${offer.percentage}%)`);
+    // actionCell.html(`<a href="#" onclick="removeOffer('${pkProductId}', 'product')" class="btn btn-md rounded font-sm">
+    //                         <i class=""></i> Remove Offer
+    //                     </a>`);
+  } else {
+    offerCell.text('No offers');
+    // actionCell.html(  `<a href="#" onclick="showModal('${pkProductId}', 'product')" class="btn btn-md rounded font-sm">
+    //                         <i class=""></i> Apply Offer
+    //                     </a>`);
+  }
+
+
+    }
+
+

@@ -47,15 +47,14 @@ const productSchema = new mongoose.Schema({
         default: null
     },
     offer:{
-        type:Number,
-        default:0
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'offer'
     },
     offerPrice:{
         type:Number,
-        default: function () {
-            return this.intPrice - this.offer;
-        }
-    }
+    
+    },
+    
 });
 
 const Product = mongoose.model('Product', productSchema);

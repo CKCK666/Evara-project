@@ -9,7 +9,7 @@ const { ObjectId, ReturnDocument} = require('mongodb');
 const { log, logger } = require("handlebars");
 const User = require("../models/userModel")
 const Cart = require("../models/cartModel")
-
+const Offer= require("../models/offerModel")
 const {getCartCount}=require("../utils/cart")
 const {getWishListCount}=require("../utils/wishlist")
 const Wishlist = require("../models/wishListModel")
@@ -19,7 +19,10 @@ const getProductList=async(req,res)=>{
     try {
      let count=await Product.countDocuments()
      if(count>0){
-       let result =await Product.find({strStatus:{$ne:"Deleted"}})
+       let result =await Product.find({strStatus:{$ne:"Deleted"}}).populate({
+        path: 'offer',
+        match: { status: true }
+    });
        let products= result.map((product,index)=>{
          const isoDate = product.createdDate;
          const date = new Date(isoDate);
@@ -27,12 +30,17 @@ const getProductList=async(req,res)=>{
          return {
            ...product._doc,
            index:index+1,
-           createdDate: formattedDate
+           createdDate: formattedDate,
+           offerPercentage:product.offer?product.offer.percentage:"",
+           offerName:product.offer?product.offer.name:""
+
           }
          
          })
+         const availableOffers = await Offer.aggregate([{$match:{ status : true, expiryDate : { $gte : new Date() }}}])
+        console.log(products);
      
-         res.render("admin/listProducts",{layout:"admin_layout",products,admin:true})
+         res.render("admin/listProducts",{layout:"admin_layout",products,admin:true,availableOffers})
        }
      else{
        res.render("admin/listProducts",{layout:"admin_layout",admin:true}) 
@@ -40,7 +48,7 @@ const getProductList=async(req,res)=>{
    
      
     } catch (error) {
-     res.json({success:true,message:error.message})
+     res.json({success:false,message:error.message})
     }
   
    
@@ -593,6 +601,66 @@ const getProductImageEditPage=async(req,res)=>{
 }
 
 
+const applyProductOffer = async (req, res,next) => {
+  try {
+    const productId = req.body.productId;
+    const offerId = req.body.offerId;
+
+    // Assuming you have an Offer model with fields: discountPercentage
+    const offer = await Offer.findOne({ _id: offerId });
+
+    if (!offer) {
+      return res.json({ success: false, message: 'Offer not found' });
+    }
+
+    const product = await Product.findOne({ _id: productId })
+    // .populate('category')
+
+    if (!product) {
+      return res.json({ success: false, message: 'Product not found' });
+    }
+
+    // Get the category discount, if available
+    const categoryDiscount = product.category && product.category.offer
+      ? await Offer.findOne({ _id: product.category.offer })
+      : 0;
+
+
+    // Calculate real price and discounted price for the product
+    const discountPercentage = offer.percentage;
+    const originalPrice = parseFloat(product.intPrice);
+    const discountedPrice = originalPrice - (originalPrice * discountPercentage) / 100;
+
+
+    // Check if category offer is available and its discount is greater than product offer
+    if (categoryDiscount && categoryDiscount.percentage > discountPercentage) {
+    
+      // You can handle this case as needed, e.g., not applying the product offer
+      return res.json({ success: false, message: 'Category offer has greater discount' });
+    }
+
+    // Update product with offer details
+    await Product.updateOne(
+      { _id: productId },
+      {
+        $set: {
+          offer: offerId,
+          offerPrice: discountedPrice,
+         
+        },
+      }
+    );
+
+    const updatedProduct = await Product.findOne({ _id: productId }).populate('offer');
+  
+    res.json({ success: true, data: updatedProduct });
+  } catch (error) {
+
+   next(error)
+  }
+};
+
+
 
 
 
@@ -610,7 +678,8 @@ const getProductImageEditPage=async(req,res)=>{
     getProductEdit,
     editProductImages,
     getSingleProductPage,
-    getProductImageEditPage
+    getProductImageEditPage,
+    applyProductOffer
   
   }
 

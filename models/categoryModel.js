@@ -25,6 +25,10 @@ const categorySchema = new mongoose.Schema({
     updatedDate: {
         type: Date,
         default:null
+    },
+    offer : {
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'offer'
     }
 });
 
