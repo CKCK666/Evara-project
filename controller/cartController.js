@@ -16,8 +16,8 @@ const {getWishListCount}=require("../utils/wishlist")
 const addToCart=async(req,res)=>{
     try {
     
-        if(req.session.user.pkUserId){
-          let pkUserId =new ObjectId(req.session.user.pkUserId)
+        if( req.body.pkUserId){
+          let pkUserId =new ObjectId(req.body.pkUserId)
         let productFind=await Product.find({pkProductId:new ObjectId(req.body.pkProductId),strStatus:"Active"},{createdDate:0,updatedDate:0})
           let product=productFind.map((pro)=>{
             return{...pro._doc}
@@ -148,19 +148,29 @@ const addToCart=async(req,res)=>{
               }
   
            }else{
-           
+
+            //new Cart!!!!!!!!!!!!!!!!!!!!!!!!!
+           let total=0
+         
+           if(product[0].offerPrice){
+            total=product[0].offerPrice
+            
+           }else{
+            total=product[0].intPrice
+            
+           }
           
             
             product[0].intQuantity=1
             
             let dataToAdd=new Cart({
               pkCartId:new ObjectId(),
-              pkUserId:new ObjectId(req.session.user.pkUserId),
+              pkUserId:new ObjectId(req.body.pkUserId),
               arrProducts:[
-                ...product,
-                
-              ],
-              total_cart_price:product[0].intPrice,
+               
+                ...product
+                ],
+              total_cart_price:total,
               updatedDate:null,
               createDate:new Date()
             })

@@ -116,39 +116,22 @@
                 <div class="col-lg-8">
                     <h3 class="text-center">Edit Product Images</h3>
     <div class="row">
+       
+        {{#each proImgArray}}
+  
     <div class="col-4">
         <div class="mb-4">
-            <label class="form-label">Main Image</label>
+            <label class="form-label">Image</label>
             <div id="imagePreviewContainer1" class="image-preview-container">
-                <img id="previewImage1" src="/uploads/{{product.[0].mainProductUrl}}" alt="Selected Image">
+                <img id="previewImage1" src="/uploads/{{pro}}" alt="Selected Image">
             </div>
     
-  <a href="/admin/getProductImageEdit?pkProductId={{product.[0].pkProductId}}&imgName=Main-Image"> <button   class="btn btn-md rounded font-sm hover-up">Edit main image</button></a>
+  <a href="/admin/getProductImageEdit?pkProductId={{pkProductId}}&imgName={{pro}}"> <button   class="btn btn-md rounded font-sm hover-up">Edit main image</button></a>
            
         </div>
      
     </div>
-    
-    <div class="col-4 ml-4">
-        <div class="mb-4">
-            <label class="form-label">Image-1</label>
-            <div id="imagePreviewContainer2" class="image-preview-container">
-                <img id="previewImage2" src="/uploads/{{imageUrl1}}" alt="Selected Image">
-            </div>
-                      
-       <a href="/admin/getProductImageEdit?pkProductId={{product.[0].pkProductId}}&imgName=Image-1"> <button   class="btn btn-md rounded font-sm hover-up">Edit main image</button></a>     
-        </div>
-    </div>
-    <div class="col-4">
-        <div class="mb-4">
-            <label class="form-label">Image-2</label>
-            <div id="imagePreviewContainer3" class="image-preview-container">
-                <img id="previewImage3" src="/uploads/{{imageUrl2}}" alt="Selected Image">
-            </div>
-    
-         <a href="/admin/getProductImageEdit?pkProductId={{product.[0].pkProductId}}&imgName=Image-2"> <button  class="btn btn-md rounded font-sm hover-up">Edit main image</button></a> 
-        </div>
-    </div>
+    {{/each}}
 </div>
 
  

@@ -634,12 +634,28 @@ $.ajax({
         console.log('success:', response.message);
     } else {
       swalLoader.close()
+      Swal.fire({
+        position: 'top-end',
+        icon: 'error',
+        title: response.message,
+        showConfirmButton: true,
+      }).then(() => {
+        window.location.reload();
+       });
         $('#errorMessage').text(response.message)
     }
    
   },
   error: function(error) {
   swalLoader.close()
+  Swal.fire({
+    position: 'top-end',
+    icon: 'error',
+    title: "Server Error!!",
+    showConfirmButton: true,
+  }).then(() => {
+   window.location.reload();
+  });
     console.error('Error:', error);
   }
   });

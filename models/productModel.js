@@ -25,14 +25,11 @@ const productSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    mainProductUrl: {
-        type: String,
-        required: true
-    },
-    arrayOtherImages: [{
-        imageUrl1: String,
-        imageUrl2: String
-    }],
+ 
+    arrayOtherImages:{
+        type: Array,
+        required: true,
+      },
     strStatus: {
         type: String,
         enum: ['Active', 'Blocked','Deleted'], // Assuming only two possible values

@@ -8,18 +8,11 @@ const productSchema = new Schema({
     fkcategoryId: Schema.Types.ObjectId,
     intPrice: Number,
     intStock: Number,
-    mainProductUrl: String,
-    arrayOtherImages: [
-        {
-            imageUrl1: String,
-            imageUrl2: String
-        }
-    ],
+ 
+    arrayOtherImages:Array,
     
     
-    intQuantity: { type:Number, default: 1 },
-    offer:Number,
-    offerPrice:Number
+    intQuantity: { type:Number, default: 1 }
 });
 
 const cartSchema = new Schema({

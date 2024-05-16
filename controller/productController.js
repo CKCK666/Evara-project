@@ -38,7 +38,6 @@ const getProductList=async(req,res)=>{
          
          })
          const availableOffers = await Offer.aggregate([{$match:{ status : true, expiryDate : { $gte : new Date() }}}])
-        console.log(products);
      
          res.render("admin/listProducts",{layout:"admin_layout",products,admin:true,availableOffers})
        }
@@ -102,15 +101,19 @@ const getProductList=async(req,res)=>{
        let mainProductUrl
        let arrayOtherImages=[]
 
+      //  files.map((file)=>{
+      //   if (file.fieldname === 'Main-Image') {
+      //     mainProductUrl = file.filename;
+      // } else if (file.fieldname === 'Image-1') {
+      //     arrayOtherImages.push({ imageUrl1: file.filename });
+      // } else if (file.fieldname === 'Image-2') {
+      //     arrayOtherImages.push({ imageUrl2: file.filename });
+      // }
+      //  })
        files.map((file)=>{
-        if (file.fieldname === 'Main-Image') {
-          mainProductUrl = file.filename;
-      } else if (file.fieldname === 'Image-1') {
-          arrayOtherImages.push({ imageUrl1: file.filename });
-      } else if (file.fieldname === 'Image-2') {
-          arrayOtherImages.push({ imageUrl2: file.filename });
-      }
+       arrayOtherImages.push(file.filename)
        })
+   
    
       
         
@@ -137,7 +140,7 @@ const getProductList=async(req,res)=>{
          updatedDate:null
        })
      let result = await dataToAdd.save()
-    
+   
       if(result._id){
        
      return    res.json({success:true,message:"successfully added product"})
@@ -164,14 +167,17 @@ const getProductList=async(req,res)=>{
         
          const pkProductId = new ObjectId(req.query.pkProductId);
         
-         let product=await Product.find({pkProductId:pkProductId,strStatus:{$ne:"Deleted"}})
+         let product=await Product.aggregate([{$match:{pkProductId:pkProductId,strStatus:{$ne:"Deleted"}}}])
        
          if (product.length) {
-           let proToArray= product.map((doc)=>({
-             ...doc._doc
-           }))
-       
-           res.render("admin/editProduct",{layout:"admin_layout",product:proToArray,categories:catToArray,admin:true,imageUrl1:proToArray[0].arrayOtherImages[0].imageUrl1,imageUrl2:proToArray[0].arrayOtherImages[1].imageUrl2})
+          let proImgArray=product[0].arrayOtherImages.map((pro,index)=>{
+            return{
+              pro,
+              pkProductId
+            }
+          })
+          
+           res.render("admin/editProduct",{layout:"admin_layout",product,categories:catToArray,admin:true,proImgArray})
          } else {
            res.redirect("/admin/listProduct",{layout:"admin_layout",admin:true})
          }
@@ -267,8 +273,6 @@ for (const wishlist of wishlists) {
         fkcategoryId: productObj.fkcategoryId,
         intPrice: productObj.intPrice,
         intStock: productObj.intStock,
-        mainProductUrl: productObj.mainProductUrl,
-        arrayOtherImages: productObj.arrayOtherImages,
         intQuantity: productObj.intQuantity
 
 
@@ -365,59 +369,40 @@ await Promise.all(updatePromises);
    
      try {
        let file=req.files[0]
+       console.log(file.fieldname);
 
        if(req.body.pkProductId){
          let pkProductId= new ObjectId(req.body.pkProductId);
-         let dataToUpdate={}
-    
-     
-      if(file.fieldname=='Main-Image'){
+         const product = await Product.findOne({ pkProductId,strStatus:"Active" });
+         const index = product.arrayOtherImages.indexOf(file.fieldname);
+        
+         if (index !== -1) {
        
-       dataToUpdate={
+          await Product.findOneAndUpdate(
+            { pkProductId,strStatus:"Active"},
+            { $pull: { arrayOtherImages: file.fieldname } }
+          );
       
-       mainProductUrl:file.filename
-       }
- 
-     }
-     
-        if (file.fieldname=='Image-1') {
-          dataToUpdate={
-           
-           "arrayOtherImages.0.imageUrl1":file.filename
-          }
- 
-          } 
-          if (file.fieldname=='Image-2') {
-           dataToUpdate={
-         
-           "arrayOtherImages.1.imageUrl2": file.filename
-           }
-       }
         
-        
-   
-       let dataToAdd={
-        ...dataToUpdate,
-       
-         updatedDate:new Date()
-       }
-    
-     
-   
-     let result = await Product.updateOne({pkProductId,strStatus: "Active"},{$set:dataToAdd})
-   
-      if(result.modifiedCount>0){
-       res.json({success:true,message:"successfully edited product"})
-      }
-      else{
-       res.json({success:false,message:"fail to  edit product"})
-      }
+          await Product.findOneAndUpdate(
+            { pkProductId,strStatus:"Active"},
+            { $push: { arrayOtherImages: { $each: [file.filename], $position: index } } },
+            { new: true }
+          );
+      
+          res.json({success:true,message:"successfully edited product"})
+          
+        } else {
+          res.json({success:false,message:"fail to  edit product"})
+        }
+
      }
      else{
        res.json({success:false,message:"Product id not found"})
      }
      } catch (error) {
-       res.json({success:false,message: error.message})
+      console.log(error.message);
+       res.json({success:false,message:"Server Error!!!"})
      }
      
       
@@ -564,29 +549,22 @@ const getProductImageEditPage=async(req,res)=>{
       let match={
         $match:{
           pkProductId:new ObjectId(req.query.pkProductId),
-          strStatus:"Active"
+          strStatus:"Active",
+          arrayOtherImages: { $in: [req.query.imgName] }
         }
       }
       let project={
         $project:{
           pkProductId:1,
-          mainProductUrl:1,
-          arrayOtherImages:1
+
+         
         }
       }
       let findProduct=await Product.aggregate([match,project])
-      if(findProduct.length){
-      let productImage
-      if(req.query.imgName=='Main-Image'){
-        productImage=findProduct[0].mainProductUrl
-      }
-      if(req.query.imgName=='Image-1'){
-        productImage=findProduct[0].arrayOtherImages[0].imageUrl1
-      }
-      if(req.query.imgName=='Image-2'){
-        productImage=findProduct[0].arrayOtherImages[1].imageUrl2
-      }
-      res.render("admin/editProductImage",{layout:"admin_layout",admin:true,productImage,pkProductId:req.query.pkProductId,imgName:req.query.imgName }) 
+      if(findProduct.length>0){
+     
+      
+      res.render("admin/editProductImage",{layout:"admin_layout",admin:true,pkProductId:req.query.pkProductId,imgName:req.query.imgName }) 
     }
       else{
         res.json({success:false,message:"Product not found"})
