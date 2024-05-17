@@ -357,112 +357,91 @@ $(".order-status-change-btn").click(function(e){
 })
 
 
-
-
-document.querySelectorAll('.inputImage').forEach(function(input, index) {
-  input.addEventListener('change', function (e) {
-    let inputName=input.name
-    let form = document.getElementById("edit-product-image-form")
-   
-    if (window.location.pathname === "/admin/getAddProduct") {
-      
-      form=document.getElementById("add-product-image-form")
-    }
-
-  
+document.addEventListener('change', function (e) {
+  const target = e.target;
+  if (target && target.classList.contains('inputImage')) {
+      const inputName = target.name;
     
-    if (!form) {
-      alert("Form element not found.");
-      return;
-  }
+      let form = document.getElementById("edit-product-image-form");
 
-    var imageFile = e.target.files[0];
-    var imageType = /^image\//;
+      if (window.location.pathname === "/admin/getAddProduct") {
+          form = document.getElementById("add-product-image-form");
+      } else if (window.location.pathname.startsWith("/admin/getProductEdit")) {
+          form = document.getElementById("add-more-image-form");
+      }
 
-    if (!imageType.test(imageFile.type)) {
-      console.error('Please select an image file');
-      return;
-    }
+      if (!form) {
+          alert("Form element not found.");
+          return;
+      }
 
-    var reader = new FileReader();
-    reader.onload = function (event) {
-      var img = new Image();
-      img.src = event.target.result;
-      img.onload = function () {
-        var imagePreview = input.parentElement.querySelector('.image-preview');
-        imagePreview.innerHTML = ''; // Clear previous image if any
-        imagePreview.style.display = 'block'; // Show image preview
-        imagePreview.appendChild(img);
+      var imageFile = target.files[0];
+      var imageType = /^image\//;
 
-        var cropper = new Cropper(img, {
-          // No fixed aspect ratio
-          crop: function (event) {
-            // You can access cropped data here
-            // Example: console.log(event.detail.x, event.detail.y, event.detail.width, event.detail.height, event.detail.rotate, event.detail.scaleX, event.detail.scaleY);
-          }
-        });
+      if (!imageType.test(imageFile.type)) {
+          console.error('Please select an image file');
+          return;
+      }
 
-        // Show crop button and heading
-        input.parentElement.querySelector('.cropButton').style.display = 'block';
-        // input.parentElement.querySelector('.heading').style.display = 'block';
+      var reader = new FileReader();
+      reader.onload = function (event) {
+          var img = new Image();
+          img.src = event.target.result;
+          img.onload = function () {
+              var imagePreview = target.parentElement.querySelector('.image-preview');
+              imagePreview.innerHTML = ''; // Clear previous image if any
+              imagePreview.style.display = 'block'; // Show image preview
+              imagePreview.appendChild(img);
 
-        input.parentElement.querySelector('.cropButton').addEventListener('click', function () {
-          var croppedCanvas = cropper.getCroppedCanvas();
-          var croppedPreview = input.parentElement.querySelector('.cropped-preview');
-          croppedPreview.innerHTML = ''; // Clear previous preview if any
-          croppedPreview.style.display = 'block'; // Show cropped image preview
-          croppedPreview.appendChild(croppedCanvas);
+              var cropper = new Cropper(img, {
+                  // No fixed aspect ratio
+                  crop: function (event) {
+                      // You can access cropped data here
+                      // Example: console.log(event.detail.x, event.detail.y, event.detail.width, event.detail.height, event.detail.rotate, event.detail.scaleX, event.detail.scaleY);
+                  }
+              });
 
-          // Get the cropped image data
-          // var croppedImageData = croppedCanvas
-          croppedCanvas.toBlob((blob) => {
-            const fileName = Date.now();
-            const file = new File([blob], `${fileName}.jpg`, {
-              type: "image/jpeg",
-            });
+              // Show crop button and heading
+              target.parentElement.querySelector('.cropButton').style.display = 'block';
 
-            let inputToRemove = form.querySelector(`input[name="${inputName}"]`);
-        
-        
-            if (inputToRemove) {
-              inputToRemove.remove();
-            
-            } 
+              target.parentElement.querySelector('.cropButton').addEventListener('click', function () {
+                  var croppedCanvas = cropper.getCroppedCanvas();
+                  var croppedPreview = target.parentElement.querySelector('.cropped-preview');
+                  croppedPreview.innerHTML = ''; // Clear previous preview if any
+                  croppedPreview.style.display = 'block'; // Show cropped image preview
+                  croppedPreview.appendChild(croppedCanvas);
 
-            if (window.FileList && window.DataTransfer) {
-              const dataTransfer = new DataTransfer();
-              dataTransfer.items.add(file);
-              const input = document.createElement("input");
-              input.type = "file";
-              input.name = inputName;
-              input.files = dataTransfer.files;
-              form.appendChild(input);
-              input.style.display = "none";
-            } else {
-              console.error(
-                "FileList and DataTransfer are not supported in this browser."
-              );
-            }
-          });
-          
-          
-          // imageData.push({
-          //   croppedImageData,
-          //   // imageName,
-          //   index:index+1
-          // })
-          // Send cropped image data and image name to backend
-          // sendToBackend(croppedImageData, imageName, index + 1);
-        });
+                  croppedCanvas.toBlob((blob) => {
+                      const fileName = Date.now();
+                      const file = new File([blob], `${fileName}.jpg`, {
+                          type: "image/jpeg",
+                      });
+
+                      let inputToRemove = form.querySelector(`input[name="${inputName}"]`);
+
+                      if (inputToRemove) {
+                          inputToRemove.remove();
+                      }
+
+                      if (window.FileList && window.DataTransfer) {
+                          const dataTransfer = new DataTransfer();
+                          dataTransfer.items.add(file);
+                          const input = document.createElement("input");
+                          input.type = "file";
+                          input.name = inputName;
+                          input.files = dataTransfer.files;
+                          form.appendChild(input);
+                          input.style.display = "none";
+                      } else {
+                          console.error("FileList and DataTransfer are not supported in this browser.");
+                      }
+                  });
+              });
+          };
       };
-    };
-    reader.readAsDataURL(imageFile);
-  });
+      reader.readAsDataURL(imageFile);
+  }
 });
-
-
-
-
 
   // add product 
   $('#product-submit').click(function (e) {
@@ -592,7 +571,7 @@ return false;
 });
 
 
-
+//edit product image
 $('.product-edit-image').click(function(e){
   e.preventDefault()
   // let pkProductId = $("input[name='pkProductId']").val()
@@ -664,6 +643,78 @@ $.ajax({
 
 });
 
+ //add more images
+ $('#add-more-image-submit').click(function(e){
+  e.preventDefault()
+ 
+  let data=new FormData($("#add-more-image-form")[0])
+  let pkProductId = $(this).data('product-id');
+
+data.append('pkProductId',pkProductId)
+ 
+let swalLoader = Swal.fire({
+  title: 'Loading...',
+  allowOutsideClick: false,
+  showConfirmButton: false,
+  onBeforeOpen: () => {
+      Swal.showLoading();
+  }
+});
+
+$.ajax({
+  url:"/admin/addMoreImages", 
+  data:data,
+  type: "POST",
+  processData: false,
+  contentType: false,
+  success: function(response) {
+    if (response.success) {
+      swalLoader.close()
+        Swal.fire({
+            position: 'top-end',
+            icon: 'success',
+            title: 'successfully added a product',
+            showConfirmButton: false,
+            timer: 1500,
+            didClose:()=>{
+           window.location.href=`/admin/getProductEdit?pkProductId=${pkProductId}`
+            }
+          })
+        console.log('success:', response.message);
+    } else {
+      swalLoader.close()
+      Swal.fire({
+        position: 'top-end',
+        icon: 'error',
+        title: response.message,
+        showConfirmButton: true,
+      }).then(() => {
+        window.location.href=`/admin/getProductEdit?pkProductId=${pkProductId}`
+       });
+        $('#errorMessage').text(response.message)
+    }
+   
+  },
+  error: function(error) {
+  swalLoader.close()
+  Swal.fire({
+    position: 'top-end',
+    icon: 'error',
+    title: "Server Error!!",
+    showConfirmButton: true,
+  }).then(() => {
+    window.location.href=`/admin/getProductEdit?pkProductId=${pkProductId}`
+  });
+    console.error('Error:', error);
+  }
+  });
+
+
+
+});
+
+
+
 
 
 if(window.location.pathname === "/admin/getCreateCoupon"){
@@ -726,6 +777,30 @@ if(window.location.pathname === "/admin/getCreateCoupon"){
       }
     });
   }
+
+
+ 
+  if (window.location.pathname.startsWith("/admin/getProductEdit")){
+  document.getElementById("add-more-image").addEventListener("click", function(event) {
+    event.preventDefault(); // Prevent form submission
+    const imageContainers = document.getElementById("image-containers");
+    const inputContainer = document.createElement("div");
+    inputContainer.classList.add("input-container");
+    const uniqueId = Date.now(); 
+    inputContainer.innerHTML = `
+        <div class="image-container">
+            <h3 class="heading">Additional Image </h3>
+            <input type="file" class="inputImage" accept="image/*"  name="Additional-Image-${uniqueId}">
+            <div class="image-preview"></div>
+            <button class="cropButton">Crop Image</button>
+         
+            <div class="cropped-preview"></div>
+        </div>
+    `;
+    imageContainers.appendChild(inputContainer);
+});
+
+}
 
 
 function generateRandomCode() {
@@ -1036,6 +1111,7 @@ $('#offerUpdateForm button[type="submit"]').click(function () {
    });
    return false;
  });
+
 
 
 
@@ -1565,3 +1641,81 @@ const handleDelete=(id,name)=>{
     }
 
 
+    const handleDeleteImg=(id,productName)=>{
+    
+       let item="Image"
+       let url="/admin/deleteProductImage"
+         const swalWithBootstrapButtons = Swal.mixin({
+             customClass: {
+               confirmButton: 'btn btn-success',
+               cancelButton: 'btn btn-danger'
+             },
+             buttonsStyling: false
+           })
+           
+           swalWithBootstrapButtons.fire({
+             title: `Want to delete this ${item}?`,
+             // text: "You won't be able to revert this!",
+             icon: 'warning',
+             showCancelButton: true,
+             confirmButtonText: 'Yes, delete it!',
+             cancelButtonText: 'No, cancel!',
+             reverseButtons: true
+           }).then((result) => {
+             if (result.isConfirmed) {
+                 $.ajax({
+                     type: 'PATCH', 
+                     url: url,
+                     data: {
+                       pkProductId:id,
+                       productName
+                     }, 
+                     success: function(response) {
+                         if (response.success) {
+                             swalWithBootstrapButtons.fire(
+                                 'Deleted!',
+                                 'Your file has been deleted.',
+                                 'success'
+                               ).then(()=>{
+                                window.location.href=`/admin/getProductEdit?pkProductId=${pkProductId}`
+                                  
+                                 })
+                              
+                             console.log('success:', response.message);
+                         } else {
+                          Swal.fire({
+                            position: 'top-end',
+                            icon: 'error',
+                            title: response.message,
+                            showConfirmButton: true,
+                          }).then(() => {
+                            window.location.href=`/admin/getProductEdit?pkProductId=${pkProductId}`
+                           });
+                         }
+                        
+                     },
+                     error: function(error) {
+                      Swal.fire({
+                        position: 'top-end',
+                        icon: 'error',
+                        title: response.message,
+                        showConfirmButton: true,
+                      }).then(() => {
+                        window.location.href=`/admin/getProductEdit?pkProductId=${pkProductId}`
+                       });
+                         
+                         console.error('Error:', error);
+                     }
+                 });
+               
+             } else if (
+               /* Read more about handling dismissals below */
+               result.dismiss === Swal.DismissReason.cancel
+             ) {
+               swalWithBootstrapButtons.fire(
+                 'Cancelled',
+                 
+               )
+             }
+           })
+         }

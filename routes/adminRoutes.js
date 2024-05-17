@@ -6,7 +6,7 @@ const {verifyLogin}=require("../middlewares/verifications")
 dotenv.config()
 const { getAdminHome, adminLogin, logout,} = require('../controller/adminController');
 const { addCategory, getCategoryPage, deleteCategory, blockCategory, getEditCategory, editCategory }=require('../controller/categoryController');
-const { getProductList, getProductAdd, addProduct, editProduct, deleteProduct, blockProduct, getProductEdit,editProductImages, getProductImageEditPage, applyProductOffer} = require('../controller/productController');
+const { getProductList, getProductAdd, addProduct, editProduct, deleteProduct, blockProduct, getProductEdit,editProductImages, getProductImageEditPage, applyProductOffer, deleteProductImages, addMoreProductImages} = require('../controller/productController');
 const { deleteUser, getUserList, blockUser,}=require("../controller/userController")
 const {getOrderDetailsPageAdmin,getOrderListAdmin,changeOrderStatus}=require("../controller/orderController")
 const multer = require('multer');
@@ -110,6 +110,13 @@ router.post("/editProduct",uploads.any(),editProduct)
 
 //edit product images
 router.post("/editProductImages",uploads.any(),editProductImages)
+
+//delete product image
+router.patch("/deleteProductImage",deleteProductImages)
+
+//add more images
+router.post("/addMoreImages",uploads.any(), addMoreProductImages)
+
 
 //delete product
 router.patch("/deleteProduct",deleteProduct)

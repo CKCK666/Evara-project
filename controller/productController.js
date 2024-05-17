@@ -23,6 +23,7 @@ const getProductList=async(req,res)=>{
         path: 'offer',
         match: { status: true }
     });
+    
        let products= result.map((product,index)=>{
          const isoDate = product.createdDate;
          const date = new Date(isoDate);
@@ -368,8 +369,11 @@ await Promise.all(updatePromises);
    const editProductImages=async(req,res)=>{
    
      try {
+      if(!req.files.length){
+        return  res.json({success:false,message:"Please select a new image"})
+      }
        let file=req.files[0]
-       console.log(file.fieldname);
+        
 
        if(req.body.pkProductId){
          let pkProductId= new ObjectId(req.body.pkProductId);
@@ -408,6 +412,41 @@ await Promise.all(updatePromises);
       
     }
  
+       //add more product
+   const addMoreProductImages = async (req, res) => {
+     try {
+       if (!req.files.length) {
+         return res.json({ success: false, message: 'Please select images' });
+       }
+       let file = req.files;
+       let productImg = file.map((pro) => pro.filename);
+       console.log(productImg);
+
+       if (req.body.pkProductId) {
+         let pkProductId = new ObjectId(req.body.pkProductId);
+         const product = await Product.findOne({
+           pkProductId,
+           strStatus: 'Active',
+         });
+
+      let result=   await Product.updateOne(
+           { pkProductId, strStatus: 'Active' },
+           { $push: { arrayOtherImages: { $each: productImg } } }
+         );
+         if (result.modifiedCount>0) {
+          res.json({ success: true, message: 'successfully edited product' });
+         } else {
+          res.json({ success: false, message: 'fail to  edit product' });
+         }
+      
+       } else {
+         res.json({ success: false, message: 'Product id not found' });
+       }
+     } catch (error) {
+       console.log(error.message);
+       res.json({ success: false, message: 'Server Error!!!' });
+     }
+   };
     // delete category
     const deleteProduct=async(req,res)=>{
      try {
@@ -639,7 +678,47 @@ const applyProductOffer = async (req, res,next) => {
 };
 
 
-
+     //edit product
+     const deleteProductImages=async(req,res)=>{
+   
+      try {
+       
+ 
+        if(req.body.pkProductId && req.body.productName){
+          let pkProductId= new ObjectId(req.body.pkProductId);
+          const product = await Product.findOne({ pkProductId,strStatus:"Active" });
+          console.log(product)
+          if(product.arrayOtherImages.length<=1){
+          return   res.json({ success: false, message: "Product must have at least one image." });
+          }
+         
+         
+        
+          let result = await Product.updateOne(
+            { pkProductId, strStatus: "Active" },
+            { $pull: { arrayOtherImages:  req.body.productName } }
+        );
+        
+      
+        
+        if (result.modifiedCount > 0) {
+          return     res.json({ success: true, message: "Successfully edited product" });
+        } else {
+          return   res.json({ success: false, message: "Failed to edit product" });
+        }
+        
+ 
+      }
+      else{
+        return  res.json({success:false,message:"Product id not found"})
+      }
+      } catch (error) {
+       console.log(error.message);
+       return   res.json({success:false,message:"Server Error!!!"})
+      }
+      
+       
+     }
 
 
 
@@ -657,7 +736,9 @@ const applyProductOffer = async (req, res,next) => {
     editProductImages,
     getSingleProductPage,
     getProductImageEditPage,
-    applyProductOffer
+    applyProductOffer,
+    deleteProductImages,
+    addMoreProductImages
   
   }
 

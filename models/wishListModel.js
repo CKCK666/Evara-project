@@ -9,12 +9,7 @@ const productSchema = new Schema({
     intPrice: Number,
     intStock: Number,
     mainProductUrl: String,
-    arrayOtherImages: [
-        {
-            imageUrl1: String,
-            imageUrl2: String
-        }
-    ],
+    arrayOtherImages:Array,
     
     
     intQuantity: { type:Number, default: 1 }
