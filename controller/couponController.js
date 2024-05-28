@@ -11,18 +11,9 @@ const Coupon= require("../models/couponModel")
 
 const listCoupons=async(req,res)=>{
     try {
-        let findResult=await Coupon.aggregate([{$sort:{updatedAt:-1}}])
-       let coupons=findResult.map((coupon,index)=>{
-        const isoDate = coupon.endDate;
-        const date = new Date(isoDate);
-        const formattedDate = date.toString().substring(0, 15)
-        return {
-          ...coupon,
-          index:index+1,
-          endDate : formattedDate
-         }
-        
-        })
+        let coupons=await Coupon.aggregate([{$sort:{startDate:-1}}])
+       
+      
     
         res.render("admin/couponsList",{layout:"admin_layout",admin:true,coupons})
     } catch (error) {
@@ -50,38 +41,39 @@ const createCoupon = async (req, res) => {
         name,
         description,
         code,
-        discount,
-        minAmount,
-        maxDiscount,
-        startDate,
-        endDate,
-        usageLimit,
-        couponType,
-        products,
-        categories,
-        status
+        discountPercentage,
+        startDate ,
+        expireDate,
+        minimumSpend,
     } = req.body;
   
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
+    let percent=parseFloat(discountPercentage)
     
     try {
-      if (!name.trim() || !code.trim() || !discount || !minAmount || !startDate || !endDate || !usageLimit) {
+      const regex = /[a-zA-Z]{3,}/;
+      if (!name.trim() || !code.trim() || !description.trim() || !discountPercentage  || !startDate || ! expireDate || !minimumSpend) {
         return res.json({ status: 'error', message: 'Required fields contain only blank spaces',filled:true });
     }
+
+    if(percent<=0  || percent>100){
+      return res.json({ status: 'error', message: 'Invalid percentage',filled:true });
+     }
+     const modifiedName = name.toUpperCase().replace(/\s+/g, '');
+     if(!regex.test(modifiedName)){
+      return res.json({ status: 'error', message: "Name must contain at least three alphabetic characters.",filled:true });
+     }
+     const existingCoupon= await Coupon.find({name:modifiedName,status:{$ne:"Deleted"}})
+     if (existingCoupon.length>0) {
+      return res.json({ status: 'error', message: 'Offer with this name already exists.', filled: true });
+  }
         const coupon = new Coupon({
-            name,
-            description,
-            code,
-            discount,
-            minAmount,
-            maxDiscount,
-            startDate,
-            endDate: end,
-            products: couponType === 'products' ? products : null,
-            categories: couponType === 'categories' ? categories : null,
-            usageLimit,
-            status
+          name:modifiedName,
+          description,
+          code,
+          discountPercentage:percent,
+          startDate ,
+          expireDate,
+          minimumSpend:parseFloat(minimumSpend),
         });
         
         await coupon.save();
@@ -110,7 +102,7 @@ const createCoupon = async (req, res) => {
      let status=strStatus=="Active"?"Blocked":"Active"
    try {
     const objectIdToUpdate = new ObjectId(id);
-    let result=await Coupon.updateOne({_id:objectIdToUpdate,status:strStatus},{$set:{status:status,updatedAt:new Date()}})
+    let result=await Coupon.updateOne({_id:objectIdToUpdate,status:strStatus},{$set:{status:status}})
      console.log(result);
     if (result.modifiedCount>0) {
       console.log("blocked/unblock");
@@ -130,23 +122,9 @@ const createCoupon = async (req, res) => {
   const getEditCoupon=async(req,res)=>{
       try {
         if(req.query._id){
-           let findResult=await Coupon.find({_id:new ObjectId(req.query._id)})
-           let queryMatch={
-            $match:{
-                strStatus:"Active"
-            }
-        }
-        let products=await Product.aggregate([queryMatch])
-        let categories=await Category.aggregate([queryMatch])
-           let coupon=findResult.map((item)=>{
-  
-             return{
-                ...item._doc,
-             
-             }
-           })
-           console.log(coupon);
-           res.render("admin/editCoupon",{layout:"admin_layout",admin:true,coupon,products,categories})
+           let coupon=await Coupon.aggregate([{$match:{_id:new ObjectId(req.query._id)}}])
+         
+         res.render("admin/editCoupon",{layout:"admin_layout",admin:true,coupon})
         }
         else{
             res.json({success:false,message:"coupon id not found"})
@@ -165,38 +143,44 @@ const createCoupon = async (req, res) => {
       name,
       description,
       code,
-      discount,
-      minAmount,
-      maxDiscount,
-      startDate,
-      endDate,
-      usageLimit,
-      couponType,
-      products,
-      categories,
+      percentage,
+      startDate ,
+      expireDate,
+      minimum,
   
   } = req.body;
-  const end =  new Date(endDate)
-  end.setHours(23, 59, 59, 999);
+ console.log(req.body);
+  let percent=parseFloat(percentage)
   try {
-  
-    if (!name.trim() || !code.trim() || !discount || !minAmount || !startDate || !endDate || !usageLimit) {
+    const regex = /[a-zA-Z]{3,}/;
+    if (!name.trim() || !code.trim() || !percentage || !startDate || !expireDate || !minimum ||!description.trim()) {
+    
       return res.json({ status: 'error', message: 'Required fields contain only blank spaces',filled:true });
   }
-  console.log(req.body);
+  if(percent<=0  || percent>100){
+    return res.json({ status: 'error', message: 'Invalid percentage',filled:true });
+   }
+   if(minimum<=0 ){
+    return res.json({ status: 'error', message: 'Invalid minimum spend',filled:true });
+   }
+   const modifiedName = name.toUpperCase().replace(/\s+/g, '');
+   if(!regex.test(modifiedName)){
+    return res.json({ status: 'error', message: "Name must contain at least three alphabetic characters.",filled:true });
+   }
+   
+   const existingCoupon= await Coupon.find({_id:{$ne:new ObjectId(coupnId)},name:modifiedName,status:{$ne:"Deleted"}})
+   if (existingCoupon.length>0) {
+    return res.json({ status: 'error', message: 'Offer with this name already exists.',filled:true});
+}
+
     await Coupon.findByIdAndUpdate(coupnId,{
-      name,
+      name:modifiedName,
       description,
       code,
-      discount,
-      minAmount,
-      maxDiscount,
-      startDate,
-      endDate:end,
-      products: couponType === 'products' ? products : null,
-      categories: couponType === 'categories' ? categories : null,
-      usageLimit,
-      updatedAt: Date.now()
+      discountPercentage:percent,
+      startDate ,
+      expireDate,
+      minimumSpend:minimum,
     },{
       runValidators: true,
       new: true,

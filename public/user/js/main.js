@@ -879,6 +879,84 @@ $(".cancel-order-btn").click(function(e){
 
 })
 
+//return  order
+$(".return-order-btn").click(function(e){
+  e.preventDefault()
+
+  let pkOrderId = $(this).data('pk-order-id');
+  let pkUserId = $(this).data('pk-user-id');
+  let orderStatusChange=$(this).data('order-status-change')
+ console.log(pkOrderId,pkUserId,orderStatusChange)
+  
+  const swalWithBootstrapButtons = Swal.mixin({
+    customClass: {
+      confirmButton: 'btn btn-danger',
+      cancelButton: 'btn btn-danger'
+    },
+    buttonsStyling: false
+  })
+  
+  swalWithBootstrapButtons.fire({
+    title: `Want to return `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, Return the order it!',
+    cancelButtonText: 'No, cancel!',
+    reverseButtons: true
+  }).then((result) => {
+    if (result.isConfirmed) {
+        $.ajax({
+            type: 'POST', 
+            url: "/orderStatusChange",
+            data: {
+              pkOrderId,
+              pkUserId,
+              orderStatusChange
+            }, 
+            success: function(response) {
+                if (response.success) {
+                    swalWithBootstrapButtons.fire(
+                        'Updated!',
+                        'Order return process starting.',
+                        'success'
+                      ).then(()=>{
+                         window.location.href=`/userSettings?pkUserId=${pkUserId}&pkOrderId=${pkOrderId}`
+                      })
+                     
+                    console.log('success:', response.message);
+                } else {
+                  console.log('success:', response.message);
+                    swalWithBootstrapButtons.fire(
+                        'Cancelled',
+                        
+                      )
+                }
+               
+            },
+            error: function(error) {
+                
+                console.error('Error:', error);
+                swalWithBootstrapButtons.fire(
+                  'Cancelled',
+                  
+                )
+            }
+        });
+      
+    } else if (
+      /* Read more about handling dismissals below */
+      result.dismiss === Swal.DismissReason.cancel
+    ) {
+      swalWithBootstrapButtons.fire(
+        'Cancelled',
+        
+      )
+    }
+  })
+
+
+})
+
 $(".removeFromCart").click(function(e){
   e.preventDefault()
   let pkCartId = $(this).data('pk-cart-id');
@@ -1658,4 +1736,10 @@ const deleteAddress=(addressId,userId,render)=>{
     });
 }
         
-
+function sortProducts(order) {
+ 
+  const url = new URL(window.location.href);
+  url.searchParams.set('sort', order);
+  
+   window.location.href = url.toString();
+}

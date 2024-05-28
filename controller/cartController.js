@@ -9,16 +9,20 @@ const router = require('../routes/userRoutes');
 const otpGenerator = require('otp-generator');
 const twilio = require('twilio');
 const Cart = require('../models/cartModel');
-const {getCartCount}=require("../utils/cart")
-const {getWishListCount}=require("../utils/wishlist")
+const {getCartCount,findTotalCartPrice}=require("../utils/cart")
+const {getWishListCount}=require("../utils/wishlist");
+const match = require('nodemon/lib/monitor/match');
 
 
 const addToCart=async(req,res)=>{
     try {
     
-        if( req.body.pkUserId){
-          let pkUserId =new ObjectId(req.body.pkUserId)
-        let productFind=await Product.find({pkProductId:new ObjectId(req.body.pkProductId),strStatus:"Active"},{createdDate:0,updatedDate:0})
+        if( req.session.user.pkUserId){
+          let pkUserId =new ObjectId(req.session.user.pkUserId)
+        let productFind=await Product.find({pkProductId:new ObjectId(req.body.pkProductId),strStatus:"Active"},{createdDate:0,updatedDate:0}).populate({
+          path:"offer",
+          match:{status:true}
+        })
           let product=productFind.map((pro)=>{
             return{...pro._doc}
           })
@@ -45,30 +49,21 @@ const addToCart=async(req,res)=>{
            
               const result = await Cart.updateOne({pkUserId,"arrProducts.pkProductId":pkProductId,strStatus:"Active"}, update);
                if(result.modifiedCount>0){
-                let aggregatePipeline = [
-                  {
-                    $match: { pkUserId ,strStatus:"Active"} // Match documents with the specified pkUserId
-                  },
-                  {
-                    $unwind: "$arrProducts" // Deconstruct the arrProducts array
-                  },
-                  {
-                    $group: {
-                      _id: null,
-                      total_cart_price: {
-                        $sum: { $multiply: ["$arrProducts.intQuantity", "$arrProducts.intPrice"] }
-                      }
-                    }
-                  }
-                ];
-                
-                let totalPriceResult = await Cart.aggregate(aggregatePipeline)
-                 
-                // Update total_cart_price for the cart
-                let updatedTotalPriceResult = await Cart.updateOne(
-                  { pkUserId,strStatus:"Active" },
-                  { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
-                );
+             
+              
+                let totalPriceResult = await findTotalCartPrice(pkUserId)
+              
+                if (totalPriceResult.length > 0 && totalPriceResult[0].total_cart_price !== undefined) {
+                  // Update total_cart_price for the cart
+                  let updatedTotalPriceResult = await Cart.updateOne(
+                      { pkUserId, strStatus: "Active" },
+                      { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
+                  );
+          
+                  console.log("Update result:", updatedTotalPriceResult);
+              } else {
+                  console.log("No active products found or total_cart_price is undefined.");
+              }
     
               console.log("cart-updated111111111111");
                 res.json({success:true,message:"cart updated-1"})
@@ -111,29 +106,20 @@ const addToCart=async(req,res)=>{
             
               if(result.modifiedCount>0){
                    // Calculate total_cart_price using aggregation framework
-              let aggregatePipeline = [
-                {
-                  $match: {
-                    pkUserId, // Match documents with the specified user ID
-                    strStatus:"Active"
-                  }
-                },
-                {
-                  $unwind: "$arrProducts" // Deconstruct the arrProducts array
-                },
-                {
-                  $group: {
-                    _id: null,
-                    total_cart_price: {
-                      $sum: { $multiply: ["$arrProducts.intQuantity", "$arrProducts.intPrice"] }
-                    }
-                  }
+                 
+            
+                   let totalPriceResult = await findTotalCartPrice(pkUserId)
+                   if (totalPriceResult.length > 0 && totalPriceResult[0].total_cart_price !== undefined) {
+                    // Update total_cart_price for the cart
+                    let updatedTotalPriceResult = await Cart.updateOne(
+                        { pkUserId, strStatus: "Active" },
+                        { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
+                    );
+            
+                    console.log("Update result:", updatedTotalPriceResult);
+                } else {
+                    console.log("No active products found or total_cart_price is undefined.");
                 }
-              ];
-                let totalPriceResult = await Cart.aggregate(aggregatePipeline)
-                
-                // Update total_cart_price for the cart
-                let updatedTotalPriceResult = await Cart.updateOne(matchQuery, { $set: { total_cart_price: totalPriceResult[0].total_cart_price } });
                 
            
                console.log("cartttt-22222222");
@@ -165,7 +151,7 @@ const addToCart=async(req,res)=>{
             
             let dataToAdd=new Cart({
               pkCartId:new ObjectId(),
-              pkUserId:new ObjectId(req.body.pkUserId),
+              pkUserId:new ObjectId(req.session.user.pkUserId),
               arrProducts:[
                
                 ...product
@@ -202,25 +188,34 @@ const addToCart=async(req,res)=>{
     let pkUserId =req.session.user.pkUserId
     
   
-   let cartDetailsFind=await Cart.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
-   let cartDetails=cartDetailsFind.map((cart)=>{
-       return{...cart._doc}
-   })
+   let cartDetailsFind=await Cart.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"}).populate('arrProducts.offer');
+   let cartDetails = cartDetailsFind.map(cart => {
+    let filteredProducts = cart.arrProducts.filter(product => product.strStatus === "Active");
+    return {
+      ...cart._doc,
+      arrProducts: filteredProducts
+    };
+  });
+
    let cartCount= await getCartCount(pkUserId)
    let wishListCount=await getWishListCount(pkUserId)
-   if (cartDetails && cartDetails.length) {
-  
-   
+   if (cartDetails && cartDetails.length && cartDetails[0].arrProducts && cartDetails[0].arrProducts.length>0) {
    
     let cartProducts=cartDetails[0].arrProducts.map(obj=>{
-      let intTotalPrice=obj.intQuantity*obj.intPrice
+     let intTotalPrice
+     if(obj.offer){
+      intTotalPrice=obj.intQuantity*obj.offerPrice
+     }else{
+      intTotalPrice=obj.intQuantity*obj.intPrice
+     }
+     
 
       return {...obj._doc,intTotalPrice:intTotalPrice,pkCartId:cartDetails[0].pkCartId}
     })
     
      res.render("user/cartPage",{layout:"user_layout",success:true,cartDetails,cartProducts,pkUserId, wishListCount,message:"successfully loaded cart page",user:true,cartCount})
    } else {
-    res.render("user/cartPage",{layout:"user_layout",success:true,user:true,pkUserId,cartCount, wishListCount})
+    res.render("user/cartPage",{layout:"user_layout",success:true,user:true,pkUserId,cartCount, wishListCount,message:"Cart is empty"})
    }
    } catch (error) {
     res.json({success:false,message:error.message})
@@ -233,10 +228,10 @@ const addToCart=async(req,res)=>{
     try {
   
       let pkProductId=new ObjectId(req.body.pkProductId)
-       let pkUserId=req.session.user.pkUserId
+       let pkUserId=new ObjectId(req.session.user.pkUserId)
      
       let quantity=parseInt(req.body.quantity)
-      let productInCartFind=await Cart.find({pkUserId:new ObjectId(pkUserId),"arrProducts.pkProductId":pkProductId,strStatus:"Active"})
+      let productInCartFind=await Cart.find({pkUserId,"arrProducts.pkProductId":pkProductId,strStatus:"Active"})
          let productInCart=productInCartFind.map((product)=>{
          return {...product._doc}
          })
@@ -245,39 +240,25 @@ const addToCart=async(req,res)=>{
           $inc: { "arrProducts.$.intQuantity": quantity},
        
         };
-        const result = await Cart.updateOne({pkUserId:new ObjectId(pkUserId),"arrProducts.pkProductId":pkProductId,strStatus:"Active"}, update);
+        const result = await Cart.updateOne({pkUserId,"arrProducts.pkProductId":pkProductId,strStatus:"Active"}, update);
     
         if(result.modifiedCount>0){
+               
+          let totalPriceResult = await findTotalCartPrice(pkUserId)
+              
+          if (totalPriceResult.length > 0 && totalPriceResult[0].total_cart_price !== undefined) {
+            // Update total_cart_price for the cart
+            let updatedTotalPriceResult = await Cart.updateOne(
+                { pkUserId, strStatus: "Active" },
+                { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
+            );
+    
+            console.log("Update result:", updatedTotalPriceResult);
+        } else {
+            console.log("No active products found or total_cart_price is undefined.");
+        }
           
-          let aggregatePipeline = [
-            {
-              $match: { pkUserId:new ObjectId(pkUserId),strStatus:"Active" } // Match documents with the specified pkUserId
-            },
-            {
-              $unwind: "$arrProducts" // Deconstruct the arrProducts array
-            },
-            {
-              $group: {
-                _id: null,
-                total_cart_price: {
-                  $sum: { $multiply: ["$arrProducts.intQuantity", "$arrProducts.intPrice"] }
-                }
-              }
-            }
-          ];
           
-          let totalPriceResult = await Cart.aggregate(aggregatePipeline)
-          
-
-          
-          // Update total_cart_price for the cart
-          let updatedTotalPriceResult = await Cart.updateOne(
-            {pkUserId:new ObjectId( pkUserId ),strStatus:"Active"},
-            { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
-          );
-          if(updatedTotalPriceResult.modifiedCount===0){
-            return res.json({success:false,message:"Fail to update total cart price"})
-          }
      
           let InCart=productInCart[0].arrProducts.map(obj=>{
             let intTotalPrice=obj.intQuantity*obj.intPrice

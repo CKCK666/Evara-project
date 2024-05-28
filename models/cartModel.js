@@ -8,9 +8,21 @@ const productSchema = new Schema({
     fkcategoryId: Schema.Types.ObjectId,
     intPrice: Number,
     intStock: Number,
+    strStatus: {
+        type: String,
+        enum: ['Active','Deleted'],
+        default: 'Active'
+    },
  
     arrayOtherImages:Array,
+    offer:{
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'offer'
+    },
+    offerPrice:{
+        type:Number,
     
+    },
     
     intQuantity: { type:Number, default: 1 }
 });

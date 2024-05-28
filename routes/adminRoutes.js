@@ -5,8 +5,8 @@ const {verifyLogin}=require("../middlewares/verifications")
 
 dotenv.config()
 const { getAdminHome, adminLogin, logout,} = require('../controller/adminController');
-const { addCategory, getCategoryPage, deleteCategory, blockCategory, getEditCategory, editCategory }=require('../controller/categoryController');
-const { getProductList, getProductAdd, addProduct, editProduct, deleteProduct, blockProduct, getProductEdit,editProductImages, getProductImageEditPage, applyProductOffer, deleteProductImages, addMoreProductImages} = require('../controller/productController');
+const { addCategory, getCategoryPage, deleteCategory, blockCategory, getEditCategory, editCategory, applyCategoryOffer, removeCategoryOffer }=require('../controller/categoryController');
+const { getProductList, getProductAdd, addProduct, editProduct, deleteProduct, blockProduct, getProductEdit,editProductImages, getProductImageEditPage, applyProductOffer, deleteProductImages, addMoreProductImages, removeProductOffer} = require('../controller/productController');
 const { deleteUser, getUserList, blockUser,}=require("../controller/userController")
 const {getOrderDetailsPageAdmin,getOrderListAdmin,changeOrderStatus}=require("../controller/orderController")
 const multer = require('multer');
@@ -76,7 +76,7 @@ router.post("/addCategory",addCategory)
 
 //get category page
 
-router.get("/getCategoryPage",isAdmin,getCategoryPage)
+router.get("/getCategoryPage",getCategoryPage)
 
 //delete category
 router.patch("/deleteCategory",deleteCategory)
@@ -92,7 +92,7 @@ router.get("/getCategoryEdit",isAdmin,getEditCategory)
 router.patch("/editCategory",editCategory)
 
 //get product list page
-router.get("/listProducts",isAdmin,getProductList)
+router.get("/listProducts",getProductList)
 
 //get product create page
 router.get("/getAddProduct",isAdmin,getProductAdd)
@@ -199,5 +199,11 @@ router.get("/api/topProducts",topProducts)
 router.get("/api/topCategories",topCategories)
 
 router.patch("/apply_offer",applyProductOffer)
+
+router.patch("/remove_offer",removeProductOffer)
+
+router.patch("/apply_offer-category",applyCategoryOffer)
+
+router.patch("/remove_offer-category",removeCategoryOffer)
 
 module.exports=router

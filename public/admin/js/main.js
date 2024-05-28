@@ -174,6 +174,7 @@ $('#product-edit-submit').click(function (e) {
 
   
   let pkProductId=data.get("pkProductId")
+  let pkCategoryId=data.get("pkCategoryId")
   let strProductName=data.get("strProductName")
   let strDescription=data.get("strDescription")
   let intPrice=data.get("intPrice")
@@ -254,7 +255,7 @@ success: function(response) {
           showConfirmButton: false,
           timer: 1500,
           didClose:()=>{
-         window.location.reload()
+            window.location.href=`/admin/getProductEdit?pkProductId=${pkProductId}`
           }
         })
       console.log('success:', response.message);
@@ -279,6 +280,7 @@ return false;
 $(".order-status-change-btn").click(function(e){
   const selectElement = document.getElementById('statusSelect');
   let orderStatusChange=selectElement.value;
+  alert(orderStatusChange)
   if(orderStatusChange==""){
     $('#errorMessage').text('Please select a status!!!!');
     return
@@ -471,7 +473,7 @@ document.addEventListener('change', function (e) {
 
 
     
-    let pkProductId=data.get("pkProductId")
+    let pkCategoryId=data.get("pkCategoryId")
         
     let strProductName=data.get("strProductName")
     let strDescription=data.get("strDescription")
@@ -718,19 +720,7 @@ $.ajax({
 
 
 if(window.location.pathname === "/admin/getCreateCoupon"){
-  document.getElementById("couponType").addEventListener("change", function () {
-    var couponType = this.value;
-    if (couponType === "products") {
-      document.getElementById("categories").value = "none";
-      document.getElementById("productsSection").style.display = "inline-block";
-      document.getElementById("categoriesSection").style.display = "none";
-    } else if (couponType === "categories") {
-      document.getElementById("products").value = "none";
-      document.getElementById("productsSection").style.display = "none";
-      document.getElementById("categoriesSection").style.display =
-        "inline-block";
-    }
-  });
+
 
   document
     .getElementById("generateCodeBtn")
@@ -748,34 +738,7 @@ if(window.location.pathname === "/admin/getCreateCoupon"){
         document.getElementById("code").value = randomCode;
       });
   
-    const product = document.getElementById("productValue").value;
-    const category = document.getElementById("categoriesValue").value;
-    const couponTypeSelect = document.getElementById("couponType");
-    if (!product) {
-      couponTypeSelect.value = "categories";
-      document.getElementById("categories").value = category;
-      document.getElementById("productsSection").style.display = "none";
-      document.getElementById("categoriesSection").style.display = "inline-block";
-    } else if (!category) {
-      couponTypeSelect.value = "products";
-      document.getElementById("products").value = product;
-      document.getElementById("productsSection").style.display = "inline-block";
-      document.getElementById("categoriesSection").style.display = "none";
-    }
-  
-    document.getElementById("couponType").addEventListener("change", function () {
-      var couponType = this.value;
-      if (couponType === "products") {
-        document.getElementById("categories").value = "none";
-        document.getElementById("productsSection").style.display = "inline-block";
-        document.getElementById("categoriesSection").style.display = "none";
-      } else if (couponType === "categories") {
-        document.getElementById("products").value = "none";
-        document.getElementById("productsSection").style.display = "none";
-        document.getElementById("categoriesSection").style.display =
-          "inline-block";
-      }
-    });
+
   }
 
 
@@ -823,15 +786,11 @@ $('#couponCreateForm button[type="submit"]').click(function () {
     name: $("#name").val(),
     code: $("#code").val(),
     description: $("#description").val(),
-    discount: $("#discount").val(),
-    minAmount: $("#minAmount").val(),
-    maxDiscount: $("#maxDiscount").val(),
-    startDate: $("#startDate").val(),
-    endDate: $("#endDate").val(),
-    usageLimit: $("#usageLimit").val(),
-    couponType: $("#couponType").val(),
-    products: $("#products").val(),
-    categories: $("#categories").val(),
+    discountPercentage: $("#percentage").val(),
+    startDate: $("#startingDate").val(),
+    expireDate: $("#expiryDate").val(),
+    minimumSpend: $("#minimum").val(),
+  
   };
 
   $.ajax({
@@ -884,15 +843,11 @@ $('#couponUpdateForm button[type="submit"]').click(function () {
     name: $("#name").val(),
     code: $("#code").val(),
     description: $("#description").val(),
-    discount: $("#discount").val(),
-    minAmount: $("#minAmount").val(),
-    maxDiscount: $("#maxDiscount").val(),
-    startDate: $("#startDate").val(),
-    endDate: $("#endDate").val(),
-    usageLimit: $("#usageLimit").val(),
-    couponType: $("#couponType").val(),
-    products: $("#products").val(),
-    categories: $("#categories").val(),
+    percentage: $("#percentage").val(),
+    startDate: $("#startingDate").val(),
+    expireDate: $("#expiryDate").val(),
+    minimum: $("#minimum").val(),
+    
   };
 
   console.log(formData);
@@ -918,7 +873,7 @@ $('#couponUpdateForm button[type="submit"]').click(function () {
       } else if (response.filled) {
         Swal.fire({
           icon: "info",
-          title: `Required fields contain only blank spaces`,
+          title:response.message,
         });
       } else if (response.duplicate) {
         Swal.fire({
@@ -941,57 +896,6 @@ $('#couponUpdateForm button[type="submit"]').click(function () {
 });
 
 
-
-// if(window.location.pathname === "/admin/getCreateOffer"){
-//   document.getElementById("couponType").addEventListener("change", function () {
-//     var couponType = this.value;
-//     if (couponType === "products") {
-//       document.getElementById("categories").value = "none";
-//       document.getElementById("productsSection").style.display = "inline-block";
-//       document.getElementById("categoriesSection").style.display = "none";
-//     } else if (couponType === "categories") {
-//       document.getElementById("products").value = "none";
-//       document.getElementById("productsSection").style.display = "none";
-//       document.getElementById("categoriesSection").style.display =
-//         "inline-block";
-//     }
-//   });
-
-//   }
-
-
-  // if (window.location.pathname.startsWith("/admin/getOfferEdit")) {
-    
-  
-  //   const product = document.getElementById("productValue").value;
-  //   const category = document.getElementById("categoriesValue").value;
-  //   const couponTypeSelect = document.getElementById("couponType");
-  //   if (!product) {
-  //     couponTypeSelect.value = "categories";
-  //     document.getElementById("categories").value = category;
-  //     document.getElementById("productsSection").style.display = "none";
-  //     document.getElementById("categoriesSection").style.display = "inline-block";
-  //   } else if (!category) {
-  //     couponTypeSelect.value = "products";
-  //     document.getElementById("products").value = product;
-  //     document.getElementById("productsSection").style.display = "inline-block";
-  //     document.getElementById("categoriesSection").style.display = "none";
-  //   }
-  
-  //   document.getElementById("couponType").addEventListener("change", function () {
-  //     var couponType = this.value;
-  //     if (couponType === "products") {
-  //       document.getElementById("categories").value = "none";
-  //       document.getElementById("productsSection").style.display = "inline-block";
-  //       document.getElementById("categoriesSection").style.display = "none";
-  //     } else if (couponType === "categories") {
-  //       document.getElementById("products").value = "none";
-  //       document.getElementById("productsSection").style.display = "none";
-  //       document.getElementById("categoriesSection").style.display =
-  //         "inline-block";
-  //     }
-  //   });
-  // }
 
 
 //offer submit
@@ -1573,72 +1477,75 @@ const handleDelete=(id,name)=>{
             }
 
          
-  function showModal(productId) {
+  function showModal(id,item) {
         $('#discountModal').modal('show');
         const offerElements = document.querySelectorAll('.modal-body.text-center');
         offerElements.forEach((element) => {
             element.onclick = function() {
                 const offerId = this.getAttribute('data-offerid');
-                enterOffer(offerId, productId); 
+                enterOffer(offerId,id,item); 
             };
         });
     }
 
-     async function enterOffer(offerId, productId) {
+    async function enterOffer(offerId, id, item) {
       $('#discountModal').modal('hide');
-        const response = await axios.patch( '/admin/apply_offer', { offerId, productId })
-        if( response.data.success ) {
-          
-          Swal.fire('Offer applied')
-          // updateOfferContent(productId, response.data.offer)
-          window.location.reload()
-        }else{
-          Swal.fire('Category offer has greater discount')
-        }
-    }
-
-     async function removeOffer(productId) {
-  try {
-    const confirmation = await Swal.fire({
-      title: 'Confirm Removal',
-      text: 'Are you sure you want to remove the offer?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Yes, remove it!',
-      cancelButtonText: 'Cancel'
-    });
-
-    if (confirmation.isConfirmed) {
-      const response = await axios.patch('/admin/remove_offer', { productId });
-      if (response.data.success) {
-        // updateOfferContent(productId, null);
-        Swal.fire('Offer Removed', '', 'success');
-        window.location.reload()
+      let response;
+      try {
+          if (item === 'category') {
+             
+              response = await axios.patch('/admin/apply_offer-category', { offerId, categoryId:id });
+          } else {
+             
+              response = await axios.patch('/admin/apply_offer', { offerId, productId:id });
+          }
+  
+          if (response.data.success) {
+              Swal.fire('Offer applied');
+              window.location.reload();
+          } else {
+              Swal.fire('Category offer has greater discount');
+          }
+      } catch (error) {
+          console.error('Error applying offer:', error);
+          Swal.fire('An error occurred while applying the offer');
       }
-    }
-  } catch (error) {
-    console.log(error.message);
-  }
-} 
-
-    function updateOfferContent(productId, offer) {
-  const offerCell = $(`tr[data-product-id="${productId}"] td:nth-child(6)`); // Update to the correct column index
-  const actionCell = $(`tr[data-product-id="${productId}"] td:nth-child(8)`);
-
-  if (offer) {
-    offerCell.html(`${offer.name} (${offer.percentage}%)`);
-    // actionCell.html(`<a href="#" onclick="removeOffer('${pkProductId}', 'product')" class="btn btn-md rounded font-sm">
-    //                         <i class=""></i> Remove Offer
-    //                     </a>`);
-  } else {
-    offerCell.text('No offers');
-    // actionCell.html(  `<a href="#" onclick="showModal('${pkProductId}', 'product')" class="btn btn-md rounded font-sm">
-    //                         <i class=""></i> Apply Offer
-    //                     </a>`);
   }
 
 
+  async function removeOffer(id, item) {
+    try {
+        const confirmation = await Swal.fire({
+            title: 'Confirm Removal',
+            text: 'Are you sure you want to remove the offer?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, remove it!',
+            cancelButtonText: 'Cancel'
+        });
+
+        if (confirmation.isConfirmed) {
+            let response;
+            if (item === 'category') {
+                response = await axios.patch('/admin/remove_offer-category', { categoryId: id });
+            } else {
+                response = await axios.patch('/admin/remove_offer', { productId: id });
+            }
+
+            if (response.data.success) {
+                Swal.fire('Offer Removed', '', 'success');
+                window.location.reload();
+            } else {
+                Swal.fire('Failed to remove offer', '', 'error');
+            }
+        }
+    } catch (error) {
+        console.error('Error removing offer:', error);
+        Swal.fire('An error occurred while removing the offer', '', 'error');
     }
+}
+
+  
 
 
     const handleDeleteImg=(id,productName)=>{

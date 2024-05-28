@@ -34,7 +34,56 @@ const  getCartCount= async(userId) =>{
     }
 
  }
+
+ const findTotalCartPrice=async(id)=>{
+  try {
+    let aggregatePipeline = [
+      {
+          $match: {
+            $or: [
+              { pkUserId: id }, // Match documents with the specified user ID
+              { _id: id } // or match documents with the specified _id
+            ],// Match documents with the specified user ID
+              strStatus: "Active"
+          }
+      },
+      {
+          $unwind: "$arrProducts" // Deconstruct the arrProducts array
+      },
+      {
+          $match: {
+              "arrProducts.strStatus": "Active" // Match only products with strStatus true
+          }
+      },
+      {
+          $group: {
+              _id: null,
+              total_cart_price: {
+                  $sum: {
+                      $multiply: [
+                          "$arrProducts.intQuantity",
+                          {
+                              $cond: {
+                                  if: { $ifNull: ["$arrProducts.offerPrice", false] }, // Check if offerPrice exists
+                                  then: "$arrProducts.offerPrice", // Use offerPrice if it exists
+                                  else: "$arrProducts.intPrice" // Otherwise, use intPrice
+                              }
+                          }
+                      ]
+                  }
+              }
+          }
+      }
+  ];
+ let totalCartPrice= await Cart.aggregate(aggregatePipeline)
+ return totalCartPrice
+  } catch (error) {
+    console.log(error.message)
+  }
+ }
   
   module.exports={
-    getCartCount
+    getCartCount,
+    findTotalCartPrice
+
   }

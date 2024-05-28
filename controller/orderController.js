@@ -21,7 +21,7 @@ const {getWishListCount}=require("../utils/wishlist")
   // change order status
   const changeOrderStatus=async(req,res)=>{
     try {
-     console.log(req.body);
+ 
       if(req.body.pkOrderId || req.body.pkUserId){
        let pkOrderId=new ObjectId(req.body.pkOrderId)
        let pkUserId=new ObjectId(req.body.pkUserId)
@@ -85,20 +85,21 @@ const {getWishListCount}=require("../utils/wishlist")
        let pkUserId =new ObjectId(req.query.pkUserId)
        let pkOrderId =new ObjectId(req.query.pkOrderId)
        let orderDetails=await Order.aggregate([{$match:{pkUserId,pkOrderId,strStatus:"Active"}}])
-       
-       let cartCount=0
+       let wishListCount=await getWishListCount(pkUserId)
+       let cartCount= await getCartCount(pkUserId)
+    
        if (orderDetails && orderDetails.length) {
          
-         let cartCount= await getCartCount(pkUserId)
+        
          let orderProducts= await orderDetails[0].arrProductsDetails.map(obj=>{
            let intTotalPrice=obj.intQuantity*obj.intPrice
            return {...obj,intTotalPrice:intTotalPrice}
             
          })
          
-          res.render("user/orderDetails",{layout:"user_layout",success:true,deliveryAddress:orderDetails[0].arrDeliveryAddress,orderProducts,orderDetails,pkUserId,cartCount ,message:"successfully loaded cart page",user:true})
+          res.render("user/orderDetails",{layout:"user_layout",success:true,deliveryAddress:orderDetails[0].arrDeliveryAddress,wishListCount,orderProducts,orderDetails,pkUserId,cartCount ,message:"successfully loaded cart page",user:true})
         } else {
-         res.render("user/orderDetails",{layout:"user_layout",success:true,user:true,pkUserId,cartCount})
+         res.render("user/orderDetails",{layout:"user_layout",success:true,user:true,pkUserId,cartCount,wishListCount})
         }
        }else{
  
@@ -148,22 +149,44 @@ const {getWishListCount}=require("../utils/wishlist")
       // let userAddress=await Address.aggregate([{ $match:{ pkUserId:pkUserId,strStatus:"Active" }}])
     
      
-      let cartDetails=await Cart.aggregate([{ $match:{ pkUserId:pkUserId,strStatus:"Active" }}])
+      let cartDetailsFind=await Cart.find({ pkUserId:pkUserId,strStatus:"Active" }).populate('arrProducts.offer');
       
       
-      if (cartDetails && cartDetails.length) {
-         let grandTotal=0
+      if (cartDetailsFind && cartDetailsFind.length) {
+        
         let cartCount= await getCartCount(userId) 
         let wishListCount=await getWishListCount(userId)
+
+        let cartDetails = cartDetailsFind.map(cart => {
+          
+          return {
+            ...cart._doc,
+         
+          };
+        });
+
         let cartProducts=cartDetails[0].arrProducts.map(obj=>{
           let intTotalPrice=obj.intQuantity*obj.intPrice
-          let totalOfferPrice=obj.intQuantity*obj.offerPrice
-          grandTotal+=obj.intQuantity*obj.offerPrice
-          let discount=obj.intQuantity*obj.offer
-          return {...obj,intTotalPrice:intTotalPrice, totalOfferPrice,discount}
+          let dataToAdd={
+             intTotalPrice
+          }
+           if(obj.offer){
+            let totalOfferPrice=obj.intQuantity*obj.offerPrice
+            let discount=intTotalPrice-totalOfferPrice
+            dataToAdd={
+              ...dataToAdd,
+              totalOfferPrice,
+              discount
+            }
+            
+           }
+         
+        
+          return {...obj._doc,...dataToAdd}
            
         })
-     
+        console.log(cartProducts)
+    
         const productAndCategoryIdsInOrder = cartDetails[0].arrProducts.map((item) => ({
           productId: item.pkProductId,
           categoryId: item.fkcategoryId,
@@ -205,7 +228,7 @@ const {getWishListCount}=require("../utils/wishlist")
           if(wallet.length){
             walletBalance= wallet[0].balance
           }
-       res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,wishListCount,pkUserId,cartDetails,cartCount ,walletBalance,coupons,grandTotal,message:"successfully loaded cart page",user:true})
+       res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,wishListCount,pkUserId,cartDetails,cartCount ,walletBalance,coupons,message:"successfully loaded cart page",user:true})
        } else {
         res.redirect("/")
        }
@@ -565,7 +588,7 @@ const {getWishListCount}=require("../utils/wishlist")
            }
           
           })
-           console.log(usersOrders);
+          
           res.render("admin/orderList",{layout:"admin_layout",admin:true,usersOrders})
          }
          else{

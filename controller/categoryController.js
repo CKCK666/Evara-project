@@ -9,7 +9,7 @@ const { ObjectId} = require('mongodb');
 const {USER_COLLECTION,ADMIN_COLLECTION, CATEGORY_COLLECTION, PRODUCTS_COLLECTION, ORDER_COLLECTION}=require("../config/collections");
 const { log, logger } = require("handlebars");
 const User = require("../models/userModel")
- 
+const Offer= require("../models/offerModel")
  
  
  
@@ -52,12 +52,19 @@ const User = require("../models/userModel")
     try {
       let count=await Category.countDocuments()
       if(count>0){
-        let result=await Category.find({strStatus:{$ne:"Deleted"}})
+        let result=await Category.find({strStatus:{$ne:"Deleted"}}).populate({
+          path: 'offer',
+          match: { status: true }
+      });
        
       
         let categories= result.map((category,index)=>({...category._doc,index:index+1}))
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const availableOffers = await Offer.aggregate([{$match:{ status : true, expiryDate : { $gte : today }}}])
+
          
-        res.render("admin/categoryPage",{layout:"admin_layout",count,categories,admin:true})
+        res.render("admin/categoryPage",{layout:"admin_layout",count,categories,admin:true,availableOffers})
       }
       else{
         res.render("admin/categoryPage",{layout:"admin_layout",count,admin:true})
@@ -201,10 +208,104 @@ if(req.body.description){
    }
   }
 
+  const applyCategoryOffer = async (req,res,next) => {
+    try {
+      const { offerId, categoryId } = req.body;
+  
+      // Get the category discount
+      const categoryOffer = await Offer.findOne({ _id: offerId });
+  
+      if (!categoryOffer) {
+        return res.json({ success: false, message: 'Category Offer not found' });
+      }
+  
+      // Update the category with the offer
+      await Category.updateOne({ _id: categoryId }, { $set: { offer: offerId } });
+  
+      // Update discounted prices for all products in the category
+      const productsInCategory = await Product.find({ fkcategoryId:new ObjectId(categoryId) });
+  
+      for (const product of productsInCategory) {
+        const productOffer = product.offer ? await Offer.findOne({ _id: product.offer }) : null;
+  
+        // Check if the product has no offer or the category offer has a greater discount
+        if (!product.offer || (productOffer && productOffer.percentage < categoryOffer.percentage)) {
+          const originalPrice = parseFloat(product.intPrice);
+          const offerPrice = originalPrice - (originalPrice * categoryOffer.percentage) / 100;
+  
+          // Update the product with the category offer details
+          await Product.updateOne(
+            { _id: product._id },
+            {
+              $set: {
+                offer: offerId,
+                offerPrice: offerPrice,
+              },
+            }
+          );
+        }
+      }
+  
+      res.json({ success: true });
+    } catch (error) {
+      
+      next(error)
+    }
+  };
+
+  
+  const removeCategoryOffer = async (req,res,next) => {
+    try {
+      const { categoryId } = req.body;
+  
+      // Get the category offer
+      const category = await Category.findById(categoryId).populate('offer');
+  
+      if (!category) {
+        return res.json({ success: false, message: 'Category not found' });
+      }
+  
+      // Update category to remove the offer
+      await Category.updateOne({ _id: categoryId }, { $unset: { offer: '' } });
+  
+      // Update all products in the category to remove offer details and reset discounted prices
+      const productsInCategory = await Product.find({ fkcategoryId:new ObjectId(categoryId) });
+  
+      for (const product of productsInCategory) {
+        if (product.offer) {
+          const productOffer = await Offer.findById(product.offer);
+  
+          // Check if the product has a greater discount than the category's offer
+          if (productOffer && productOffer.percentage > category.offer.percentage) {
+            continue; // Skip this product, as it has a greater discount
+          }
+        }
+  
+        // Remove the offer and reset discounted prices for the product
+        await Product.updateOne(
+          { _id: product._id },
+          {
+            $unset: {
+              offer: '',
+              offerPrice: '',
+            },
+          }
+        );
+      }
+  
+      res.json({ success: true });
+    } catch (error) {
+      
+      next(error)
+    }
+  };
+  
+
   module.exports={
     addCategory,
     getCategoryPage,deleteCategory,
     blockCategory,getEditCategory,
-    editCategory,
+    editCategory,applyCategoryOffer,
+    removeCategoryOffer
 
   }

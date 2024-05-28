@@ -36,7 +36,7 @@
                   <td>{{name}}</td>
                   <td>{{dateStatus startingDate}}</td>
                    <td>{{formatDate expiryDate}}</td>
-                 {{#if status}} <td>Active</td> {{else}} <td>Blocked</td> {{/if}}
+                 {{#if status}} <td>{{checkExpiry expiryDate status}}</td> {{else}} <td>Blocked</td> {{/if}}
                 
                   <td>{{percentage}}%</td>
                  

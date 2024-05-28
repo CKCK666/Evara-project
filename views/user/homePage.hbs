@@ -107,7 +107,7 @@
          <section class="product-tabs pt-25 pb-20 wow fadeIn animated">
             <div class="container">
                 <div class="row">
-                    <div class="col-lg-3">
+                    {{!-- <div class="col-lg-3">
                      
                         <div class="widget-category mb-30">
                             <h5 class="section-title style-1 mb-30 wow fadeIn animated">Sort by</h5>
@@ -120,7 +120,7 @@
                         </div>
                       
                         
-                    </div>
+                    </div> --}}
                     <div class="col-lg-9">
                         <div class="tab-header">
                             <ul class="nav nav-tabs" id="myTab" role="tablist">
@@ -147,21 +147,24 @@
                                             <div class="product-img-action-wrap">
                                                 <div class="product-img product-img-zoom">
                                                     <a href="shop-product-right.html">
-                                                        <img class="default-img" src="/uploads/{{mainProductUrl}}" alt="">
+                                               
                                                         {{#if arrayOtherImages}}
-                                                {{#each products.[0].arrayOtherImages}}
-                                                        <img class="hover-img" src="/uploads/{{imageUrl1}}" alt="">
+                                                {{#each arrayOtherImages}}
+                                                         <img class="default-img" src="/uploads/{{this}}" alt="">
+                                                        <img class="hover-img" src="/uploads/{{this}}" alt="">
                                                         {{/each}}
                                                 {{/if}}
                                                     </a>
                                                 </div>
                                                 <div class="product-action-1">
-                                                    <a aria-label="Quick view" class="action-btn hover-up" data-bs-toggle="modal" data-bs-target="#quickViewModal"><i class="fi-rs-eye"></i></a>
+                                                    
                                                     <a aria-label="Add To Wishlist" class="action-btn hover-up" onclick=" handleAddToWishList('{{pkProductId}}','{{pkUserId}}')"><i class="fi-rs-heart"></i></a>
-                                                    <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
+                   <a aria-label="Add To Cart" class="action-btn hover-up" onclick="handleAddToCart('{{pkProductId}}','{{pkUserId}}')"><i class="fi-rs-shopping-bag-add"></i></a>
                                                 </div>
                                                 <div class="product-badges product-badges-position product-badges-mrg">
-                                                    <span class="hot">Hot</span>
+
+                                                 {{#if offer}}   <span class="hot">-{{{json offer}}}%</span> {{/if}}
+                                                   
                                                 </div>
                                             </div>
                                             <div class="product-content-wrap">
@@ -169,15 +172,22 @@
                                                     <a href="shop-grid-right.html">Clothing</a>
                                                 </div>
                                                 <h2><a href="/getProduct?pkProductId={{pkProductId}}">{{strProductName}}</a></h2>
-                                                <div class="rating-result" title="90%">
+                                                {{!-- <div class="rating-result" title="90%">
                                                     <span>
                                                         <span>90%</span>
                                                     </span>
-                                                </div>
+                                                </div> --}}
+                                                {{#if offer}}
                                                 <div class="product-price">
-                                                    <span>₹{{intPrice}}</span>
-                                                    {{!-- <span class="old-price">$245.8</span> --}}
+                                                    <span>₹{{offerPrice}}</span>
+                                                    <span class="old-price">₹{{intPrice}}</span>
                                                 </div>
+                                                {{else}}
+                                                  <div class="product-price">
+                                                    <span>₹{{intPrice}}</span>
+                                                    
+                                                </div>
+                                                {{/if}}
                                                 <div class="product-action-1 show">
                                                     <a aria-label="Add To Cart" class="action-btn hover-up" onclick="handleAddToCart('{{pkProductId}}','{{pkUserId}}')"><i class="fi-rs-shopping-bag-add"></i></a>
                                                 </div>

@@ -18,6 +18,7 @@
                     <div class="col-12">
                         <div class="table-responsive">
                             <table class="table shopping-summery text-center clean">
+                           
                                  {{#if cartProducts}}
                                 <thead>
                                     <tr class="main-heading">
@@ -37,25 +38,32 @@
                                     <tr class="cart-product-details">
                                         <input type="hidden" id="pkProductId" value={{pkProductId}}>
                                         <input type="hidden" id="intStock" value={{intStock}} >
-                                        <td class="image product-thumbnail"><img src="/uploads/{{mainProductUrl}}" alt="#"></td>
+                                        <td class="image product-thumbnail"><img src="/uploads/{{arrayOtherImages.[0]}}" alt="#"></td>
                                         <td class="product-des product-name">
-                                            <h5 class="product-name"><a href="shop-product-right.html">{{strProductName}}</a></h5>
+                                            <h5 class="product-name">{{strProductName}}</h5>
                                             <p class="font-xs">{{strDescription}}<br> .
                                             </p>
                                         </td>
-                                        <td class="price" data-title="Price"><span>{{intPrice}}</span></td>
+                                        <td class="price" data-title="Price"><span>{{#if offer}} {{offerPrice}} {{else}} {{intPrice}} <span class="space"></span> {{/if}}</span>
+                                      {{#if offer}}  <span class="old-price font-md ml-15"> <del>{{intPrice}}</del></span>
+                                      
+                                       {{/if}}
+                                      
+                                        </td>
+                                        
                                         <td class="text-center" data-title="Stock">
                                             <div class="detail-qty border radius  m-auto">
                                                 {{!-- <a onclick="handleQuantity('-1','{{pkProductId}}')" href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
                                                 <span id="qty-val" class="qty-val">{{intQuantity}}</span>
                                                 <a href="#" onclick="handleQuantity('1','{{pkProductId}}')" class="qty-up"><i class="fi-rs-angle-small-up"></i></a> --}}
-                                                  <a  href="#" class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
+                                                  <a class="qty-down"><i class="fi-rs-angle-small-down"></i></a>
                                               <span id="qty-val" class="qty-val">{{intQuantity}}</span>
-                                                <a href="#"  class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
+                                                <a  class="qty-up"><i class="fi-rs-angle-small-up"></i></a>
                                             </div>
                                         </td>
                                         <td class="text-right" data-title="Cart">
-                                            <span class="product-total-amount">{{intTotalPrice}}</span>
+                                           
+                                            <span class="product-total-amount"> {{intTotalPrice}}</span>
                                         </td>
                                         <td class="action" data-title="Remove"><a href="#"  class="text-muted removeFromCart"
                                         data-pk-cart-id="{{pkCartId}}" data-pk-product-id="{{pkProductId}}" 
@@ -127,3 +135,19 @@
                 </div>
             </div>
         </section>
+
+        <style>
+   
+    .price span {
+        display: inline-block;
+        margin-right: 10px; /* Adds space between the prices */
+    }
+    .old-price {
+        text-decoration: line-through;
+        color: red;
+    }
+    .space {
+        display: inline-block;
+        width: 50px; /* Adjust the width as needed for spacing */
+    }
+</style>

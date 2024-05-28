@@ -76,7 +76,8 @@
                                             <th>Sl.No</th>
                                             <th>Category</th>
                                             <th>Description</th>
-                                            <th  class="text-center">Status</th>
+                                            <th>Offer</th>
+                                            <th class="text-center">Status</th>
                                             <th class="text-center">Action</th>
                                         </tr>
                                         {{/if}}
@@ -89,14 +90,18 @@
                                             <td>{{index}}</td>
                                             <td><b>{{strCategoryName}}</b></td>
                                             <td>{{strDescription}}</td>
+                                            <td>50%</td>
                                             <td  class="text-center"><span class="badge rounded-pill  {{#eq strStatus 'Blocked'}}alert-warning{{else}}{{#eq strStatus 'Active'}}alert-success{{else}}{{/eq}}{{/eq}}">{{strStatus}}</span></td>
                                             
-                                            <td class="text-center">
+                                            <td>
                                                 
                                                  
                                                  <a href="/admin/getCategoryEdit?pkCategoryId={{pkCategoryId}}" class="btn btn-md rounded font-sm " ><i class="fas fa-edit"></i>Edit</a>
                                                       <a href="#" onclick="handleBlock('{{pkCategoryId}}','{{strStatus}}','category')"class="btn btn-md rounded font-sm "style="width: 94px;" ><i class="{{#eq strStatus 'Blocked'}}fas fa-check-circle{{else}}fas fa-ban{{/eq}}"></i>{{#eq strStatus 'Blocked'}}Unblock{{else}}Block{{/eq}}</a>
-                                                  <a href="#" onclick="handleDelete('{{pkCategoryId}}', 'category')" class="btn btn-md rounded font-sm"><i class="fas fa-trash-alt" ></i>Delete</a>
+                                                  {{!-- <a href="#" onclick="handleDelete('{{pkCategoryId}}', 'category')" class="btn btn-md rounded font-sm"><i class="fas fa-trash-alt" ></i>Delete</a> --}}
+                                                    {{#if offer}}  <a  onclick="removeOffer('{{_id}}', 'category')" class="btn btn-md rounded font-sm">Remove offer</a>    {{else}}
+                                                    <a  onclick="showModal('{{_id}}', 'category')" class="btn btn-md rounded font-sm">Apply offer</a> 
+                                                     {{/if}} 
                                             </td>
                                         </tr>
                                         {{/each}}
@@ -112,6 +117,32 @@
                     </div> <!-- .row // -->
                 </div> <!-- card body .// -->
             </div> <!-- card .// -->
+
+<div class="modal fade" id="discountModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" >
+          <div class="modal-dialog" role="document">
+            
+                 {{#if availableOffers}}
+                 {{#each availableOffers}}
+                  <div class="modal-content rounded-0">
+                    <div data-offerid="{{_id}}" style="cursor: pointer;" class="modal-body text-center" aria-hidden="true">
+                          <div class="icon text-danger">
+                              <i style="font-size: 20px;" class="fas fa-gift"></i>
+                          </div>
+                          <div class="notice">  
+                      
+                                  <h2>{{name}}</h2>                          
+                                  <h4>{{percentage}}% Discount</h4>
+                              <p>Valid from {{formatDate startingDate}} to {{formatDate expiryDate}} </p>
+                          </div>
+                          <div class="code"></div>
+                      </div>
+                  </div>
+                  {{/each}}
+               {{/if}}
+          </div>
+        </div>
+
+
             
         </section>
        

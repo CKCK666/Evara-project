@@ -32,6 +32,21 @@ handlebars.registerHelper('dateStatus', function(startDate) {
     return  formattedStartDate;
   }
 });
+handlebars.registerHelper('checkExpiry', function(endDate,status) {
+  const today = moment(); // Get current date and time
+  const end = moment(endDate);
+  if (end.isBefore(today, 'day')) { 
+      return "Expired";
+  } else {
+    const formattedStartDate = status?"Active":"Blocked"
+ 
+    return  formattedStartDate;
+  }
+});
+handlebars.registerHelper('json', function(context) {
+return context.percentage
+
+});
 app.set("views",path.join(__dirname,"views"))
 const hbs = exphbs.create({
   handlebars: handlebars,

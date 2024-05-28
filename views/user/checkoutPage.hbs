@@ -106,18 +106,18 @@
                                         {{#if cartProducts}}
                                         {{#each cartProducts}}
                                         <tr>
-                                            <td class="image product-thumbnail"><img src="/uploads/{{mainProductUrl}}" alt="#"></td>
+                                            <td class="image product-thumbnail"><img src="/uploads/{{arrayOtherImages.[0]}}" alt="#"></td>
                                             <td>
-                                                <h5><a href="shop-product-full.html">{{strDescription}}</a></h5> <span class="product-qty">x {{intQuantity}}</span>
+                                                <h5><a href="shop-product-full.html">{{strDescription}}</a></h5> <span class="product-qty">{{intPrice}} x {{intQuantity}}</span>
                                             </td>
                                             <td>
                                                 <div class="containter10">
+                                                     <ul style="list-style-type: none; padding: 0; margin: 0;">
+            <li style="padding-bottom: 5px;">Total price: {{intTotalPrice}}</li>
+          {{#if offer}}  <li style="padding-bottom: 5px;">Discount: -{{discount}}</li>
+            <li style="color: #bd2130;">Discount price: {{totalOfferPrice}}</li>{{/if}}
+        </ul>
 
-                                              
-                                                <h6>Total price:{{intTotalPrice}}</h6>
-                                                  <h6>Discount:-{{discount}}</h6>
-                                                 <h6>Discount price:{{totalOfferPrice}}</h6>
-                                                   </div>
                                             </td>
                                         </tr>
                                         {{/each}}
@@ -130,14 +130,14 @@
                                             <th>Shipping</th>
                                             <td colspan="2"><em>Free Shipping</em></td>
                                         </tr>
-                                        <tr>
+                                        {{!-- <tr>
                                             <th>Total</th>
                                             <td colspan="2" class="product-subtotal totalAmt"><span class="font-xl text-brand fw-900">₹{{cartDetails.[0].total_cart_price}}</span></td>
-                                        </tr>
+                                        </tr> --}}
                                       
                                         <tr>
-                                            <th>Grand Total After Discount</th>
-                                            <td colspan="2" class="product-subtotal grandTotalAmt"><span class="font-xl text-brand fw-900">₹{{grandTotal}}</span></td>
+                                            <th>Order Total</th>
+                                            <td colspan="2" class="product-subtotal grandTotalAmt"><span class="font-xl text-brand fw-900">₹{{cartDetails.[0].total_cart_price}}</span></td>
                                         </tr>
                                     
                                         {{/if}}
@@ -223,16 +223,5 @@
 .button-group button:last-child {
     margin-right: 0; /* Remove margin-right for the last button to prevent extra space */
 }
-.container10 {
-    display: flex; /* Use flexbox layout */
-    flex-direction: row; /* Align items horizontally */
-    align-items: center; /* Center items vertically */
-}
 
-.container10 h4,
-.container10 h5,
-.container10 p,
-.container10 h6 {
-    margin: 0; /* Remove default margins */
-}
         </style>

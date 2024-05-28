@@ -69,6 +69,7 @@
                         </td>
                     <td><a href="#">{{strProductName}}</a></td>
                     <td>{{intPrice}}</td>
+                   
                     <td><span id="statusId" class="badge rounded-pill {{#eq strStatus 'Blocked'}}alert-warning{{else}}{{#eq strStatus 'Active'}}alert-success{{else}}{{/eq}}{{/eq}}">{{strStatus}}</span></td>
                       <td>{{#if offer}}{{offerPercentage}}% {{else}}NO OFFER{{/if}}</td>
                    <td>{{#if offer}}{{offerName}}{{else}} {{/if}} </td>

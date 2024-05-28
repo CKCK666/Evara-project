@@ -69,7 +69,8 @@
                                   
                                           <div class="col-md-5">
                                         <select class="form-select" name="pkCategoryId">
-                                         {{#if categories}} {{#each categories}}<option value="{{pkCategoryId}}">{{strCategoryName}}</option>{{/each}}{{/if}}
+                                        
+                                         {{#if categories}} {{#each categories}}<option value="{{this._id}}" {{#if this.defaultSelect}}selected{{/if}}>{{this.strCategoryName}}</option>{{/each}}{{/if}}
                                            
                                         </select>
                                     </div>

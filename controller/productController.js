@@ -10,7 +10,7 @@ const { log, logger } = require("handlebars");
 const User = require("../models/userModel")
 const Cart = require("../models/cartModel")
 const Offer= require("../models/offerModel")
-const {getCartCount}=require("../utils/cart")
+const {getCartCount,findTotalCartPrice}=require("../utils/cart")
 const {getWishListCount}=require("../utils/wishlist")
 const Wishlist = require("../models/wishListModel")
 
@@ -23,7 +23,7 @@ const getProductList=async(req,res)=>{
         path: 'offer',
         match: { status: true }
     });
-    
+
        let products= result.map((product,index)=>{
          const isoDate = product.createdDate;
          const date = new Date(isoDate);
@@ -38,8 +38,10 @@ const getProductList=async(req,res)=>{
           }
          
          })
-         const availableOffers = await Offer.aggregate([{$match:{ status : true, expiryDate : { $gte : new Date() }}}])
-     
+         const today = new Date();
+         today.setHours(0, 0, 0, 0);
+         const availableOffers = await Offer.aggregate([{$match:{ status : true, expiryDate : { $gte : today }}}])
+       
          res.render("admin/listProducts",{layout:"admin_layout",products,admin:true,availableOffers})
        }
      else{
@@ -160,24 +162,53 @@ const getProductList=async(req,res)=>{
    //edit product page
    const getProductEdit=async(req,res)=>{
      try {
-       let categories=await Category.find({strStatus:{$ne:"Deleted"}})
-       let catToArray=categories.map((doc)=>({
-         ...doc._doc
-       }))
+      let categories = await Category.aggregate([
+        {
+          $match: {
+            strStatus: { $ne: "Deleted" }
+          }
+        }
+      ]);
+      
        if(req.query.pkProductId){
         
          const pkProductId = new ObjectId(req.query.pkProductId);
         
-         let product=await Product.aggregate([{$match:{pkProductId:pkProductId,strStatus:{$ne:"Deleted"}}}])
+         const productObj = await Product.find({
+          pkProductId: pkProductId,
+          strStatus: { $ne: "Deleted" }
+      }).populate('fkcategoryId');
+      let product=productObj.map((pro)=>{
+       return{
+       ... pro._doc
+       }
+      })
        
-         if (product.length) {
+         if (product && product[0].arrayOtherImages && product[0].arrayOtherImages.length > 0) {
           let proImgArray=product[0].arrayOtherImages.map((pro,index)=>{
             return{
               pro,
               pkProductId
             }
           })
-          
+          let catToArray = categories.map(category => {
+           
+            if (category._id.toString()===product[0].fkcategoryId._id.toString()) {
+              
+              return {
+                ...category,
+                defaultSelect: true
+                
+              };
+            } else {
+              
+              return {
+                ...category,
+              
+              }
+            }
+          });
+      
            res.render("admin/editProduct",{layout:"admin_layout",product,categories:catToArray,admin:true,proImgArray})
          } else {
            res.redirect("/admin/listProduct",{layout:"admin_layout",admin:true})
@@ -202,117 +233,108 @@ const getProductList=async(req,res)=>{
      try {
     
        if(req.body.pkProductId){
- 
+   
      let pkProductId=new ObjectId(req.body.pkProductId)
       let stock= parseInt(req.body.intStock)
-    
-    
+       
+     
         const existingProduct= await Product.find({strProductName:req.body.strProductName,strStatus:{$ne:"Deleted"},pkProductId:{$ne:pkProductId}})
      
        if(existingProduct.length){
          return res.json({success:false,message:"Product name already exist"})
        }
-         
+let productOffer= await Product.find({pkProductId,strStatus:"Active"}).populate("offer")
        let dataToAdd={
        
          strProductName:req.body.strProductName,
          strDescription:req.body.strDescription,
-         fkcategoryId:req.body.pkCategoryId,
+         fkcategoryId:new ObjectId(req.body.pkCategoryId),
          intPrice:parseFloat(req.body.intPrice),
          intStock:stock,
          updatedDate:new Date()
+       }
+       if(productOffer.length>0 && productOffer[0].offer){
+         let discount=parseFloat(req.body.intPrice)*parseFloat(productOffer[0].offer.percentage)/100
+         let offerPrice=parseFloat(req.body.intPrice)-discount
+         dataToAdd={...dataToAdd,offerPrice:offerPrice}
        }
      let result = await Product.updateOne({pkProductId},{$set:dataToAdd})
       
       if(result.modifiedCount>0){
       
-        let productObj=await Product.findOne({pkProductId})
+        let productObj=await Product.findOne({pkProductId}).populate({  path: 'offer',
+        match: { status: true }})
+      console.log(productObj)
+        const wishlists = await Wishlist.find({ "arrProducts.pkProductId": pkProductId, "strStatus": "Active" });
         
-      //     {
-      //         $match: {
-      //             "arrProducts.pkProductId": pkProductId,
-      //             "strStatus": "Active"
-      //         }
-      //     },
-      //     {
-      //         $addFields: {
-      //             arrProducts: {
-      //                 $filter: {
-      //                     input: "$arrProducts",
-      //                     as: "product",
-      //                     cond: { $ne: ["$$product.pkProductId",pkProductId] }
-      //                 }
-      //             }
-      //         }
-      //     },
-      //     {
-      //         $push: {
-      //             arrProducts: {
-      //               $each: productArray
-      //             }
-      //         }
-      //     }
-      // ]);
 
-
-// Find all wishlists that contain the product to be updated
-const wishlists = await Wishlist.find({ "arrProducts.pkProductId": pkProductId, "strStatus": "Active" });
-
-// Loop through each wishlist and update it individually
-for (const wishlist of wishlists) {
-    // Pull the existing product from arrProducts
-    await Wishlist.updateOne(
-        { _id: wishlist._id },
-        { $pull: { "arrProducts": { "pkProductId": pkProductId } } }
-    );
-
-    // Push the new product into arrProducts
-    wishlist.arrProducts.push({
-      pkProductId: productObj.pkProductId,
-        strProductName: productObj.strProductName,
-        strDescription: productObj.strDescription,
-        fkcategoryId: productObj.fkcategoryId,
-        intPrice: productObj.intPrice,
-        intStock: productObj.intStock,
-        intQuantity: productObj.intQuantity
-
-
+        if(wishlists.length>0){
+          for (const wishlist of wishlists) {
+            // Find the product in the arrProducts array
+            const productIndex = wishlist.arrProducts.findIndex(product =>product.pkProductId.toString()==pkProductId.toString() );
+            
+            if (productIndex !== -1) {
+              // Update the product properties
+              let updatedProduct = {
+                pkProductId:productObj.pkProductId,
+                strProductName: productObj.strProductName,
+                strDescription: productObj.strDescription,
+                fkcategoryId: productObj.fkcategoryId,
+                intPrice: productObj.intPrice,
+                intStock: productObj.intStock,
+                intQuantity: productObj.intQuantity,
+                arrayOtherImages:productObj.arrayOtherImages
+              };
+              
+              // Check if there is an offer and add the offerPrice property
+              if (productObj.offer) {
+                console.log("product offer")
+                let discount=parseFloat(req.body.intPrice)*parseFloat(productObj.offer.percentage)/100
+                let offerPrice=parseFloat(req.body.intPrice)-discount
+                console.log(offerPrice)
+                updatedProduct={
+                  ...updatedProduct,
+                  offerPrice,
+                  offer:new ObjectId(productObj.offer._id)
+                }
+              }
+             
+          
+              // Update the product in the wishlist's arrProducts array
+              wishlist.arrProducts[productIndex] = updatedProduct;
+          
+              // Update the wishlist in the database
+              await Wishlist.updateOne(
+                { _id: wishlist._id, "arrProducts.pkProductId": pkProductId,strStatus:"Active" },
+                { $set: { "arrProducts.$": wishlist.arrProducts[productIndex] } }
+              );
+            }
+            else{
+              console.log("errrorrrrrr")
+            }
+          }
 
 
 
-    });
+        }
 
-    // Save the updated wishlist
-    await wishlist.save();
-}
-
+       
+        
 
 
         //update cart 
-        await Cart.updateMany({ "arrProducts.pkProductId": pkProductId, "arrProducts.intQuantity": { $gt: stock } },
+        await Cart.updateMany({ "arrProducts.pkProductId": pkProductId,strStatus:"Active", "arrProducts.intQuantity": { $gt: stock } },
         { $set: { "arrProducts.$.intQuantity": stock } },)
 
       // Calculate total_cart_price for each document
-const carts = await Cart.aggregate([
-  {
-    $match: { "arrProducts.pkProductId": pkProductId } // Filter to match documents containing the specified product
-  },
-  {
-    $set: {
-      total_cart_price: {
-        $sum: {
-          $map: {
-            input: "$arrProducts",
-            as: "product",
-            in: { $multiply: ["$$product.intQuantity", "$$product.intPrice"] }
-          }
-        }
-      }
-    }
-  }
-])
-console.log(carts)
-// If no documents found, handle the scenario
+      const carts = await Cart.aggregate([
+        {
+          $match: { "arrProducts.pkProductId": pkProductId,strStatus:"Active" } // Filter to match documents containing the specified product
+        },
+      
+      ]);
+     
+
 if (carts.length === 0) {
   console.log("No documents found in Cart collection.");
   return   res.json({success:true,message:"Successfully edited product"})
@@ -322,8 +344,19 @@ if (carts.length === 0) {
 const updatePromises = carts.map(async cart => {
   const updatedProducts = cart.arrProducts.map(product => {
     if (product.pkProductId.equals(pkProductId)) {
-      product.intStock = stock;
-    }
+      product.intStock = stock,
+      product.strProductName= productObj.strProductName,
+      product.strDescription= productObj.strDescription,
+      product.fkcategoryId =productObj.fkcategoryId,
+      product.intPrice=productObj.intPrice
+      if(product.offer){
+        let discount=parseFloat(req.body.intPrice)*parseFloat(productOffer[0].offer.percentage)/100
+        let offerPrice=parseFloat(req.body.intPrice)-discount
+        product.offerPrice=offerPrice
+      }
+    
+     
+     }
     return product;
   });
 
@@ -332,10 +365,25 @@ const updatePromises = carts.map(async cart => {
     {
       $set: {
         arrProducts: updatedProducts,
-        total_cart_price: cart.total_cart_price
+       
       }
     }
   );
+  let totalPriceResult = await findTotalCartPrice(cart._id)
+
+
+  await Cart.updateOne(
+    { _id: cart._id },
+    {
+      $set: {
+        
+        total_cart_price:  totalPriceResult[0].total_cart_price
+      }
+    }
+  );
+
+
+
 });
 
 // Execute all update operations
@@ -504,14 +552,15 @@ await Promise.all(updatePromises);
          let cartCount=  await getCartCount(pkUserId)
       
            let wishListCount=await getWishListCount(pkUserId)
-        let productFind =await Product.find({pkProductId:pkProductId,strStatus:"Active"})
+        let productFind =await Product.find({pkProductId:pkProductId,strStatus:"Active"}).populate({
+          path:"offer",match:{status:true }   })
         let product=productFind.map((pro)=>{
            return{...pro._doc}
         })
         let categories=await Category.aggregate([{$match:{strStatus:"Active"}}])
           if(product.length){
-            
-          res.render("user/productSingle",{layout:"user_layout",user:true,product,imageUrl1:product[0].arrayOtherImages[0].imageUrl1,imageUrl2:product[0].arrayOtherImages[1].imageUrl2,pkUserId,cartCount,categories,wishListCount})
+          
+          res.render("user/productSingle",{layout:"user_layout",user:true,product,pkUserId,cartCount,categories,wishListCount})
           }
           else{
             res.json({success:false,message:"product  not found"})
@@ -527,16 +576,17 @@ await Promise.all(updatePromises);
   const sortProducts=async(req,res)=>{
     let pkUserId=req.session.user.pkUserId
     try {
-      
+      console.log(req.query);
+
       let sort={createdDate:-1}
        let search={strStatus: 'Active'}
-      if(req.query.lowToHigh){
+      if(req.query.sort=='asc'){
         sort={
          
           intPrice:1
         }
       }
-      if(req.query.highToLow){
+      if(req.query.sort=='desc'){
         sort={
          
           intPrice:-1
@@ -553,7 +603,8 @@ await Promise.all(updatePromises);
       }
   
       }
-      if(req.query.pkCategoryId && req.query.productName && req.query.pkCategoryId!="All Categories"){
+
+      if(req.query.pkCategoryId && req.query.productName && req.query.pkCategoryId!="AllCategories"){
         let productName=req.query.productName
         let fkcategoryId=new ObjectId(req.query.pkCategoryId)
         search={
@@ -669,6 +720,54 @@ const applyProductOffer = async (req, res,next) => {
     );
 
     const updatedProduct = await Product.findOne({ _id: productId }).populate('offer');
+
+    const carts = await Cart.aggregate([
+      {
+        $match: { "arrProducts.pkProductId": product.pkProductId,strStatus:"Active" } // Filter to match documents containing the specified product
+      },
+    
+    ]);
+    console.log(carts);
+    const updatePromises = carts.map(async cart => {
+      const updatedProducts = cart.arrProducts.map(pro => {
+        if (pro.pkProductId.equals(product.pkProductId)) {
+          pro.offer= offerId,
+          pro.offerPrice= discountedPrice
+         }
+        return pro;
+      });
+    
+      await Cart.updateOne(
+        { _id: cart._id },
+        {
+          $set: {
+            arrProducts: updatedProducts,
+           
+          }
+        }
+      );
+      let totalPriceResult = await findTotalCartPrice(cart._id)
+    
+    
+      await Cart.updateOne(
+        { _id: cart._id },
+        {
+          $set: {
+            
+            total_cart_price:  totalPriceResult[0].total_cart_price
+          }
+        }
+      );
+    
+    
+    
+    });
+    
+    // Execute all update operations
+    await Promise.all(updatePromises);
+
+
+
   
     res.json({ success: true, data: updatedProduct });
   } catch (error) {
@@ -720,7 +819,27 @@ const applyProductOffer = async (req, res,next) => {
        
      }
 
-
+     const removeProductOffer = async (req, res,next) => {
+      try {
+        const { productId } = req.body;
+    
+        const remove = await Product.updateOne(
+          { pkProductId: productId },
+          {
+            $unset: {
+              offer: '',
+              offerPrice: '',
+            },
+          }
+        );
+    
+        res.json({ success: true ,data:remove });
+      } catch (error) {
+       
+       next(error)
+      }
+    };
+    
 
 
 
@@ -738,7 +857,8 @@ const applyProductOffer = async (req, res,next) => {
     getProductImageEditPage,
     applyProductOffer,
     deleteProductImages,
-    addMoreProductImages
+    addMoreProductImages,
+    removeProductOffer
   
   }
 

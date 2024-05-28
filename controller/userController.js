@@ -86,19 +86,21 @@ const signUp = async (req, res) => {
 const getHome = async (req, res) => {
   
   if(req.session.passport){
-    console.log(req.session.passport);
+    
     console.log("passporttt");
     let products =await User.find({strStatus:"Active"})
    return  res.render('user/homePage', {layout:"user_layout",user:true,products});
   }
   
  const objectIdToFind = new ObjectId(req.session.user.pkUserId);
-  
+  console.log(req.session.user.pkUserId);
   let userExist = await User.find({pkUserId: objectIdToFind ,strStatus:"Active"})
     
 
   if (userExist && userExist.length > 0) {
-    let findProducts =await Product.find({strStatus:"Active"})
+    let findProducts =await Product.find({strStatus:"Active"}).populate({
+      path:"offer",match:{status:true }   })
+      
     let products=findProducts.map((product)=>{
       return{
         ...product._doc
@@ -299,7 +301,7 @@ const getUserSetting=async(req,res)=>{
 
         let orderSort={
           $sort:{
-            updatedDate:-1,
+            
             createdDate:-1
           }
         }

@@ -6,8 +6,7 @@ passport.use(new GoogleStrategy({
     clientSecret:process.env.GOOGLE_SECRET,
     callbackURL: 'http://localhost:5000/auth/google/callback'
 }, (accessToken, refreshToken, profile, done) => {
-    // Handle user authentication here
-    // This is where you would save the user to your database
+     console.log(profile)
     return done(null, profile);
 }));
 

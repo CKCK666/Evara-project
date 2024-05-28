@@ -18,11 +18,12 @@
             <thead>
               <tr>
                
-                <th>No</th>
+               
                 <th>Name</th>
                 <th>Status</th>
                 <th>Coupon code</th>
                 <th>Coupon discount</th>
+                  <th>starting Date</th>
                 <th>Expiry Date</th>
                 <th class="text-end">Action</th>
               </tr>
@@ -31,12 +32,13 @@
                  {{#if coupons}}
                  {{#each coupons}}
                 <tr>
-                  <td>{{index}}</td>
+                  
                   <td>{{name}}</td>
                   <td>{{status}}</td>
                   <td>{{code}}</td>
-                  <td>{{discount}}</td>
-                  <td>{{endDate}}</td>
+                  <td>{{discountPercentage}}%</td>
+                   <td>{{dateStatus startDate}}</td>
+                  <td>{{formatDate expireDate}}</td>
                   <td class="d-flex flex-row text-center">
                     <a class="dropdown-item w-50 p-0"  href="/admin/getCouponEdit?_id={{_id}}">Edit</a>
                     <a class="dropdown-item w-50 p-0 text-danger delete" href="#" onclick="handleBlockCoupon('{{_id}}','{{status}}')" >
