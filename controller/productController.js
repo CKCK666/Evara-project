@@ -28,6 +28,7 @@ const getProductList=async(req,res)=>{
          const isoDate = product.createdDate;
          const date = new Date(isoDate);
          const formattedDate = date.toString().substring(0, 15)
+         
          return {
            ...product._doc,
            index:index+1,
@@ -593,6 +594,7 @@ await Promise.all(updatePromises);
         }
       }
       if(req.query.productName){
+        console.log("have prodcutname")
         let productName=req.query.productName
       search={
         $and: [
@@ -605,6 +607,7 @@ await Promise.all(updatePromises);
       }
 
       if(req.query.pkCategoryId && req.query.productName && req.query.pkCategoryId!="AllCategories"){
+        console.log("allllllllllll")
         let productName=req.query.productName
         let fkcategoryId=new ObjectId(req.query.pkCategoryId)
         search={
@@ -727,7 +730,7 @@ const applyProductOffer = async (req, res,next) => {
       },
     
     ]);
-    console.log(carts);
+  
     const updatePromises = carts.map(async cart => {
       const updatedProducts = cart.arrProducts.map(pro => {
         if (pro.pkProductId.equals(product.pkProductId)) {
@@ -766,7 +769,35 @@ const applyProductOffer = async (req, res,next) => {
     // Execute all update operations
     await Promise.all(updatePromises);
 
+    const wishlists = await Wishlist.aggregate([
+      {
+        $match: { "arrProducts.pkProductId": product.pkProductId,strStatus:"Active" } // Filter to match documents containing the specified product
+      },
+    
+    ]);
+    const updateWishlist = wishlists.map(async wishlist => {
+      const updatedProducts = wishlist.arrProducts.map(pro => {
+        if (pro.pkProductId.equals(product.pkProductId)) {
+          pro.offer= offerId,
+          pro.offerPrice= discountedPrice
+         }
+        return pro;
+      });
+    
+      await Wishlist.updateOne(
+        { _id: wishlist._id },
+        {
+          $set: {
+            arrProducts: updatedProducts,
+           
+          }
+        }
+      );
+    
+    });
 
+  // Execute all update operations
+  await Promise.all(updateWishlist);
 
   
     res.json({ success: true, data: updatedProduct });
@@ -832,6 +863,82 @@ const applyProductOffer = async (req, res,next) => {
             },
           }
         );
+        const product = await Product.findOne({ pkProductId: new ObjectId(productId) }).populate('offer');
+
+        const carts = await Cart.aggregate([
+          {
+            $match: { "arrProducts.pkProductId": product.pkProductId,strStatus:"Active" } // Filter to match documents containing the specified product
+          },
+        
+        ]);
+      
+        const updatePromises = carts.map(async cart => {
+          const updatedProducts = cart.arrProducts.map(pro => {
+            if (pro.pkProductId.equals(product.pkProductId)) {
+              delete pro.offer;
+              delete pro.offerPrice;
+             }
+            return pro;
+          });
+        
+          await Cart.updateOne(
+            { _id: cart._id },
+            {
+              $set: {
+                arrProducts: updatedProducts,
+               
+              }
+            }
+          );
+          let totalPriceResult = await findTotalCartPrice(cart._id)
+        
+        
+          await Cart.updateOne(
+            { _id: cart._id },
+            {
+              $set: {
+                
+                total_cart_price:  totalPriceResult[0].total_cart_price
+              }
+            }
+          );
+        
+        
+        
+        });
+        
+        // Execute all update operations
+        await Promise.all(updatePromises);
+    
+        const wishlists = await Wishlist.aggregate([
+          {
+            $match: { "arrProducts.pkProductId": product.pkProductId,strStatus:"Active" } // Filter to match documents containing the specified product
+          },
+        
+        ]);
+        const updateWishlist = wishlists.map(async wishlist => {
+          const updatedProducts = wishlist.arrProducts.map(pro => {
+            if (pro.pkProductId.equals(product.pkProductId)) {
+              delete pro.offer;
+              delete pro.offerPrice;
+             }
+            return pro;
+          });
+        
+          await Wishlist.updateOne(
+            { _id: wishlist._id },
+            {
+              $set: {
+                arrProducts: updatedProducts,
+               
+              }
+            }
+          );
+        
+        });
+    
+      // Execute all update operations
+      await Promise.all(updateWishlist);
     
         res.json({ success: true ,data:remove });
       } catch (error) {

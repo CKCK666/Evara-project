@@ -10,7 +10,14 @@ const productSchema = new Schema({
     intStock: Number,
     mainProductUrl: String,
     arrayOtherImages:Array,
+    offer:{
+        type : mongoose.Schema.Types.ObjectId,
+        ref : 'offer'
+    },
+    offerPrice:{
+        type:Number,
     
+    },
     
     intQuantity: { type:Number, default: 1 }
 });

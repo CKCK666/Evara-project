@@ -211,6 +211,22 @@ const createOffer = async (req, res) => {
       new: true,
     })
 
+    let products=await Product.find({offer:new ObjectId(offerId)}).populate("offer")
+    if(products && products.length){
+      for (let product of products){
+  
+      let discount=parseFloat(product.intPrice)*parseFloat(product.offer.percentage)/100
+      let offerPrice=parseFloat(product.intPrice)-discount
+       await Product.updateOne({pkProductId:new ObjectId(product.pkProductId)},{$set:{offerPrice}})
+     
+
+    await Product.findByIdAndUpdate(product._id,{
+    offerPrice
+})
+} 
+}
+
+
    return res.status(200).json({ status: 'success', message: 'Offer updated successfully', success:true });
   } catch (error) {
       if (error instanceof mongoose.Error.ValidationError) {

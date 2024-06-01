@@ -21,7 +21,7 @@ const  addToWishList=async(req,res)=>{
             return{...pro._doc}
           })
          if(product && product.length){
-          
+          console.log(product);
            let pkProductId=new ObjectId(product[0].pkProductId)
            let userWishList= await Wishlist.find({pkUserId,strStatus:"Active"})
               
@@ -113,11 +113,12 @@ const  addToWishList=async(req,res)=>{
     
      let wishListCount=0
      let cartCount= await getCartCount(pkUserId)
-    let wishListDetailsFind=await Wishlist.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
-    let wishListDetails=wishListDetailsFind.map((wish)=>{
-        return{...wish._doc}
+    let wishlistFind=await Wishlist.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
+    let wishListDetails=wishlistFind.map((wish)=>{
+    return {...wish._doc}
     })
-   
+
+  
     if (wishListDetails && wishListDetails.length) {
    
       

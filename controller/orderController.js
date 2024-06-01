@@ -47,7 +47,7 @@ const {getWishListCount}=require("../utils/wishlist")
     ]);
      
      if (result.modifiedCount>0) {
-      if(orderStatus=="Cancelled"){
+      if(orderStatus=="Cancelled" || orderStatus=="Return Requested"){
        
         orderArray[0].arrProductsDetails.map(async(product)=>{
         
@@ -55,12 +55,13 @@ const {getWishListCount}=require("../utils/wishlist")
             let updateStock=await Product.updateOne({pkProductId:new ObjectId(product.pkProductId)},{$inc:{intStock:quantity}})
          
         })
-         if( orderArray[0].strPaymentMethod==='RAZORPAY'){
+         if( orderArray[0].strPaymentMethod==='RAZORPAY' || orderArray[0].strPaymentMethod==='Wallet'){
           let totalAmt=parseFloat(orderArray[0].totalAmountAfterDiscount)
         let updateWallent=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:totalAmt}})
          
       }
       }
+     
        
        res.json({success:true,message: 'successfully status changed order!',userBlocked:true})
      }
@@ -185,43 +186,10 @@ const {getWishListCount}=require("../utils/wishlist")
           return {...obj._doc,...dataToAdd}
            
         })
-        console.log(cartProducts)
-    
-        const productAndCategoryIdsInOrder = cartDetails[0].arrProducts.map((item) => ({
-          productId: item.pkProductId,
-          categoryId: item.fkcategoryId,
-        }));
-        const productIdsInOrder = productAndCategoryIdsInOrder.map(
-          (item) => item.productId
-        );
-        const categoryIdsInOrder = productAndCategoryIdsInOrder.map(
-          (item) => item.categoryId
-        );
-        
-        const currentDate = new Date();
-
-        const findCoupons = await Coupon.find({
-            $and: [
-                { status: "Active" },
-                {
-                    $or: [
-                        { products: productIdsInOrder },
-                        { categories:categoryIdsInOrder },
-                    ],
-                },
-                { 
-                    $or: [
-                        { usageLimit: { $gt: 0 } }, // Check if usage limit is greater than 0
-                        { endDate: { $gt: currentDate } }, // Check if expiry date is greater than current date
-                    ]          
-                }
-            ],
-        });
-        let coupons=findCoupons.map((coupon)=>{
-          return{
-            ...coupon._doc
-          }
-        })
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const coupons = await Coupon.aggregate([{$match:{ status : "Active", expireDate : { $gte : today }}}])
+     
          let walletBalance=0
         let wallet=await Wallet.aggregate([{$match:{userId:pkUserId}}])
         

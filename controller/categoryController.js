@@ -10,8 +10,9 @@ const {USER_COLLECTION,ADMIN_COLLECTION, CATEGORY_COLLECTION, PRODUCTS_COLLECTIO
 const { log, logger } = require("handlebars");
 const User = require("../models/userModel")
 const Offer= require("../models/offerModel")
- 
- 
+const Wishlist = require('../models/wishListModel');
+const Cart = require('../models/cartModel');
+const {findTotalCartPrice}=require("../utils/cart")
  
  //add categories page
  const addCategory=async(req,res)=>{
@@ -243,6 +244,93 @@ if(req.body.description){
               },
             }
           );
+       
+          const carts = await Cart.aggregate([
+            {
+              $match: { "arrProducts.pkProductId": product.pkProductId,strStatus:"Active" } // Filter to match documents containing the specified product
+            },
+          
+          ]);
+        
+          const updatePromises = carts.map(async cart => {
+            const updatedProducts = cart.arrProducts.map(pro => {
+              if (pro.pkProductId.equals(product.pkProductId)) {
+                pro.offer= offerId,
+                pro.offerPrice= offerPrice
+               }
+              return pro;
+            });
+          
+            await Cart.updateOne(
+              { _id: cart._id },
+              {
+                $set: {
+                  arrProducts: updatedProducts,
+                 
+                }
+              }
+            );
+            let totalPriceResult = await findTotalCartPrice(cart._id)
+          
+          
+            await Cart.updateOne(
+              { _id: cart._id },
+              {
+                $set: {
+                  
+                  total_cart_price:  totalPriceResult[0].total_cart_price
+                }
+              }
+            );
+          
+          
+          
+          });
+          
+          // Execute all update operations
+          await Promise.all(updatePromises);
+
+          const wishlists = await Wishlist.aggregate([
+            {
+              $match: { "arrProducts.pkProductId": product.pkProductId,strStatus:"Active" } // Filter to match documents containing the specified product
+            },
+          
+          ]);
+          const updateWishlist = wishlists.map(async wishlist => {
+            const updatedProducts = wishlist.arrProducts.map(pro => {
+              if (pro.pkProductId.equals(product.pkProductId)) {
+                pro.offer= offerId,
+                pro.offerPrice= offerPrice
+               }
+              return pro;
+            });
+          
+            await Wishlist.updateOne(
+              { _id: wishlist._id },
+              {
+                $set: {
+                  arrProducts: updatedProducts,
+                 
+                }
+              }
+            );
+          
+          });
+      
+        // Execute all update operations
+        await Promise.all(updateWishlist);
+
+
+
+
+
+
+
+
+
+
+
+
         }
       }
   
@@ -291,6 +379,89 @@ if(req.body.description){
             },
           }
         );
+
+        const carts = await Cart.aggregate([
+          {
+            $match: { "arrProducts.pkProductId": product.pkProductId,strStatus:"Active" } // Filter to match documents containing the specified product
+          },
+        
+        ]);
+        
+      
+        const updatePromises = carts.map(async cart => {
+          const updatedProducts = cart.arrProducts.map(pro => {
+            if (pro.pkProductId.equals(product.pkProductId)) {
+              delete pro.offer;
+              delete pro.offerPrice;
+             }
+            return pro;
+          });
+        
+          await Cart.updateOne(
+            { _id: cart._id },
+            {
+              $set: {
+                arrProducts: updatedProducts,
+               
+              }
+            }
+          );
+          let totalPriceResult = await findTotalCartPrice(cart._id)
+        
+        
+          await Cart.updateOne(
+            { _id: cart._id },
+            {
+              $set: {
+                
+                total_cart_price:  totalPriceResult[0].total_cart_price
+              }
+            }
+          );
+        
+        
+        
+        });
+        
+        // Execute all update operations
+        await Promise.all(updatePromises);
+    
+        const wishlists = await Wishlist.aggregate([
+          {
+            $match: { "arrProducts.pkProductId": product.pkProductId,strStatus:"Active" } // Filter to match documents containing the specified product
+          },
+        
+        ]);
+        const updateWishlist = wishlists.map(async wishlist => {
+          const updatedProducts = wishlist.arrProducts.map(pro => {
+            if (pro.pkProductId.equals(product.pkProductId)) {
+              delete pro.offer;
+              delete pro.offerPrice;
+             }
+            return pro;
+          });
+        
+          await Wishlist.updateOne(
+            { _id: wishlist._id },
+            {
+              $set: {
+                arrProducts: updatedProducts,
+               
+              }
+            }
+          );
+        
+        });
+    
+      // Execute all update operations
+      await Promise.all(updateWishlist);
+
+
+
+
+
+
+
       }
   
       res.json({ success: true });
