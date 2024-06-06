@@ -59,7 +59,11 @@ const {findTotalCartPrice}=require("../utils/cart")
       });
        
       
-        let categories= result.map((category,index)=>({...category._doc,index:index+1}))
+        let categories= result.map((category,index)=>({
+          offerPercentage:category.offer?category.offer.percentage:"",
+          offerName:category.offer?category.offer.name:"",
+          ...category._doc,
+          index:index+1}))
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const availableOffers = await Offer.aggregate([{$match:{ status : true, expiryDate : { $gte : today }}}])
@@ -137,6 +141,7 @@ const {findTotalCartPrice}=require("../utils/cart")
             strStatus: doc.strStatus,
             createdDate: doc.createdDate,
             updatedDate: doc.updatedDate,
+           
             __v: doc.__v
         }));
        

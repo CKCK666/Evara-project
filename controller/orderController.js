@@ -60,6 +60,15 @@ const {getWishListCount}=require("../utils/wishlist")
         let updateWallent=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:totalAmt}})
          
       }
+      if( orderArray[0].strPaymentMethod==='COD' && orderStatus=="Return Requested"){
+        let totalAmt=parseFloat(orderArray[0].totalAmountAfterDiscount)
+      let updateWallent=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:totalAmt}})
+       
+    }
+
+
+
+
       }
      
        
@@ -93,7 +102,12 @@ const {getWishListCount}=require("../utils/wishlist")
          
         
          let orderProducts= await orderDetails[0].arrProductsDetails.map(obj=>{
-           let intTotalPrice=obj.intQuantity*obj.intPrice
+          let intTotalPrice
+          if(obj.offer){
+           intTotalPrice=obj.intQuantity*obj.offerPrice
+          }else{
+           intTotalPrice=obj.intQuantity*obj.intPrice
+          }
            return {...obj,intTotalPrice:intTotalPrice}
             
          })
@@ -189,7 +203,8 @@ const {getWishListCount}=require("../utils/wishlist")
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const coupons = await Coupon.aggregate([{$match:{ status : "Active", expireDate : { $gte : today }}}])
-     
+        console.log(coupons);
+
          let walletBalance=0
         let wallet=await Wallet.aggregate([{$match:{userId:pkUserId}}])
         
@@ -520,7 +535,12 @@ const {getWishListCount}=require("../utils/wishlist")
           })
       
         let orderProducts= await orderDetails[0].arrProductsDetails.map(obj=>{
-          let intTotalPrice=obj.intQuantity*obj.intPrice
+          let intTotalPrice
+     if(obj.offer){
+      intTotalPrice=obj.intQuantity*obj.offerPrice
+     }else{
+      intTotalPrice=obj.intQuantity*obj.intPrice
+     }
           return {...obj,intTotalPrice:intTotalPrice}
            
         })

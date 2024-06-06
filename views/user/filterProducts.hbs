@@ -16,7 +16,7 @@
                     <div class="col-lg-9">
                         <div class="shop-product-fillter">
                             <div class="totall-product">
-                                {{!-- <p> We found <strong class="text-brand">688</strong> items for you!</p> --}}
+                                <p> We found <strong class="text-brand">688</strong> items for you!</p>
                             </div>
                             <div class="sort-by-product-area">
                                 {{!-- <div class="sort-by-cover mr-10">
@@ -41,7 +41,8 @@
                                 <div class="sort-by-cover">
                                     <div class="sort-by-product-wrap">
                                         <div class="sort-by">
-                                            <span><i class="fi-rs-apps-sort"></i>Sort by:</span>
+                                            <span><i class="fi-rs-apps-sort"></i>Sort by:
+                                             {{sortDisplay}}</span>
                                         </div>
                                         <div class="sort-by-dropdown-wrap">
                                             <span><i class="fi-rs-angle-small-down"></i></span>
@@ -49,9 +50,9 @@
                                     </div>
                                     <div class="sort-by-dropdown">
                                         <ul>
-                                            
-                                            <li><a onclick="sortProducts('asc')">Price: Low to High</a></li>
-                                            <li><a  onclick="sortProducts('desc')">Price: High to Low</a></li>
+                                            <li><a onclick="sortProducts('new')">Newest:Arrivals</a></li>
+                                            <li><a onclick="sortProducts('asc')">Price:Low to High</a></li>
+                                            <li><a  onclick="sortProducts('desc')">Price:High to Low</a></li>
                                            
                                         </ul>
                                     </div>
@@ -77,7 +78,7 @@
                                             <a aria-label="Compare" class="action-btn hover-up" href="shop-compare.html"><i class="fi-rs-shuffle"></i></a>
                                         </div>
                                         <div class="product-badges product-badges-position product-badges-mrg">
-                                            <span class="hot">Hot</span>
+                                              {{#if offer}} <span class="hot">-{{{json offer}}}%</span> {{/if}}
                                         </div>
                                     </div>
                                     <div class="product-content-wrap">
@@ -86,10 +87,17 @@
                                         </div>
                                         <h2><a href="/getProduct?pkProductId={{pkProductId}}">{{strProductName}}</a></h2>
                                        
-                                        <div class="product-price">
-                                            <span>{{intPrice}}</span>
-                                            
-                                        </div>
+                                            {{#if offer}}
+                                                <div class="product-price">
+                                                    <span>₹{{offerPrice}}</span>
+                                                    <span class="old-price">₹{{intPrice}}</span>
+                                                </div>
+                                                {{else}}
+                                                  <div class="product-price">
+                                                    <span>₹{{intPrice}}</span>
+                                                    
+                                                </div>
+                                                {{/if}}
                                         <div class="product-action-1 show">
                                             <a aria-label="Add To Cart" class="action-btn hover-up" href="shop-cart.html"><i class="fi-rs-shopping-bag-add"></i></a>
                                         </div>
@@ -126,6 +134,38 @@
                                 <li><a href="shop-grid-right.html">Accessories</a></li>
                             </ul>
                         </div> --}}
+                         <div class="sidebar-widget price_range range mb-30">
+                            <div class="widget-header position-relative mb-20 pb-10">
+                                <h5 class="widget-title mb-10">Fill by price</h5>
+                                <div class="bt-1 border-color-1"></div>
+                            </div>
+                            <div class="price-filter">
+                                <div class="price-filter-inner">
+                                    <div id="slider-range"></div>
+                                    <div class="price_slider_amount">
+                                        <div class="label-input">
+                                            <span>Range:</span><input type="text" id="amount" name="price" placeholder="Add Your Price" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="list-group">
+                                <div class="list-group-item mb-10 mt-10">
+                                    <label class="fw-900">Category</label>
+                                    <div class="custome-checkbox">
+                                        {{#if categories}}
+                                        {{#each categories}}
+                                        <input class="form-check-input" type="checkbox" name="checkbox"  value="" >
+                                        <label class="form-check-label" for="exampleCheckbox1"><span>{{strCategoryName}}</span></label>
+                                        <br>
+                                        {{/each}}
+                                       {{/if}}
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            <a onclick="getSliderRange()" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i> Fillter</a>
+                        </div>
                       
                         <!-- Product sidebar Widget -->
                         <div class="sidebar-widget product-sidebar  mb-30 p-30 bg-grey border-radius-10">

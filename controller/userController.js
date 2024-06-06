@@ -106,13 +106,22 @@ const getHome = async (req, res) => {
         ...product._doc
       }
     })
-   
+    let findNewProducts =await Product.find({strStatus:"Active"}).populate({
+      path:"offer",match:{status:true }   })
+      .sort({createdDate:-1})
+
+      let newAddproducts=findNewProducts.map((product)=>{
+        return{
+          ...product._doc
+        }
+      })
+
     let categories =await Category.aggregate([{$match:{strStatus:"Active"}}])
     let cartCount= await getCartCount(req.session.user.pkUserId)
     let wishListCount=await getWishListCount(req.session.user.pkUserId)
 
     
-    res.render('user/homePage', {layout:"user_layout",user:true,products,categories,pkUserId:req.session.user.pkUserId,cartCount,wishListCount});
+    res.render('user/homePage', {layout:"user_layout",user:true,products,categories,pkUserId:req.session.user.pkUserId,cartCount,wishListCount,newAddproducts});
   } else {
      console.log("not userExist");
     req.session.otpVerified=false;
@@ -273,7 +282,8 @@ const getUserSetting=async(req,res)=>{
          
           pkUserId:1,
           strUserName:1,
-          strEmail:1
+          strEmail:1,
+          strPhoneNumber:1
         }
       }
     
@@ -327,7 +337,27 @@ const getUserSetting=async(req,res)=>{
         let wishListCount=await getWishListCount(req.query.pkUserId)
         let  arrAddress=await Address.aggregate([match,addField,sort,projectAddress])
          let findOrders=await Order.aggregate([match,orderSort,orderProject])
-         
+         let walletHistory1=await Order.aggregate([  {
+          $match: {
+            pkUserId:new ObjectId(req.query.pkUserId),
+            strStatus:"Active",
+              strOrderStatus: { $in: ["Cancelled", "Returned"] }
+          }
+      }])
+      pipeline = [
+        {
+            "$match": {
+              pkUserId:new ObjectId(req.query.pkUserId),
+              strStatus:"Active",
+                "strOrderStatus": { "$nin": ["Cancelled", "Returned"] },
+                "walletCashUsed": { "$gt": 0 }
+            }
+        }
+    ]
+
+      let walletHistory2=await Order.aggregate(pipeline)
+      let walletHistory = [...walletHistory1, ...walletHistory2];
+
          let userOrders= findOrders.map((order,index)=>{
           const isoDate = order.createdDate;
           const date = new Date(isoDate);
@@ -340,7 +370,7 @@ const getUserSetting=async(req,res)=>{
           
           })
       
-          res.render("user/userSettings",{layout:"user_layout",user:true,arrAddress,pkUserId:req.query.pkUserId,cartCount,wishListCount,userDetails,userOrders,wallet})
+          res.render("user/userSettings",{layout:"user_layout",user:true,arrAddress,pkUserId:req.query.pkUserId,cartCount,wishListCount,userDetails,userOrders,wallet,walletHistory})
        }else{
         return res.json({success:false,message:"Failed to fetch user data"})
        }

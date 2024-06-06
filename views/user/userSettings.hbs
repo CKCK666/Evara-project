@@ -214,6 +214,18 @@
                               type='text'
                             />
                           </div>
+                          <div class='form-group'>
+                            <label>Phone Number
+                             
+                            <input
+                            value="{{userDetails.[0].strPhoneNumber}}"
+                              required=''
+                              class='form-control square'
+                              name='name'
+                              type='text'
+                              readonly
+                            />
+                          </div>
 
                           <div class='form-group'>
                             <label>Email Address
@@ -337,8 +349,8 @@
                           </tr>
                         </thead>
                         <tbody>
-                          {{#if userOrders}}
-                          {{#each userOrders}}
+                          {{#if walletHistory}}
+                          {{#each walletHistory}}
                           <tr>
                             <td>{{pkOrderId}}</td>
                             <td>{{createdDate}}</td>
@@ -352,10 +364,25 @@
                              {{strOrderStatus}}
                              </td> --}}
                              
-                            <td {{#eq strOrderStatus 'Cancelled'}}style="color: green"  {{else}}style="color: red" {{/eq}}>
-                             {{#eq strOrderStatus 'Cancelled'}}+ {{else}}-{{/eq}}
+                            <td {{#eq strOrderStatus 'Cancelled'}}style="color: green"  {{else}}
+                            {{#eq strOrderStatus 'Returned'}}style="color: green" {{else}}
+                            style="color: red" 
                             
-                            {{intTotalOrderPrice}}</td>
+                            {{/eq}}
+                            {{/eq}}>
+
+                             {{#eq strOrderStatus 'Cancelled'}}+ {{else}}
+                             {{#eq strOrderStatus 'Returned'}}+{{else}}-
+
+                             {{/eq}}
+                             {{/eq}}
+                            
+                     {{#eq strOrderStatus 'Cancelled'}} {{intTotalOrderPrice}} {{else}} {{#eq strOrderStatus 'Returned'}}{{intTotalOrderPrice}} 
+                     
+                     {{else}} {{walletCashUsed}}
+                      {{/eq}}{{/eq}}
+                            
+                            </td>
                             <td>
                             
                                  {{!-- <a style="color: red;"

@@ -1234,17 +1234,16 @@ let pkOrderId
 document.getElementById('searchForm').addEventListener('submit', function(event) {
   event.preventDefault(); // Prevent default form submission behavior
 
-  var category = document.querySelector('.select-active').value;
+  //  var category = document.querySelector('.select-active').value;
   var searchQuery = document.getElementById('searchInput').value;
 
-  console.log('Category:', category);
   console.log('Search Query:', searchQuery);
 
   // Clear the input fields if needed
   document.getElementById('searchInput').value = '';
 
    productName=searchQuery
-   pkCategoryId=category
+  //  pkCategoryId=category
 
   
 
@@ -1258,124 +1257,10 @@ document.getElementById('searchInput').addEventListener('keydown', async functio
 
       // Trigger the form submission by clicking the submit button
       document.getElementById('submitButton').click();
-      const url = `/search?pkCategoryId=${pkCategoryId}&productName=${productName}`;
+      const url = `/search?productName=${productName}`;
       window.location.href=url
   }
 });
-
-// let couponApplied=false
-// let totalAmountAfterDiscount
-// let discountPrice
-// document.addEventListener('click', function(event) {
-  
-//   if (event.target.classList.contains('apply-btn')) {
-//     if(couponApplied){
-//       return alert("coupon already applied")
-//     }
-//     let totalCartPriceElement= document.querySelector(".product-subtotal.totalAmt")
-//     let grandTotalElement=document.querySelector('td.product-subtotal.grandTotalAmt span')
-//     // let grandTotal=parseFloat(grandTotalElement.textContent.substring(1))
-//     var totalCartPrice = parseFloat( totalCartPriceElement.textContent.substring(1))
-//     // Select the button element
-// var button = document.querySelector('.copy-btn');
-
-// // Get data using getAttribute method
-// var id = button.getAttribute('data-id');
-// var minAmount = parseFloat(button.getAttribute('data-minAmount'))
-// var maxDiscount = parseFloat(button.getAttribute('data-maxDiscount'))
-//  let discount =parseFloat( button.getAttribute('data-discount'))
-
-//   if(totalCartPrice*(discount/100)<maxDiscount &&totalCartPrice*(discount/100)>minAmount ){
-   
-  
-//      totalPriceAfterDiscount  =parseFloat(totalAmountAfterDiscount)-parseFloat(totalCartPrice*(discount/100))
-//      alert("percent")
-//     grandTotalElement.textContent="₹" + totalPriceAfterDiscount
-//   }else{
-    
-//      totalPriceAfterDiscount =parseFloat( totalCartPrice - maxDiscount)
-//     grandTotalElement.textContent=  "₹" + totalPriceAfterDiscount
-//    discountPrice=maxDiscount
- 
-//   }
-//       event.target.textContent = "Applied";
-    
-//     // Show Remove Coupon button when Apply Coupon button is clicked
-//     const buttonGroup = event.target.closest('.button-group');
-//     const removeBtn = buttonGroup.querySelector('.remove-btn');
-//     event.target.disabled = true
-//     removeBtn.style.display = 'inline-block';
-//     couponApplied=true
-//   }
-// });
-
-
-// if(window.location.pathname === "/getCheckoutPage"){
-//   // Selecting the radio buttons and wallet checkbox div
-//   const codOption = document.getElementById("codOption");
-//   const razorpayOption = document.getElementById("razorpayOption");
-//   const walletCheckboxDiv = document.querySelector(".form-check.wallet");
-//   const walletCheckbox = document.getElementById("walletCheck")
-//   let spanElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
-//    totalAmountAfterDiscount = parseFloat(spanElement.textContent.slice(1))
-  
-//   // Adding event listener to the radio buttons
-//   codOption.addEventListener("change", toggleWalletCheckbox);
-//   razorpayOption.addEventListener("change", toggleWalletCheckbox);
-//   walletCheckbox.addEventListener("change", handleWalletCheckboxChange)
-  
-  
-//   function toggleWalletCheckbox() {
-//       if (razorpayOption.checked) {
-  
-//           walletCheckboxDiv.style.display = "block";
-         
-//       } else {
-//           walletCheckboxDiv.style.display = "none";
-//       }
-//   }
-  
-//   // Initial call to set the initial state based on the default checked radio button
-//   toggleWalletCheckbox();
-//   function handleWalletCheckboxChange() {
-//     if (walletCheckbox.checked) {
-//         // Code to execute when the wallet checkbox is checked
-//         let walletBalanceUsed=parseFloat(totalAmountAfterDiscount-100)
-//         spanElement.textContent="₹"+walletBalanceUsed
-//         totalAmountAfterDiscount=walletBalanceUsed
-        
-//     } else {
-//       let walletBalanceUsed=parseFloat(totalAmountAfterDiscount+100)
-//       spanElement.textContent="₹"+walletBalanceUsed
-//       totalAmountAfterDiscount=walletBalanceUsed
-//         console.log("Wallet checkbox is unchecked");
-//     }
-//   }
-  
-  
-//   }
-
-
-
-
-// document.addEventListener('click', function(event) {
-//   if (event.target.classList.contains('remove-btn')) {
-//     couponApplied=false
-//       // Reset Apply Coupon button text to its original state
-//       const buttonGroup = event.target.closest('.button-group');
-//       const applyBtn = buttonGroup.querySelector('.apply-btn');
-//       applyBtn.textContent = "Apply";
-//       let grandTotalElement=document.querySelector('td.product-subtotal.grandTotalAmt span')
-//       // let totalCartPriceElement= document.querySelector(".product-subtotal.totalAmt")
-//       // var totalCartPrice = parseFloat( totalCartPriceElement.textContent.substring(1))
-//       totalAmountAfterDiscount=parseFloat(totalAmountAfterDiscount)+parseFloat(discountPrice)
-//       grandTotalElement.textContent="₹" +  totalAmountAfterDiscount
-//       applyBtn.disabled = false;
-//       // Hide Remove Coupon button when clicked
-//       event.target.style.display = 'none';
-//   }
-// });
-
 
 
 
@@ -1444,27 +1329,39 @@ document.addEventListener('click', function(event) {
         if (couponApplied) {
             return alert("Coupon already applied");
         }
-
+        var button = document.querySelector('.copy-btn');
         let totalCartPriceElement = document.querySelector(".product-subtotal.totalAmt");
         let grandTotalElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
         let totalCartPrice = parseFloat(totalCartPriceElement.textContent.substring(1));
+        var minSpend = parseFloat(button.getAttribute('data-minSpend'));
 
-        var button = document.querySelector('.copy-btn');
-        var id = button.getAttribute('data-id');
-        var minAmount = parseFloat(button.getAttribute('data-minAmount'));
-        var maxDiscount = parseFloat(button.getAttribute('data-maxDiscount'));
-        let discount = parseFloat(button.getAttribute('data-discount'));
-
-        if (totalCartPrice * (discount / 100) < maxDiscount && totalCartPrice * (discount / 100) > minAmount) {
-            totalPriceAfterDiscount = parseFloat(totalAmountAfterDiscount) - parseFloat(totalCartPrice * (discount / 100));
-            grandTotalElement.textContent = "₹" + totalPriceAfterDiscount;
-            discountPrice = maxDiscount;
-        } else {
-            totalPriceAfterDiscount = parseFloat(totalAmountAfterDiscount) - maxDiscount;
-            grandTotalElement.textContent = "₹" + totalPriceAfterDiscount;
-            discountPrice = maxDiscount;
+        if(totalCartPrice<minSpend){
+          Toastify({
+            text: `Purchase above ${minSpend}`,
+            duration: 3000, // Duration in milliseconds
+            close: true, // Whether to display a close button
+            gravity: 'top', // Toast position: 'top', 'bottom', 'center'
+            position: 'center', // Toast position: 'left', 'center', 'right'
+            stopOnFocus: true, // Whether to close the toast when focused
+            style: {
+              width: '500px', // Adjust the width as needed
+              height: '50px', // Adjust the height as needed
+              background: 'red' // Set the background color to red
+            }
+          }).showToast();
+      
+          return
         }
 
+       
+        var id = button.getAttribute('data-id');
+        
+        let discount = parseFloat(button.getAttribute('data-discount'));
+
+             totalPriceAfterDiscount = parseFloat(totalAmountAfterDiscount) - parseFloat(totalCartPrice * (discount / 100));
+            grandTotalElement.textContent = "₹" + totalPriceAfterDiscount;
+            discountPrice= parseFloat(totalCartPrice * (discount / 100));
+         
         event.target.textContent = "Applied";
 
         const buttonGroup = event.target.closest('.button-group');
@@ -1485,6 +1382,7 @@ document.addEventListener('click', function(event) {
       const applyBtn = buttonGroup.querySelector('.apply-btn');
 
       applyBtn.textContent = "Apply";
+ 
       let grandTotalElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
       totalAmountAfterDiscount = parseFloat(totalAmountAfterDiscount) + parseFloat(discountPrice);
       grandTotalElement.textContent = "₹" + totalAmountAfterDiscount.toFixed(2);
@@ -1526,7 +1424,7 @@ document.addEventListener('click', function(event) {
 
 const deleteAddress=(addressId,userId,render)=>{
 
-  console.log("hereee",addressId,userId);
+ 
 
   const swalWithBootstrapButtons = Swal.mixin({
       customClass: {
@@ -1742,4 +1640,10 @@ function sortProducts(order) {
   url.searchParams.set('sort', order);
   
    window.location.href = url.toString();
+}
+
+function getSliderRange() {
+  var min = $("#slider-range").slider("values", 0);
+  var max = $("#slider-range").slider("values", 1);
+ alert("Selected range: $" + min + " - $" + max);
 }

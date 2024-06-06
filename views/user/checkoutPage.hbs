@@ -21,13 +21,14 @@
                                         <div class="col-lg-4">
                                             <div class="coupon" id="couponContainer">
                                                 
-                                                <h4>{{code}}</h4>
-                                                <h5>{{name}}</h5>
-                                                <p>Discount: {{discountPercentage}} %</p>
+                                                <h5>{{code}}</h5>
+                                                <h6>{{name}}</h6>
+                                                <p>Discount: {{discountPercentage}}%</p>
+                                                <p>Purchase above Rs.{{minimumSpend}}</p>
                                                 <h6>Expiry :{{formatDate expireDate}}<h6>
                                           
                                                 <div class="button-group">
-                    <button type="button" class="copy-btn btn btn-primary btn-sm rounded apply-btn" data-id="{{_id}}" data-discount="{{discountPercentage}}">Apply</button>
+                    <button type="button" class="copy-btn btn btn-primary btn-sm rounded apply-btn" data-id="{{_id}}" data-discount="{{discountPercentage}}" data-minSpend="{{minimumSpend}}" >Apply</button>
                     <button type="button" class="remove-btn btn btn-danger btn-sm rounded" style="display: none;">Remove</button>
                 </div>
                                             </div>
@@ -132,10 +133,10 @@
                                             <th>Shipping</th>
                                             <td colspan="2"><em>Free Shipping</em></td>
                                         </tr>
-                                        {{!-- <tr>
+                                        <tr>
                                             <th>Total</th>
                                             <td colspan="2" class="product-subtotal totalAmt"><span class="font-xl text-brand fw-900">₹{{cartDetails.[0].total_cart_price}}</span></td>
-                                        </tr> --}}
+                                        </tr>
                                       
                                         <tr>
                                             <th>Order Total</th>

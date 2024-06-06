@@ -578,36 +578,34 @@ await Promise.all(updatePromises);
     let pkUserId=req.session.user.pkUserId
     try {
       console.log(req.query);
-
-      let sort={createdDate:-1}
-       let search={strStatus: 'Active'}
-      if(req.query.sort=='asc'){
-        sort={
-         
-          intPrice:1
-        }
-      }
-      if(req.query.sort=='desc'){
-        sort={
-         
-          intPrice:-1
-        }
-      }
-      if(req.query.productName){
-        console.log("have prodcutname")
+      let sort
+      let sortDisplay
+     let search={strStatus: 'Active',intStock:{$ne:0}}
+      
+if (req.query.sort === 'desc') {
+  sort = -1;
+  sortDisplay = "Price: High to Low";
+} else if (req.query.sort === 'asc') {
+  sort = 1;
+  sortDisplay = "Price: Low to High";
+} else {
+  sort = { createdDate: -1 }; 
+  sortDisplay = "Newest:Arrivals";
+}
+ 
+    if(req.query.productName){
+      
         let productName=req.query.productName
-      search={
-        $and: [
-          { strProductName: { $regex:productName, $options: 'i' } }, 
-          { ...search },
-          {intStock:{$ne:0}}
-      ] 
-      }
-  
-      }
+        search={
+          ...search,
+          strProductName: { $regex:productName, $options: 'i' }
 
-      if(req.query.pkCategoryId && req.query.productName && req.query.pkCategoryId!="AllCategories"){
-        console.log("allllllllllll")
+        }
+       }
+
+
+      if(req.query.pkCategoryId && req.query.productName){
+       
         let productName=req.query.productName
         let fkcategoryId=new ObjectId(req.query.pkCategoryId)
         search={
@@ -621,17 +619,58 @@ await Promise.all(updatePromises);
     
 
       }
-      let findResult=await Product.find(search).sort(sort)
-      let result=findResult.map((product)=>{
-        return {
-          ...product._doc
-        }
-      })
+      const result = await Product.aggregate([
+        // Match the products based on the search criteria
+        { $match: search },
+        // Lookup the offer collection
+        {
+          $lookup: {
+            from: "offers",
+            localField: "offer",
+            foreignField: "_id",
+            as: "offer",
+          }
+        },
+        // Filter offers based on status
+        {
+          $unwind: {
+            path: "$offer",
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        {
+          $match: {
+            $or: [
+              { "offer.status": true },
+              { "offer": { $exists: false } }
+            ]
+          }
+        },
+        // Add a field for sorting
+        {
+          $addFields: {
+            effectivePrice: {
+              $ifNull: ["$offerPrice", "$intPrice"]
+            }
+          }
+        },
+        // Sort based on the effective price or createdDate
+        ...(req.query.sort ? [{
+          $sort: {
+            effectivePrice: sort
+          }
+        }] : [{
+          $sort: sort
+        }])
+      ]);
+      
+ 
+      
       let categories=await Category.aggregate([{$match:{strStatus:"Active"}}])
       let cartCount= await getCartCount(pkUserId)
         
       let wishListCount=await getWishListCount(pkUserId)
-      res.render("user/filterProducts",{layout:"user_layout",user:true,result,categories,cartCount,wishListCount})
+      res.render("user/filterProducts",{layout:"user_layout",user:true,result,categories,cartCount,wishListCount,sortDisplay})
     } catch (error) {
       res.json({success:true,message:error.message})
     }

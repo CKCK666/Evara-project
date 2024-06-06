@@ -22,12 +22,12 @@ async function generatePDFReports(reportData, startDate, endDate) {
             pdfDoc.text(`Address: Ernakulam`);
             pdfDoc.text(`Contact No: +919999999999`);
             pdfDoc.moveDown();
-
+            let fontBold = 'Helvetica-Bold';
             pdfDoc.text("Orders:");
             pdfDoc.fontSize(10);
             let startY = pdfDoc.y + 15;
             let rowHeight = 20;
-
+            let totalAmountAfterDiscount=0
             // Headers
             pdfDoc.text("No", 50, startY);
             pdfDoc.text("Order Id", 75, startY);
@@ -40,6 +40,7 @@ async function generatePDFReports(reportData, startDate, endDate) {
             // Data
             startY += rowHeight;
             reportData.forEach((orderInfo, index) => {
+                totalAmountAfterDiscount+=orderInfo.totalAmountAfterDiscount
                 let createdDate=orderInfo.createdDate.toLocaleDateString()
                 pdfDoc.text(`${index + 1}`, 50, startY);
                 pdfDoc.text(`${orderInfo.pkOrderId}`, 75, startY);
@@ -54,7 +55,10 @@ async function generatePDFReports(reportData, startDate, endDate) {
 
             pdfDoc.moveDown();
             pdfDoc.moveDown();
-
+            pdfDoc.font(fontBold).text("Total Revenue:", 450,startY);
+            pdfDoc.font(fontBold).text(totalAmountAfterDiscount.toFixed(2), 560, startY);
+            pdfDoc.font(fontBold).text("Total Discount:", 450,startY+40);
+            pdfDoc.font(fontBold).text(totalAmountAfterDiscount.toFixed(2)-5600, 560, startY+40);
             // const totalValue = reportData.reduce((acc, value) => acc + value.totalAmountAfterDiscount, 0);
             // pdfDoc.fontSize(12).text(`Total Value: ${totalValue.toFixed(2)}`, 420, startY, { bold: true });
 
