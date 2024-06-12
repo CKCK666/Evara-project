@@ -5,7 +5,7 @@ const { getSingleProductPage,sortProducts}=require("../controller/productControl
 const {addToCart, getCartPage, changeQuantity, removeFromCart,}=require("../controller/cartController")
 const {addToWishList, getWishListPage, removeFromWishList}=require("../controller/wishListController")
 const {editAddress, getEditAddressPage, setAsDefaultAddress,deleteAddress, getAddressPage, addNewAddress}=require("../controller/addressController")
-const {changeOrderStatus, getCheckoutPage, checkOut, getOrderDetailsPage, checkOutRazorPay, verifyPayment}=require("../controller/orderController")
+const {changeOrderStatus, getCheckoutPage, checkOut, getOrderDetailsPage, checkOutRazorPay, verifyPayment, orderDismiss}=require("../controller/orderController")
 const router =express.Router()
 const passport = require('passport');
 const { printInvoice } = require('../controller/reportController');
@@ -145,5 +145,7 @@ router.get('/logout',logout)
 
 //generate invoice
 router.get("/api/printInvoice",printInvoice);
+
+router.delete("/paymentDismiss",orderDismiss)
 
 module.exports=router

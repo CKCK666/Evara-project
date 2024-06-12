@@ -108,18 +108,13 @@
                            {{/if}}
                         </div>
                         <!--pagination-->
-                        {{!-- <div class="pagination-area mt-15 mb-sm-5 mb-lg-0">
+                        <div class="pagination-area mt-15 mb-sm-5 mb-lg-0">
                             <nav aria-label="Page navigation example">
                                 <ul class="pagination justify-content-start">
-                                    <li class="page-item active"><a class="page-link" href="#">01</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">02</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">03</a></li>
-                                    <li class="page-item"><a class="page-link dot" href="#">...</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">16</a></li>
-                                    <li class="page-item"><a class="page-link" href="#"><i class="fi-rs-angle-double-small-right"></i></a></li>
+                                 {{paginate currentPage totalPages}}
                                 </ul>
                             </nav>
-                        </div> --}}
+                        </div>
                     </div>
                     <div class="col-lg-3 primary-sidebar sticky-sidebar">
                         {{!-- <div class="widget-category mb-30">
@@ -155,8 +150,8 @@
                                     <div class="custome-checkbox">
                                         {{#if categories}}
                                         {{#each categories}}
-                                        <input class="form-check-input" type="checkbox" name="checkbox"  value="" >
-                                        <label class="form-check-label" for="exampleCheckbox1"><span>{{strCategoryName}}</span></label>
+                                        <input class="form-check-input category-checkbox" type="checkbox" id="{{_id}}" name="checkbox"  value="{{_id}}" >
+                                        <label class="form-check-label" for="{{_id}}"><span>{{strCategoryName}}</span></label>
                                         <br>
                                         {{/each}}
                                        {{/if}}
@@ -164,7 +159,7 @@
                                     
                                 </div>
                             </div>
-                            <a onclick="getSliderRange()" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i> Fillter</a>
+                            <button id="filter-btn" class="btn btn-sm btn-default"><i class="fi-rs-filter mr-5"></i> Fillter</button>
                         </div>
                       
                         <!-- Product sidebar Widget -->

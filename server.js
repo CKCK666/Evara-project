@@ -47,6 +47,26 @@ handlebars.registerHelper('json', function(context) {
 return context.percentage
 
 });
+handlebars.registerHelper('paginate', function(currentPage, totalPages, options) {
+  let output = '';
+
+  for (let i = 1; i <= totalPages; i++) {
+      if (i === currentPage) {
+          output += `<li class="page-item active"><a class="page-link" data-page=${i}>${i}</a></li>`;
+      } else {
+          output += `<li class="page-item"><a class="page-link" data-page=${i}>${i}</a></li>`;
+      }
+  }
+
+  return new handlebars.SafeString(output);
+});
+
+handlebars.registerHelper('or', function() {
+  var args = Array.prototype.slice.call(arguments, 0, -1);
+  return args.some(Boolean);
+});
+
+
 app.set("views",path.join(__dirname,"views"))
 const hbs = exphbs.create({
   handlebars: handlebars,

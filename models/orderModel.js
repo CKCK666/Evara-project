@@ -6,6 +6,7 @@ const Schema = mongoose.Schema;
 const OrderSchema = new Schema({
     pkOrderId: { type: Schema.Types.ObjectId },
     pkUserId: { type: Schema.Types.ObjectId },
+    pkCartId:{ type: Schema.Types.ObjectId },
     arrProductsDetails:Array,
     arrDeliveryAddress: Array,
     intTotalOrderPrice: Number,

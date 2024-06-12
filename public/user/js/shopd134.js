@@ -92,6 +92,9 @@
 
         let cartCountText = $('#cartCount').text();
         let cartCountValue = parseInt(cartCountText, 10);
+
+       
+        
         
         
 
@@ -115,14 +118,14 @@
                     $(this).prev().text(qtyval);
                     productTotalAmt=productAmt*qtyval
                     $(this).closest('.cart-product-details').find('.product-total-amount').text(productTotalAmt);
-                    cartSubTotalAmtValue=cartSubTotalAmtValue+productAmt
-                    cartTotalAmtValue=cartTotalAmtValue+productAmt
+                    // cartSubTotalAmtValue=cartSubTotalAmtValue+productAmt
+                    // cartTotalAmtValue=cartTotalAmtValue+productAmt
                     cartCountValue++
-
+                    
+ 
                     $('#cartCount').text(cartCountValue)
-                    $('#cart_subtotal').text(cartSubTotalAmtValue)
-                    $('#totalPrice').text(cartTotalAmtValue)
-
+                  
+                   
                     $.ajax({
                         type: 'POST',
                         url: '/changeQuantity',
@@ -130,7 +133,9 @@
                         success: function(response) {
                             if(response.success){
                              console.log("successfully update quantity");
-                              
+                             $('#cart_totalDiscount').text(response.totalDiscount)
+                             $('#cart_subtotal').text(response.subTotalCart)
+                             $('#totalPrice').text(response.totalPriceResult)
                             }
                         },
                         error: function(error) {
@@ -149,14 +154,14 @@
                     productTotalAmt=productAmt*qtyval
                    
                     $(this).closest('.cart-product-details').find('.product-total-amount').text(productTotalAmt);
-                    cartSubTotalAmtValue=cartSubTotalAmtValue-productAmt
-                    cartTotalAmtValue=cartTotalAmtValue-productAmt
+                    // cartSubTotalAmtValue=cartSubTotalAmtValue-productAmt
+                    // cartTotalAmtValue=cartTotalAmtValue-productAmt
                     cartCountValue--
 
                     $('#cartCount').text(cartCountValue)
 
-                    $('#cart_subtotal').text(cartSubTotalAmtValue)
-                    $('#totalPrice').text(cartTotalAmtValue)
+                    // $('#cart_subtotal').text(cartSubTotalAmtValue)
+                    // $('#totalPrice').text(cartTotalAmtValue)
                     $.ajax({
                         type: 'POST',
                         url: '/changeQuantity',
@@ -164,7 +169,9 @@
                         success: function(response) {
                             if(response.success){
                              console.log("successfully update quantity");
-                              
+                             $('#cart_totalDiscount').text(response.totalDiscount)
+                             $('#cart_subtotal').text(response.subTotalCart)
+                             $('#totalPrice').text(response.totalPriceResult)
                             }
                         },
                         error: function(error) {

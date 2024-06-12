@@ -15,7 +15,7 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const Wallet = require('../models/walletModel');
 const { log } = require('console');
-const {getCartCount}=require("../utils/cart")
+const {getCartCount,findCartDiscountTotal,cartTotalWithoutDiscount}=require("../utils/cart")
 const {getWishListCount}=require("../utils/wishlist")
 
   // change order status
@@ -97,7 +97,7 @@ const {getWishListCount}=require("../utils/wishlist")
        let orderDetails=await Order.aggregate([{$match:{pkUserId,pkOrderId,strStatus:"Active"}}])
        let wishListCount=await getWishListCount(pkUserId)
        let cartCount= await getCartCount(pkUserId)
-    
+   
        if (orderDetails && orderDetails.length) {
          
         
@@ -173,10 +173,10 @@ const {getWishListCount}=require("../utils/wishlist")
         let wishListCount=await getWishListCount(userId)
 
         let cartDetails = cartDetailsFind.map(cart => {
-          
+         
           return {
             ...cart._doc,
-         
+           
           };
         });
 
@@ -211,7 +211,28 @@ const {getWishListCount}=require("../utils/wishlist")
           if(wallet.length){
             walletBalance= wallet[0].balance
           }
-       res.render("user/checkoutPage",{layout:"user_layout",success:true,userAddress,cartProducts,wishListCount,pkUserId,cartDetails,cartCount ,walletBalance,coupons,message:"successfully loaded cart page",user:true})
+          let subTotal=await cartTotalWithoutDiscount(cartDetails[0]._id)
+          let totalDiscount=await findCartDiscountTotal(cartDetails[0]._id)
+          let subTotalPrice =parseFloat( subTotal && subTotal[0] ? subTotal[0].total_price : 0);
+          let totalDiscountValue =parseFloat( totalDiscount && totalDiscount[0] ? totalDiscount[0].total_discount : 0);
+        let gst=parseFloat(subTotalPrice*4/100)
+        let  totalCartPrice =parseFloat(cartDetails[0].total_cart_price+gst)
+          let dataTosent={
+            layout:"user_layout",success:true,userAddress,
+            cartProducts,wishListCount,pkUserId,cartDetails,cartCount ,
+            subTotalPrice,
+            gst,
+            totalCartPrice,
+            walletBalance,coupons,message:"successfully loaded cart page",user:true
+          }
+        
+          if(totalDiscountValue>0){
+            dataTosent={
+              ...dataTosent,
+              totalDiscountValue
+            }
+          }
+       res.render("user/checkoutPage",{...dataTosent})
        } else {
         res.redirect("/")
        }
@@ -590,7 +611,21 @@ const {getWishListCount}=require("../utils/wishlist")
     
     }
   
-  
+    const orderDismiss = async (req, res) => {
+
+      console.log(req.session);
+      console.log(req.body);
+      const orderId = req.body.orderId;
+    
+      try {
+    
+        await Order.findByIdAndDelete(
+          {_id:req.body.orderId },
+        
+        );
+        return res.json({ success: true });
+      } catch (error) {}
+    };
   module.exports = {
     getOrderDetailsPage,
     changeOrderStatus,
@@ -599,5 +634,6 @@ const {getWishListCount}=require("../utils/wishlist")
     getOrderDetailsPageAdmin,
     getOrderListAdmin,
     checkOutRazorPay,
-    verifyPayment
+    verifyPayment,
+    orderDismiss
   }

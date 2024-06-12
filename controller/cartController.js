@@ -9,7 +9,7 @@ const router = require('../routes/userRoutes');
 const otpGenerator = require('otp-generator');
 const twilio = require('twilio');
 const Cart = require('../models/cartModel');
-const {getCartCount,findTotalCartPrice}=require("../utils/cart")
+const {getCartCount,findTotalCartPrice,cartTotalWithoutDiscount,findCartDiscountTotal}=require("../utils/cart")
 const {getWishListCount}=require("../utils/wishlist");
 const match = require('nodemon/lib/monitor/match');
 
@@ -57,7 +57,7 @@ const addToCart=async(req,res)=>{
                   // Update total_cart_price for the cart
                   let updatedTotalPriceResult = await Cart.updateOne(
                       { pkUserId, strStatus: "Active" },
-                      { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
+                      { $set: { total_cart_price: parseFloat(totalPriceResult[0].total_cart_price) } }
                   );
           
                   console.log("Update result:", updatedTotalPriceResult);
@@ -113,7 +113,7 @@ const addToCart=async(req,res)=>{
                     // Update total_cart_price for the cart
                     let updatedTotalPriceResult = await Cart.updateOne(
                         { pkUserId, strStatus: "Active" },
-                        { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
+                        { $set: { total_cart_price: parseFloat(totalPriceResult[0].total_cart_price) } }
                     );
             
                     console.log("Update result:", updatedTotalPriceResult);
@@ -156,7 +156,7 @@ const addToCart=async(req,res)=>{
                
                 ...product
                 ],
-              total_cart_price:total,
+              total_cart_price:parseFloat(total),
               updatedDate:null,
               createDate:new Date()
             })
@@ -212,8 +212,13 @@ const addToCart=async(req,res)=>{
 
       return {...obj._doc,intTotalPrice:intTotalPrice,pkCartId:cartDetails[0].pkCartId}
     })
-    
-     res.render("user/cartPage",{layout:"user_layout",success:true,cartDetails,cartProducts,pkUserId, wishListCount,message:"successfully loaded cart page",user:true,cartCount})
+    let subTotal=await cartTotalWithoutDiscount(cartDetails[0]._id)
+    let totalDiscount=await findCartDiscountTotal(cartDetails[0]._id)
+    let subTotalPrice = subTotal && subTotal[0] ? subTotal[0].total_price : 0;
+    let totalDiscountValue = totalDiscount && totalDiscount[0] ? totalDiscount[0].total_discount : 0;
+  
+     res.render("user/cartPage",{layout:"user_layout",success:true,cartDetails,cartProducts,pkUserId, wishListCount, subTotal: subTotalPrice,
+      totalDiscount:totalDiscountValue,message:"successfully loaded cart page",user:true,cartCount})
    } else {
     res.render("user/cartPage",{layout:"user_layout",success:true,user:true,pkUserId,cartCount, wishListCount,message:"Cart is empty"})
    }
@@ -252,7 +257,7 @@ const addToCart=async(req,res)=>{
                 { pkUserId, strStatus: "Active" },
                 { $set: { total_cart_price: totalPriceResult[0].total_cart_price } }
             );
-    
+          
             console.log("Update result:", updatedTotalPriceResult);
         } else {
             console.log("No active products found or total_cart_price is undefined.");
@@ -265,9 +270,9 @@ const addToCart=async(req,res)=>{
             return {...obj,intTotalPrice:intTotalPrice}
           })
     
-    
-    
-          res.json({success:true,message:"cart updated-1",quantity,totalPriceResult:totalPriceResult[0].total_cart_price,pkUserId})
+    let totalDiscount=await findCartDiscountTotal(pkUserId)
+    let subTotalCart=parseFloat(totalPriceResult[0].total_cart_price+totalDiscount[0].total_discount)
+          res.json({success:true,message:"cart updated-1",quantity,totalPriceResult:totalPriceResult[0].total_cart_price,pkUserId,totalDiscount:totalDiscount[0].total_discount,subTotalCart})
         }
         else{
           res.json({succes:false,message:"Fail to change quantity"})

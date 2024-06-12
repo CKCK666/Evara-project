@@ -502,6 +502,7 @@ $("#place-order-btn").click(async function(e){
             const orderId = response.orderId;
          const walletCashUsed=response.walletCashUsed
          const pkUserId=response.pkUserId
+         let isProgrammaticClose = false;
             var options = {
               key: "rzp_test_N10HdSb3UEKLbM",
               amount:order.amount, // Amount in paise (change to your desired amount)
@@ -540,10 +541,57 @@ $("#place-order-btn").click(async function(e){
                   });
                   
                 },
+               
+
+
               });
-              }
+              },
+              modal: {
+                ondismiss: function(greet){
+                alert(greet)
+                  // if (!isProgrammaticClose) {
+                  // $.ajax({
+                  //   url: "/paymentDismiss",
+                  //   method: "Delete",
+                  //   data: {
+                  //     payment : 'failed',
+                  //     orderId: orderId
+                  //   },
+                  //   success: function (data) {
+                  //     if (data.success) {
+  
+                  //       Swal.fire({
+                  //         icon: 'success',
+                  //         title: 'Payment Cancelled',
+                  //         showConfirmButton: true,
+                  //         confirmButtonText: 'OK',
+                         
+                  //       })
+                  //     }
+                  //   },
+                  //   error: function (xhr, status, error) {
+                  //     console.error(error);
+                  //   },
+                  // });
+                  // }
+                  return true
+                }
+            },
           };
           var rzp = new Razorpay(options);
+          let handlePaymentFailed=()=>{
+
+          rzp.close("hello")
+           
+          }
+     rzp.on("payment.failed", async function (response) {
+     
+          handlePaymentFailed()
+          });
+
+         
+    
+  
           rzp.open();
 
 
@@ -1408,18 +1456,95 @@ document.addEventListener('click', function(event) {
 
 }
 
+if(window.location.pathname.startsWith("/search")){
+  const checkboxes = document.querySelectorAll('.category-checkbox');
+  const urlParams = new URLSearchParams(window.location.search);
+  const minPrice = parseInt(urlParams.get('minPrice')) || 0;
+  const maxPrice = parseInt(urlParams.get('maxPrice')) || 5000;
+
+    /*---------------------
+        Price range
+    --------------------- */
+    var sliderrange = $('#slider-range');
+    var amountprice = $('#amount');
+    $(function() {
+        sliderrange.slider({
+            range: true,
+            min: 50,
+            max: 10000,
+            values: [minPrice,maxPrice],
+            slide: function(event, ui) {
+                amountprice.val("₹" + ui.values[0] + " - ₹" + ui.values[1]);
+            }
+        });
+        amountprice.val("₹" + sliderrange.slider("values", 0) +
+            " - ₹" + sliderrange.slider("values", 1));
+    });
 
 
 
 
-
-
-
-
-
-
+  const selectedCategoryIds = urlParams.get('categoryIds') ? urlParams.get('categoryIds').split(',') : [];
+  $('.category-checkbox').each(function() {
+      if (selectedCategoryIds.includes($(this).val())) {
+          $(this).prop('checked', true);
+      }
+  });
 
  
+ 
+
+  // Function to get checked checkboxes
+  function getCheckedCheckboxes() {
+    const checkedValues = [];
+    checkboxes.forEach(checkbox => {
+      if (checkbox.checked) {
+        checkedValues.push(checkbox.value);
+      }
+    });
+    return checkedValues;
+  }
+
+  // Example of using the function when a button is clicked
+  document.querySelector('#filter-btn').addEventListener('click', () => {
+    const url = new URL(window.location.href);
+    const checkedCategories = getCheckedCheckboxes();
+    var min = $("#slider-range").slider("values", 0);
+    var max = $("#slider-range").slider("values", 1);
+    url.searchParams.set('minPrice',min);
+    url.searchParams.set('maxPrice',max);
+   url.searchParams.set('categoryIds',checkedCategories);
+    window.location.href = url.toString();
+  });
+
+ 
+  var pageLinks = document.querySelectorAll('.page-link');
+  if (pageLinks.length > 0) {
+ 
+  pageLinks.forEach(function(link) {
+      
+      link.addEventListener('click', function(event) {
+        const url = new URL(window.location.href);
+          event.preventDefault();
+        var page = link.getAttribute('data-page')
+       
+      url.searchParams.set('page', page);
+      window.location.href = url.toString();
+         
+         
+      });
+  });
+
+  }
+
+
+
+}
+
+
+
+
+
 });
 
 const deleteAddress=(addressId,userId,render)=>{
@@ -1637,13 +1762,11 @@ const deleteAddress=(addressId,userId,render)=>{
 function sortProducts(order) {
  
   const url = new URL(window.location.href);
-  url.searchParams.set('sort', order);
   
+    url.searchParams.set('sort', order);
+   
+
    window.location.href = url.toString();
 }
 
-function getSliderRange() {
-  var min = $("#slider-range").slider("values", 0);
-  var max = $("#slider-range").slider("values", 1);
- alert("Selected range: $" + min + " - $" + max);
-}
+

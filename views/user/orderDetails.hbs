@@ -66,6 +66,8 @@
                             {{else}}{{#eq strOrderStatus 'Delivered'}}style="color: green"
                            {{else}}{{#eq strOrderStatus 'Cancelled'}}style="color: red"
                             {{else}}{{#eq strOrderStatus 'Return Requested'}}style="color: red"
+                            {{else}}{{#eq strOrderStatus 'Pending'}}style="color: red"
+                            {{/eq}}
                             {{/eq}}
                              {{/eq}}
                              {{/eq}}
@@ -92,33 +94,49 @@
                                     </tbody>
                                 </table>
                             </div>
-                            <div class="bt-1 border-color-1 mt-30 mb-30"></div>
-                            {{#eq orderDetails.[0].strOrderStatus 'Delivered'}}
-                            {{else}}
-                            {{#eq orderDetails.[0].strOrderStatus 'Cancelled'}}
-                            {{#eq orderDetails.[0].strOrderStatus 'Returned'}}
-                            {{#eq orderDetails.[0].strOrderStatus 'Return Requested'}}
-                            {{else}}
-                              <a 
-                                href='#' data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Cancelled"
-                                class='btn-small d-block cancel-order-btn'
-                              >  <button  class='btn btn-fill-out'>Cancel Order</button></a>
-                               {{/eq}}
-                            {{/eq}}
-                           
-                            {{/eq}}
-                            {{/eq}}
+                            <div class="bt-1 border-color-1 mt-30 mb-30">
+                         {{#eq orderDetails.[0].strOrderStatus 'Processing'}}
+                         <a href='#' data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Cancelled" class='btn-small d-block cancel-order-btn'>
+    <button class='btn btn-fill-out'>Cancel Order</button>
+  </a>
+{{else}}
+ {{#eq orderDetails.[0].strOrderStatus 'Confirmed'}}
+ <a href='#' data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Cancelled" class='btn-small d-block cancel-order-btn'>
+    <button class='btn btn-fill-out'>Cancel Order</button>
+  </a>
+  {{else}}
+   {{#eq orderDetails.[0].strOrderStatus 'Shipped'}}
+ <a href='#' data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Cancelled" class='btn-small d-block cancel-order-btn'>
+    <button class='btn btn-fill-out'>Cancel Order</button>
+  </a>
+  {{else}}
+   {{#eq orderDetails.[0].strOrderStatus 'Pending'}}
+ <a href='#' data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Cancelled" class='btn-small d-block cancel-order-btn'>
+    <button class='btn btn-fill-out'>Cancel Order</button>
+  </a>
+  {{else}}
+  {{/eq}}
+ {{/eq}}
+  {{/eq}}
+ {{/eq}}
+                         
+
                              {{#eq orderDetails.[0].strOrderStatus 'Delivered'}}
                                <button onclick="generateInvoice()" class="btn btn-md rounded font-sm hover-up"><i class="text-muted material-icons md-post_add"></i>Invoice download</button>
                                {{else}}
                                {{#eq orderDetails.[0].strOrderStatus 'Returned'}}
                                <button onclick="generateInvoice()" class="btn btn-md rounded font-sm hover-up "><i class="text-muted material-icons md-post_add"></i>Invoice download</button>
+                               {{else}}
+                               {{#eq orderDetails.[0].strOrderStatus 'Return Requested'}}
+                               <button onclick="generateInvoice()" class="btn btn-md rounded font-sm hover-up "><i class="text-muted material-icons md-post_add"></i>Invoice download</button>
+                               {{/eq}}
                                {{/eq}}
                                {{/eq}}
                                
                                  {{#eq orderDetails.[0].strOrderStatus 'Delivered'}}
                                <button  class="btn btn-md rounded font-sm hover-up return-order-btn" data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Return Requested"><i class="text-muted material-icons md-post_add"></i>Return order</button>
                                {{/eq}}
+                               </div>
                         </div>
                     </div>
                                         

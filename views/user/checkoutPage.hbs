@@ -135,12 +135,26 @@
                                         </tr>
                                         <tr>
                                             <th>Total</th>
-                                            <td colspan="2" class="product-subtotal totalAmt"><span class="font-xl text-brand fw-900">₹{{cartDetails.[0].total_cart_price}}</span></td>
+                                            <td colspan="2" class="product-subtotal totalAmt"><span>₹{{subTotalPrice}}</span></td>
+                                        </tr>
+                                        {{#if totalDiscountValue}}
+                                          <tr>
+                                            <th>Discount</th>
+                                            <td colspan="2" class="totalDiscount"><span class="text-danger">-{{totalDiscountValue}}</span></td>
+                                        </tr>
+                                        {{/if}}
+                                         <tr>
+                                            <th>Coupon reduction</th>
+                                            <td colspan="2" class="couponDiscount"><span class="text-danger">0.00</span></td>
+                                        </tr>
+                                          <tr>
+                                            <th>Gst-(4%)</th>
+                                            <td colspan="2" class="gst"><span class="text-danger">+{{gst}}</span></td>
                                         </tr>
                                       
                                         <tr>
                                             <th>Order Total</th>
-                                            <td colspan="2" class="product-subtotal grandTotalAmt"><span class="font-xl text-brand fw-900">₹{{cartDetails.[0].total_cart_price}}</span></td>
+                                            <td colspan="2" class="product-subtotal grandTotalAmt"><span class="font-xl text-brand fw-900">₹{{totalCartPrice}}</span></td>
                                         </tr>
                                     
                                         {{/if}}
@@ -226,5 +240,9 @@
 .button-group button:last-child {
     margin-right: 0; /* Remove margin-right for the last button to prevent extra space */
 }
+
+
+
+   
 
         </style>

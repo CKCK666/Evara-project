@@ -577,9 +577,15 @@ await Promise.all(updatePromises);
   const sortProducts=async(req,res)=>{
     let pkUserId=req.session.user.pkUserId
     try {
-      console.log(req.query);
+     
+      const page = parseInt(req.query.page) || 1;
+   const limit = parseInt(req.query.limit) || 1;
+      const skip = (page - 1) * limit;
       let sort
       let sortDisplay
+      const queryCheck = req.query.sort && (req.query.sort === 'asc' || req.query.sort === 'desc') ? req.query.sort : null;
+      const minPrice = parseFloat(req.query.minPrice) || 0;
+       const maxPrice = parseFloat(req.query.maxPrice) || Number.MAX_VALUE;
      let search={strStatus: 'Active',intStock:{$ne:0}}
       
 if (req.query.sort === 'desc') {
@@ -598,27 +604,24 @@ if (req.query.sort === 'desc') {
         let productName=req.query.productName
         search={
           ...search,
-          strProductName: { $regex:productName, $options: 'i' }
-
+          strProductName: { $regex:productName, $options: 'i' },
+        
         }
        }
+    if(req.query.categoryIds && req.query.categoryIds.length){
+      const categoryIdsArray = req.query.categoryIds.split(',').map(id=>new ObjectId(id))
+      search={
+        ...search,
+        fkcategoryId: { $in: categoryIdsArray }
+      }
 
+    }
 
-      if(req.query.pkCategoryId && req.query.productName){
-       
-        let productName=req.query.productName
-        let fkcategoryId=new ObjectId(req.query.pkCategoryId)
-        search={
-          $and: [
-            { strProductName: { $regex:productName, $options: 'i' } }, 
-            {fkcategoryId},
-            { ...search },
-            {intStock:{$ne:0}}
-        ] 
-        }
     
 
-      }
+
+
+
       const result = await Product.aggregate([
         // Match the products based on the search criteria
         { $match: search },
@@ -655,23 +658,78 @@ if (req.query.sort === 'desc') {
           }
         },
         // Sort based on the effective price or createdDate
-        ...(req.query.sort ? [{
+        ...(queryCheck ? [{
           $sort: {
             effectivePrice: sort
           }
         }] : [{
           $sort: sort
-        }])
+        }]),
+        {
+          $match: {
+            effectivePrice: {
+              $gte: minPrice,
+              $lte: maxPrice
+            }
+          }
+        },
+        { $skip: skip },
+        { $limit: limit }
       ]);
-      
+      // Get total count for pagination
+const totalCount = await Product.aggregate([
+  { $match: search },
+  {
+      $lookup: {
+          from: "offers",
+          localField: "offer",
+          foreignField: "_id",
+          as: "offer",
+      }
+  },
+  {
+      $unwind: {
+          path: "$offer",
+          preserveNullAndEmptyArrays: true
+      }
+  },
+  {
+      $match: {
+          $or: [
+              { "offer.status": true },
+              { "offer": { $exists: false } }
+          ]
+      }
+  },
+  {
+      $addFields: {
+          effectivePrice: {
+              $ifNull: ["$offerPrice", "$intPrice"]
+          }
+      }
+  },
+  {
+      $match: {
+          effectivePrice: {
+              $gte: minPrice,
+              $lte: maxPrice
+          }
+      }
+  },
+  { $count: "totalCount" }
+]);
+
+const totalPages = Math.ceil((totalCount[0] ? totalCount[0].totalCount : 0) / limit);
  
       
       let categories=await Category.aggregate([{$match:{strStatus:"Active"}}])
       let cartCount= await getCartCount(pkUserId)
         
       let wishListCount=await getWishListCount(pkUserId)
-      res.render("user/filterProducts",{layout:"user_layout",user:true,result,categories,cartCount,wishListCount,sortDisplay})
+      res.render("user/filterProducts",{layout:"user_layout",user:true,result,categories,cartCount,wishListCount,sortDisplay, currentPage: page,
+        totalPages: totalPages,queries:req.query})
     } catch (error) {
+      console.log(error)
       res.json({success:true,message:error.message})
     }
    }
