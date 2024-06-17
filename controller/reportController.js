@@ -170,10 +170,10 @@ const printInvoice = async (req, res) => {
 
       try {
   
-        const orderId = new ObjectId("6638c6f54c36010cead6ff5e")
+        const orderId = new ObjectId(req.query.orderId)
        
         const orderData = await Order.aggregate([{$match:{pkOrderId:orderId}}])
-         console.log(orderData);
+        
 
         const { fileName, pdfBuffer } = await generateInvoice(orderData[0]);
           res.setHeader('Content-disposition', `attachment; filename="${fileName}"`);

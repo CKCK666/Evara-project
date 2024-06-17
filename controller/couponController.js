@@ -9,17 +9,36 @@ const User = require("../models/userModel")
 const Coupon= require("../models/couponModel")
 
 
-const listCoupons=async(req,res)=>{
-    try {
-        let coupons=await Coupon.aggregate([{$sort:{startDate:-1}}])
-       
-      
-    
-        res.render("admin/couponsList",{layout:"admin_layout",admin:true,coupons})
-    } catch (error) {
-        
-    }
-}
+const listCoupons = async (req, res) => {
+  try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 6;
+      const skip = (page - 1) * limit;
+
+      // Aggregate query with sorting and pagination
+      const coupons = await Coupon.aggregate([
+          { $sort: { startDate: -1 } },
+          { $skip: skip },
+          { $limit: limit }
+      ]);
+
+      // Count the total number of coupons
+      const totalCoupons = await Coupon.countDocuments();
+      const totalPages = Math.ceil(totalCoupons / limit);
+
+      res.render("admin/couponsList", {
+          layout: "admin_layout",
+          admin: true,
+          coupons,
+          totalPages,
+          currentPage: page
+      });
+  } catch (error) {
+      console.error("Error fetching coupons: ", error);
+      res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 const getCreateCoupons=async(req,res)=>{
     try {
         let queryMatch={

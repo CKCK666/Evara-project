@@ -340,6 +340,7 @@ const getUserSetting=async(req,res)=>{
          let walletHistory1=await Order.aggregate([  {
           $match: {
             pkUserId:new ObjectId(req.query.pkUserId),
+            strPaymentStatus:"Success",
             strStatus:"Active",
               strOrderStatus: { $in: ["Cancelled", "Returned"] }
           }
@@ -348,6 +349,7 @@ const getUserSetting=async(req,res)=>{
         {
             "$match": {
               pkUserId:new ObjectId(req.query.pkUserId),
+              strPaymentStatus:"Success",
               strStatus:"Active",
                 "strOrderStatus": { "$nin": ["Cancelled", "Returned"] },
                 "walletCashUsed": { "$gt": 0 }
@@ -445,39 +447,52 @@ const userEdit = async (req, res) => {
 
 
    //get user list
-   const getUserList=async(req,res)=>{
+   const getUserList = async (req, res) => {
     try {
-      let count =await User.find().countDocuments()
-      if(count>0){
-        let result=await User.find({strStatus:{$nin:["Deleted","Pending"]}})
-       
-        let users= result.map((user,index)=>{
-          const isoDate = user.createdDate;
-          const date = new Date(isoDate);
-          const formattedDate = date.toString().substring(0, 15) 
-          return {
-            ...user._doc,
-            index:index+1,
-            createdDate: formattedDate
-           }
-          
-          })
-        console.log(users);
-        res.render("admin/listUsers",{layout:"admin_layout",users,count,admin:true})
-      }
-      else{
+        const count = await User.countDocuments({ strStatus: { $nin: ["Deleted", "Pending"] } });
         
-        res.render("admin/listUsers",{layout:"admin_layout",count,admin:true})
-      }
-   
-     
-     
+        if (count > 0) {
+            const page = parseInt(req.query.page) || 1;
+            const limit = parseInt(req.query.limit) || 10;
+            const skip = (page - 1) * limit;
+            const totalPages = Math.ceil(count / limit);
+
+            let result = await User.find({ strStatus: { $nin: ["Deleted", "Pending"] } })
+                .skip(skip)
+                .limit(limit);
+
+            let users = result.map((user, index) => {
+                const isoDate = user.createdDate;
+                const date = new Date(isoDate);
+                const formattedDate = date.toString().substring(0, 15);
+                return {
+                    ...user._doc,
+                    index: skip + index + 1,
+                    createdDate: formattedDate,
+                };
+            });
+
+            res.render("admin/listUsers", {
+                layout: "admin_layout",
+                users,
+                count,
+                totalPages,
+                currentPage: page,
+                admin: true
+            });
+        } else {
+            res.render("admin/listUsers", {
+                layout: "admin_layout",
+                totalPages: 0,
+                currentPage: 1,
+                admin: true
+            });
+        }
     } catch (error) {
-      res.json({success:false,message: error.message})
+        res.json({ success: false, message: error.message });
     }
-    
-     
-   }
+};
+
   
     //delete
     const deleteUser=async(req,res)=>{

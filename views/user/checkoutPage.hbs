@@ -26,7 +26,7 @@
                                                 <p>Discount: {{discountPercentage}}%</p>
                                                 <p>Purchase above Rs.{{minimumSpend}}</p>
                                                 <h6>Expiry :{{formatDate expireDate}}<h6>
-                                          
+                                                  
                                                 <div class="button-group">
                     <button type="button" class="copy-btn btn btn-primary btn-sm rounded apply-btn" data-id="{{_id}}" data-discount="{{discountPercentage}}" data-minSpend="{{minimumSpend}}" >Apply</button>
                     <button type="button" class="remove-btn btn btn-danger btn-sm rounded" style="display: none;">Remove</button>
@@ -140,12 +140,12 @@
                                         {{#if totalDiscountValue}}
                                           <tr>
                                             <th>Discount</th>
-                                            <td colspan="2" class="totalDiscount"><span class="text-danger">-{{totalDiscountValue}}</span></td>
+                                            <td colspan="2" class="totalDiscount"><span class="text-danger" id="totalDiscountSpan">-{{totalDiscountValue}}</span></td>
                                         </tr>
                                         {{/if}}
                                          <tr>
                                             <th>Coupon reduction</th>
-                                            <td colspan="2" class="couponDiscount"><span class="text-danger">0.00</span></td>
+                                            <td colspan="2" class="couponDiscount-checkout"><span class="text-danger" id="couponDiscountSpan">0.00</span></td>
                                         </tr>
                                           <tr>
                                             <th>Gst-(4%)</th>

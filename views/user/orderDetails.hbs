@@ -31,8 +31,9 @@
                     {{/if}}
                    
                     </div>
-                      
+                      {{#if orderDetails}}
                      <div class="col-md-6">
+                      
                         <div class="order_review">
                             <div class="mb-20">
                                 <h4>Your Orders</h4>
@@ -79,7 +80,19 @@
                                         </tr>
                                         <tr>
                                             <th>SubTotal</th>
-                                            <td class="product-subtotal" colspan="2">₹{{totalAmountAfterDiscount}}</td>
+                                            <td class="product-subtotal" colspan="2">₹{{intTotalOrderPrice}}</td>
+                                        </tr>
+                                         <tr>
+                                            <th>Total Discount</th>
+                                            <td class="product-discount" colspan="2">-₹{{totalDiscount}}</td>
+                                        </tr>
+                                         <tr>
+                                            <th>Coupon Discount</th>
+                                            <td class="product-coupon-discount" colspan="2">-₹{{couponDiscount}}</td>
+                                        </tr>
+                                         <tr>
+                                            <th>Gst-(4%)</th>
+                                            <td class="product-gst" colspan="2">+₹{{gst}}</td>
                                         </tr>
                                         <tr>
                                             <th>Shipping</th>
@@ -114,6 +127,9 @@
  <a href='#' data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Cancelled" class='btn-small d-block cancel-order-btn'>
     <button class='btn btn-fill-out'>Cancel Order</button>
   </a>
+   <a href='#' data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Cancelled" class='btn-small d-block cancel-order-btn'>
+    <button class='btn btn-fill-out'>Retry</button>
+  </a>
   {{else}}
   {{/eq}}
  {{/eq}}
@@ -121,14 +137,19 @@
  {{/eq}}
                          
 
-                             {{#eq orderDetails.[0].strOrderStatus 'Delivered'}}
-                               <button onclick="generateInvoice()" class="btn btn-md rounded font-sm hover-up"><i class="text-muted material-icons md-post_add"></i>Invoice download</button>
+                           
+                               </div>
+
+                               <div class="bt-1 border-color-1 mt-30 mb-30">
+                                 {{#eq orderDetails.[0].strOrderStatus 'Pending'}}
+                           
                                {{else}}
-                               {{#eq orderDetails.[0].strOrderStatus 'Returned'}}
-                               <button onclick="generateInvoice()" class="btn btn-md rounded font-sm hover-up "><i class="text-muted material-icons md-post_add"></i>Invoice download</button>
+                               {{#eq orderDetails.[0].strOrderStatus 'Processing'}}
+                   
                                {{else}}
-                               {{#eq orderDetails.[0].strOrderStatus 'Return Requested'}}
-                               <button onclick="generateInvoice()" class="btn btn-md rounded font-sm hover-up "><i class="text-muted material-icons md-post_add"></i>Invoice download</button>
+                               {{#eq orderDetails.[0].strOrderStatus 'Cancelled'}}
+                               {{else}}
+                               <a onclick="generateInvoice('{{orderDetails.[0].pkOrderId}}')" class="btn btn-md rounded font-sm hover-up "><i class="text-muted material-icons md-post_add"></i>Invoice download</a>
                                {{/eq}}
                                {{/eq}}
                                {{/eq}}
@@ -137,9 +158,17 @@
                                <button  class="btn btn-md rounded font-sm hover-up return-order-btn" data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Return Requested"><i class="text-muted material-icons md-post_add"></i>Return order</button>
                                {{/eq}}
                                </div>
+                               
                         </div>
+                             
                     </div>
-                                        
+                    {{else}}
+                    <div class="col-md-6">
+                      <h1>No Orders</h1>
+                    </div>
+                   {{/if}}   
+                    
+                                  
                 </div>
               
             

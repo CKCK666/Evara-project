@@ -10,26 +10,44 @@ const Coupon= require("../models/couponModel")
 const Offer= require("../models/offerModel")
 const { sortProducts } = require("./productController")
 
-const listOffer=async(req,res)=>{
-    try {
-        let findResult=await Offer.aggregate([{$sort:{startingDate:1}}])
-       let offers=findResult.map((offer,index)=>{
-        // const isoDate = offer.endDate;
-        // const date = new Date(isoDate);
-        // const formattedDate = date.toString().substring(0, 15)
-        return {
-          ...offer,
-          index:index+1,
-          // endDate : formattedDate
-         }
-        
-        })
-    
-        res.render("admin/listOffer",{layout:"admin_layout",admin:true,offers})
-    } catch (error) {
-        
-    }
-}
+const listOffer = async (req, res) => {
+  try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 6;
+      const skip = (page - 1) * limit;
+
+      // Aggregate query with sorting and pagination
+      const findResult = await Offer.aggregate([
+          { $sort: { startingDate: 1 } },
+          { $skip: skip },
+          { $limit: limit }
+      ]);
+
+      // Count the total number of offers
+      const totalOffers = await Offer.countDocuments();
+      const totalPages = Math.ceil(totalOffers / limit);
+
+      // Map the results to include the index
+      let offers = findResult.map((offer, index) => {
+          return {
+              ...offer,
+              index: skip + index + 1,
+          };
+      });
+
+      res.render("admin/listOffer", {
+          layout: "admin_layout",
+          admin: true,
+          offers,
+          totalPages,
+          currentPage: page
+      });
+  } catch (error) {
+      console.error("Error fetching offers: ", error);
+      res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 const getCreateOffer=async(req,res)=>{
     try {
         let queryMatch={

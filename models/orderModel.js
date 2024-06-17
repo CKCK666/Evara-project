@@ -29,8 +29,11 @@ const OrderSchema = new Schema({
         enum: ['Active','Deleted'],
         default: 'Active'
     },
+    gst:Number,
     totalAmountAfterDiscount : {type:Number},
   walletCashUsed : {type:Number,default:0},
+  couponDiscount : {type:Number,default:0},
+  totalDiscount : {type:Number,default:0},
     createdDate: { type: Date, default: Date.now },
     updatedDate: { type: Date, default:null }
 });

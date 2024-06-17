@@ -1,5 +1,6 @@
 const PDFDocument = require('pdfkit');
 const moment = require('moment');
+const fs = require('fs');
 
 async function generatePDFReports(reportData, startDate, endDate) {
     return new Promise((resolve, reject) => {
@@ -7,75 +8,99 @@ async function generatePDFReports(reportData, startDate, endDate) {
             const pdfDoc = new PDFDocument();
             const filename = `sales-report-${moment().format('YYYY-MM-DD')}.pdf`;
 
+            // Set up PDF document
+            pdfDoc.font('Helvetica');
             pdfDoc.text("Order Report", { align: "center" });
             pdfDoc.moveDown();
-            if(startDate && endDate){
+            if (startDate && endDate) {
                 pdfDoc.text(`Report from ${startDate} to ${endDate}`, { align: "center" });
             }
 
-            
-          
             pdfDoc.moveDown();
-
             pdfDoc.text("Seller Information:");
             pdfDoc.text(`Company Name: Evara`);
             pdfDoc.text(`Address: Ernakulam`);
             pdfDoc.text(`Contact No: +919999999999`);
-            pdfDoc.moveDown();
-            let fontBold = 'Helvetica-Bold';
-            pdfDoc.text("Orders:");
-            pdfDoc.fontSize(10);
-            let startY = pdfDoc.y + 15;
-            let rowHeight = 20;
-            let totalAmountAfterDiscount=0
-            // Headers
-            pdfDoc.text("No", 50, startY);
-            pdfDoc.text("Order Id", 75, startY);
-            pdfDoc.text("Order Date", 220, startY);
-            pdfDoc.text("Amount", 275, startY);
-            pdfDoc.text("Order Amount", 330, startY);
-            pdfDoc.text("Order Status", 400, startY);
-            pdfDoc.text("Payment Status", 470, startY);
+            pdfDoc.moveDown(2);
 
-            // Data
+            // Table settings
+            const headers = ["No", "Order Id", "Order Date", "Amount", "After Discount", "Payment Status"];
+            const columnWidths = [25, 100, 100, 75, 100, 100]
+            let startX = 40;
+            let startY = pdfDoc.y+20;
+            let rowHeight = 25;
+
+            // Draw table headers
+            pdfDoc.font('Helvetica-Bold');
+            headers.forEach((header, i) => {
+                pdfDoc.text(header, startX, startY-10, { width: columnWidths[i], align: 'center' });
+                startX += columnWidths[i];
+            });
+
+            // Draw table header border
+            drawTableBorders(pdfDoc, 40, startY, rowHeight, columnWidths);
+
+            // Table Rows
+            pdfDoc.font('Helvetica');
             startY += rowHeight;
-            reportData.forEach((orderInfo, index) => {
-                totalAmountAfterDiscount+=orderInfo.totalAmountAfterDiscount
-                let createdDate=orderInfo.createdDate.toLocaleDateString()
-                pdfDoc.text(`${index + 1}`, 50, startY);
-                pdfDoc.text(`${orderInfo.pkOrderId}`, 75, startY);
-                pdfDoc.text(`${createdDate}`, 225, startY);
-                pdfDoc.text(`${orderInfo.intTotalOrderPrice.toFixed(2)}`, 275, startY);
-                pdfDoc.text(`${orderInfo.totalAmountAfterDiscount.toFixed(2)}`, 335, startY);
-                pdfDoc.text(`${orderInfo.strOrderStatus}`, 400, startY);
-                pdfDoc.text(`${orderInfo.strPaymentStatus}`, 470, startY);
+            let totalAmountAfterDiscount = 0;
+            let totalAmountBeforeDiscount=0
 
+            reportData.forEach((orderInfo, index) => {
+                totalAmountAfterDiscount += orderInfo.totalAmountAfterDiscount;
+                totalAmountBeforeDiscount+=  orderInfo.intTotalOrderPrice
+                let createdDate = new Date(orderInfo.createdDate).toLocaleDateString();
+                startX = 40;
+
+                const row = [
+                    index + 1,
+                    orderInfo.orderId || "N/A",
+                    createdDate,
+                    orderInfo.intTotalOrderPrice.toFixed(2),
+                    orderInfo.totalAmountAfterDiscount.toFixed(2),
+                    orderInfo.strPaymentStatus
+                ];
+
+                row.forEach((cell, i) => {
+                    pdfDoc.text(cell.toString(), startX, startY-10, { width: columnWidths[i], align: 'center' });
+                    startX += columnWidths[i];
+                });
+
+                drawTableBorders(pdfDoc, 40, startY, rowHeight, columnWidths);
                 startY += rowHeight;
             });
 
-            pdfDoc.moveDown();
-            pdfDoc.moveDown();
-            pdfDoc.font(fontBold).text("Total Revenue:", 450,startY);
-            pdfDoc.font(fontBold).text(totalAmountAfterDiscount.toFixed(2), 560, startY);
-            pdfDoc.font(fontBold).text("Total Discount:", 450,startY+40);
-            pdfDoc.font(fontBold).text(totalAmountAfterDiscount.toFixed(2)-5600, 560, startY+40);
-            // const totalValue = reportData.reduce((acc, value) => acc + value.totalAmountAfterDiscount, 0);
-            // pdfDoc.fontSize(12).text(`Total Value: ${totalValue.toFixed(2)}`, 420, startY, { bold: true });
+            // Total Summary
+            pdfDoc.moveDown(2);
+            pdfDoc.font('Helvetica-Bold').text("Total Amount:", 400, startY);
+            pdfDoc.text(totalAmountAfterDiscount.toFixed(2), 500, startY);
 
+            pdfDoc.moveDown(2);
+            pdfDoc.font('Helvetica-Bold').text("Total Revenue:", 400, startY+40);
+            pdfDoc.text(totalAmountBeforeDiscount.toFixed(2), 495, startY+40);
+            
             // Generate the PDF and resolve the promise when done
             const chunks = [];
             pdfDoc.on('data', (chunk) => {
                 chunks.push(chunk);
             });
-            pdfDoc.on('end', () => {
-                const pdfBuffer = Buffer.concat(chunks);
-                resolve({ filename, pdfBuffer });
-            });
-            pdfDoc.end();
-        } catch (error) {
-            reject(error);
-        }
-    });
+            
+pdfDoc.on('end', () => {
+    const pdfBuffer = Buffer.concat(chunks);
+    resolve({ filename, pdfBuffer });
+});
+pdfDoc.end();
+} catch (error) {
+reject(error);
+}
+})}
+
+function drawTableBorders(doc, startX, startY, rowHeight, columnWidths) {
+let x = startX;
+columnWidths.forEach((width) => {
+doc.rect(x, startY - rowHeight + 2.5 , width , rowHeight).stroke();
+x += width;
+});
 }
 
 module.exports = generatePDFReports;

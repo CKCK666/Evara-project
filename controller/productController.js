@@ -18,11 +18,16 @@ const Wishlist = require("../models/wishListModel")
 const getProductList=async(req,res)=>{
     try {
      let count=await Product.countDocuments()
+     const page = parseInt(req.query.page) || 1;
+     const limit = parseInt(req.query.limit) || 5;
+        const skip = (page - 1) * limit;
+        const totalPages = Math.ceil((count ? count : 0) / limit);
      if(count>0){
        let result =await Product.find({strStatus:{$ne:"Deleted"}}).populate({
         path: 'offer',
         match: { status: true }
-    });
+    }) .skip(skip)
+    .limit(limit);
 
        let products= result.map((product,index)=>{
          const isoDate = product.createdDate;
@@ -31,7 +36,7 @@ const getProductList=async(req,res)=>{
          
          return {
            ...product._doc,
-           index:index+1,
+           index:skip + index + 1,
            createdDate: formattedDate,
            offerPercentage:product.offer?product.offer.percentage:"",
            offerName:product.offer?product.offer.name:""
@@ -42,8 +47,9 @@ const getProductList=async(req,res)=>{
          const today = new Date();
          today.setHours(0, 0, 0, 0);
          const availableOffers = await Offer.aggregate([{$match:{ status : true, expiryDate : { $gte : today }}}])
+         
        
-         res.render("admin/listProducts",{layout:"admin_layout",products,admin:true,availableOffers})
+         res.render("admin/listProducts",{layout:"admin_layout",products,admin:true,availableOffers,currentPage: page, totalPages:totalPages})
        }
      else{
        res.render("admin/listProducts",{layout:"admin_layout",admin:true}) 
@@ -579,7 +585,7 @@ await Promise.all(updatePromises);
     try {
      
       const page = parseInt(req.query.page) || 1;
-   const limit = parseInt(req.query.limit) || 1;
+   const limit = parseInt(req.query.limit) || 6;
       const skip = (page - 1) * limit;
       let sort
       let sortDisplay

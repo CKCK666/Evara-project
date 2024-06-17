@@ -428,7 +428,7 @@ $.ajax({
 
 
 
-
+let couponReduction=0
 $("#place-order-btn").click(async function(e){
   e.preventDefault()
   let razorpayRadioButton = document.querySelector('#razorpayOption');
@@ -436,6 +436,24 @@ $("#place-order-btn").click(async function(e){
   let walletAmt=parseFloat(document.getElementById('walletBalanceSpan').textContent)
   let  discountAmt =parseFloat( document.querySelector('td.product-subtotal.grandTotalAmt span').textContent.slice(1))
   let totalAmountAfterDiscount=walletAmt<discountAmt?discountAmt-walletAmt:walletAmt-discountAmt
+  let totalDiscountText = document.getElementById('totalDiscountSpan').textContent;
+ // Declare couponDiscount and set it to null initially
+
+
+  let totalDiscount=null
+  if (totalDiscountText.length > 0) {
+    // Remove the first character (assuming it's a currency symbol)
+    let totalDiscountNumber = totalDiscountText.slice(1);
+
+    // Parse the resulting string to a float
+    totalDiscount = parseFloat(totalDiscountNumber);
+
+    // Log the result to the console (or use it as needed)
+    console.log(totalDiscount);
+} else {
+    // Handle the case where the text content is empty
+    console.log('totalDiscountSpan has no content');
+}
 
   const radioButtons = document.querySelectorAll('input[type="radio"][name="shipping-address"]');
 
@@ -485,8 +503,13 @@ $("#place-order-btn").click(async function(e){
    let bodyData={
     pkAddressId,
     totalAmountAfterDiscount,
-    walletAmt
+    walletAmt,
+    couponReduction
    }
+   if (totalDiscount !== null && !isNaN(totalDiscount)) {
+    bodyData.totalDiscount = totalDiscount;
+}
+
   
   
     $.ajax({
@@ -528,7 +551,7 @@ $("#place-order-btn").click(async function(e){
                   if (data.success) {
                     window.location.href ="/";
                     Swal.fire({
-                      icon: "Success",
+                      icon: "Success", 
                       title: "payment success",
                     });
                   }
@@ -548,45 +571,44 @@ $("#place-order-btn").click(async function(e){
               },
               modal: {
                 ondismiss: function(greet){
-                alert(greet)
-                  // if (!isProgrammaticClose) {
-                  // $.ajax({
-                  //   url: "/paymentDismiss",
-                  //   method: "Delete",
-                  //   data: {
-                  //     payment : 'failed',
-                  //     orderId: orderId
-                  //   },
-                  //   success: function (data) {
-                  //     if (data.success) {
+          
+                  if (!isProgrammaticClose) {
+                  $.ajax({
+                    url: "/paymentDismiss",
+                    method: "Delete",
+                    data: {
+                      payment : 'failed',
+                      orderId: orderId
+                    },
+                    success: function (data) {
+                      if (data.success) {
   
-                  //       Swal.fire({
-                  //         icon: 'success',
-                  //         title: 'Payment Cancelled',
-                  //         showConfirmButton: true,
-                  //         confirmButtonText: 'OK',
+                        Swal.fire({
+                          icon: 'success',
+                          title: 'Payment Cancelled',
+                          showConfirmButton: true,
+                          confirmButtonText: 'OK',
                          
-                  //       })
-                  //     }
-                  //   },
-                  //   error: function (xhr, status, error) {
-                  //     console.error(error);
-                  //   },
-                  // });
-                  // }
-                  return true
+                        })
+                      }
+                    },
+                    error: function (xhr, status, error) {
+                      console.error(error);
+                    },
+                  });
+                  }else{
+                    rzp.open()
+                   
+                  }
+                  
                 }
             },
           };
           var rzp = new Razorpay(options);
-          let handlePaymentFailed=()=>{
-
-          rzp.close("hello")
-           
-          }
+      
      rzp.on("payment.failed", async function (response) {
-     
-          handlePaymentFailed()
+      isProgrammaticClose=true
+          rzp.close()
           });
 
          
@@ -614,16 +636,22 @@ $("#place-order-btn").click(async function(e){
   else{
     let paymentMethod="COD"
     codOption.checked==false?paymentMethod="WALLET":paymentMethod="COD"
+    let bodyData={
+      pkAddressId,
+      totalAmountAfterDiscount,
+      walletAmt,
+      paymentMethod,
+      couponReduction
+    }
+    alert(totalDiscount)
+    if (totalDiscount !== null && !isNaN(totalDiscount)) {
+      bodyData.totalDiscount = totalDiscount;
+  }
  
     $.ajax({
       type: 'POST', 
       url: '/checkOut',
-      data:{
-        pkAddressId,
-        totalAmountAfterDiscount,
-        walletAmt,
-        paymentMethod
-      },
+      data:bodyData,
       success: function(response) {
           if (response.success) {
               Swal.fire({
@@ -1377,11 +1405,23 @@ document.addEventListener('click', function(event) {
         if (couponApplied) {
             return alert("Coupon already applied");
         }
-        var button = document.querySelector('.copy-btn');
+        // Declare variables outside the function
+     
+        const button = event.target;
+       
+      let discount = button.getAttribute('data-discount');
+    let  minSpend = button.getAttribute('data-minSpend');
+     let  id = button.getAttribute('data-id');
+     discount = parseFloat(discount);
+     minSpend = parseFloat(minSpend);
+        
         let totalCartPriceElement = document.querySelector(".product-subtotal.totalAmt");
+        let couponDiscountElement=document.querySelector('.couponDiscount-checkout')
+         let couponDiscount=parseFloat(couponDiscountElement.textContent)
+        
         let grandTotalElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
         let totalCartPrice = parseFloat(totalCartPriceElement.textContent.substring(1));
-        var minSpend = parseFloat(button.getAttribute('data-minSpend'));
+        
 
         if(totalCartPrice<minSpend){
           Toastify({
@@ -1402,14 +1442,17 @@ document.addEventListener('click', function(event) {
         }
 
        
-        var id = button.getAttribute('data-id');
-        
-        let discount = parseFloat(button.getAttribute('data-discount'));
+       
 
              totalPriceAfterDiscount = parseFloat(totalAmountAfterDiscount) - parseFloat(totalCartPrice * (discount / 100));
+           
+             couponDiscountElement.textContent=couponDiscount+parseFloat(totalCartPrice * (discount / 100))
             grandTotalElement.textContent = "₹" + totalPriceAfterDiscount;
             discountPrice= parseFloat(totalCartPrice * (discount / 100));
-         
+          couponReduction=discountPrice
+          alert(couponReduction)
+           
+          
         event.target.textContent = "Applied";
 
         const buttonGroup = event.target.closest('.button-group');
@@ -1419,8 +1462,14 @@ document.addEventListener('click', function(event) {
         couponApplied = true;
         totalAmountAfterDiscount = totalPriceAfterDiscount;
         console.log("Total amount after discount (applied):", totalAmountAfterDiscount);
+    }else{
+      return
     }
 });
+
+
+
+
 
 //remove coupon
 document.addEventListener('click', function(event) {
@@ -1433,9 +1482,14 @@ document.addEventListener('click', function(event) {
  
       let grandTotalElement = document.querySelector('td.product-subtotal.grandTotalAmt span');
       totalAmountAfterDiscount = parseFloat(totalAmountAfterDiscount) + parseFloat(discountPrice);
+      let couponDiscountElement=document.querySelector('.couponDiscount-checkout')
+      let couponDiscount=parseFloat(couponDiscountElement.textContent)
+      couponDiscountElement.textContent=couponDiscount-parseFloat(discountPrice)
       grandTotalElement.textContent = "₹" + totalAmountAfterDiscount.toFixed(2);
       applyBtn.disabled = false;
       event.target.style.display = 'none';
+      couponReduction=0
+      alert(couponReduction)
       console.log("Total amount after discount (removed):", totalAmountAfterDiscount);
   }
 });
@@ -1733,8 +1787,10 @@ const deleteAddress=(addressId,userId,render)=>{
 
 
 
-  function generateInvoice() {
-    let fetchUrl = '/api/printInvoice';
+  function generateInvoice(orderId) {
+   
+  
+    let fetchUrl = `/api/printInvoice?orderId=${orderId}`;
 
     $.ajax({
         url: fetchUrl,

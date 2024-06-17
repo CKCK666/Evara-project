@@ -377,7 +377,8 @@
                              {{/eq}}
                              {{/eq}}
                             
-                     {{#eq strOrderStatus 'Cancelled'}} {{intTotalOrderPrice}} {{else}} {{#eq strOrderStatus 'Returned'}}{{intTotalOrderPrice}} 
+                     {{#eq strOrderStatus 'Cancelled'}} {{totalAmountAfterDiscount}} {{else}} {{#eq strOrderStatus 'Returned'}}{{totalAmountAfterDiscount
+                     }} 
                      
                      {{else}} {{walletCashUsed}}
                       {{/eq}}{{/eq}}

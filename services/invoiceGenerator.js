@@ -73,18 +73,18 @@ pdfDoc.fillColor("#fff").text("ID", 20, 256, { width: 90 });
 pdfDoc.text("Product", 110, 256, { width: 190 });
 pdfDoc.text("Qty", 300, 256, { width: 100 });
 pdfDoc.text("Price", 350, 256, { width: 100 });
-pdfDoc.text("Discounts", 420, 256, { width: 100 });
+pdfDoc.text("Offer Price", 420, 256, { width: 100 });
 pdfDoc.text("Total Price", 500, 256, { width: 100 });
 
 let productNo = 1;
-orderData.arrProductsDetails.forEach(product => {
+orderData.arrProductsDetails.forEach((product ,index)=> {
 console.log("adding", product.strProductName);
 let y = 256 + (productNo * 20);
-pdfDoc.fillColor("#000").text("ddddddd", 20, y, { width: 90 });
+pdfDoc.fillColor("#000").text(index, 20, y, { width: 90 });
 pdfDoc.text(product.strProductName, 110, y, { width: 190 });
 pdfDoc.text(product.intQuantity, 300, y, { width: 100 });
 pdfDoc.text(product.intPrice.toFixed(2), 350, y, { width: 100 });
-pdfDoc.text((product.intPrice).toFixed(2), 420, y, { width: 100 });
+pdfDoc.text((product.offerPrice?product.offerPrice:product.intPrice).toFixed(2), 420, y, { width: 100 });
 pdfDoc.text((product.intPrice*product.intQuantity).toFixed(2), 500, y, { width: 100 });
 productNo++;
 });
@@ -94,12 +94,25 @@ productNo++;
 
 pdfDoc.font(fontNormal).text("Total:", 400, 256 + (productNo * 17));
 pdfDoc.font(fontNormal).text(orderData.intTotalOrderPrice.toFixed(2), 500, 256 + (productNo * 17));
-pdfDoc.font(fontNormal).text("Discounts:", 400, 271 + (productNo * 17));
-pdfDoc.font(fontNormal).text((orderData.intTotalOrderPrice-orderData.totalAmountAfterDiscount).toFixed(2), 500, 271 + (productNo * 17));
+
+pdfDoc.font(fontNormal).text("Gst", 400, 271 + (productNo * 17));
+pdfDoc.font(fontNormal).text((`+${orderData.gst.toFixed(2)}`), 500, 271 + (productNo * 17));
+
+pdfDoc.font(fontNormal).text("couponDiscount", 400, 286 + (productNo * 17));
+pdfDoc.font(fontNormal).text((orderData.couponDiscount > 0 ? `-${orderData.couponDiscount.toFixed(2)}` : orderData.couponDiscount.toFixed(2)), 500, 286 + (productNo * 17));
+
+pdfDoc.font(fontNormal).text("offer Discount", 400, 301 + (productNo * 17));
+pdfDoc.font(fontNormal).text((orderData.totalDiscount > 0 ? `-${orderData.totalDiscount.toFixed(2)}` : orderData.totalDiscount.toFixed(2)), 500, 301 + (productNo * 17));
+
+pdfDoc.font(fontNormal).text("wallet Cash Used", 400, 316 + (productNo * 17));
+pdfDoc.font(fontNormal).text((orderData.walletCashUsed > 0 ? `-${orderData.walletCashUsed.toFixed(2)}` : orderData.walletCashUsed.toFixed(2)), 500, 316 + (productNo * 17));
+
+
+
 pdfDoc.lineWidth(1);
-pdfDoc.moveTo(390, 281 + (productNo * 17)).lineTo(550, 281 + (productNo * 17)) .stroke();
-pdfDoc.font(fontBold).text("Grand total:", 400, 286 + (productNo * 17));
-pdfDoc.font(fontBold).text(orderData.totalAmountAfterDiscount.toFixed(2), 500, 286 + (productNo * 17));
+pdfDoc.moveTo(390, 331 + (productNo * 17)).lineTo(550, 331 + (productNo * 17)) .stroke();
+pdfDoc.font(fontBold).text("Grand total:", 400, 341+ (productNo * 17));
+pdfDoc.font(fontBold).text(orderData.totalAmountAfterDiscount.toFixed(2), 500, 341 + (productNo * 17));
 
 const chunks = [];
             pdfDoc.on('data', (chunk) => {

@@ -280,7 +280,7 @@ return false;
 $(".order-status-change-btn").click(function(e){
   const selectElement = document.getElementById('statusSelect');
   let orderStatusChange=selectElement.value;
-  alert(orderStatusChange)
+  
   if(orderStatusChange==""){
     $('#errorMessage').text('Please select a status!!!!');
     return
@@ -1625,4 +1625,23 @@ const handleDelete=(id,name)=>{
                )
              }
            })
+         }
+
+         var pageLinks = document.querySelectorAll('.page-link');
+         if (pageLinks.length > 0) {
+        
+         pageLinks.forEach(function(link) {
+             
+             link.addEventListener('click', function(event) {
+               const url = new URL(window.location.href);
+                 event.preventDefault();
+               var page = link.getAttribute('data-page')
+              
+             url.searchParams.set('page', page);
+             window.location.href = url.toString();
+                
+                
+             });
+         });
+       
          }

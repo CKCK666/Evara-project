@@ -154,11 +154,15 @@
                                                 {{/if}}
                                                     </a>
                                                 </div>
+                                                {{#eq intStock '0'}}
+
+                                                {{else}}
                                                 <div class="product-action-1">
                                                     
                                                     <a aria-label="Add To Wishlist" class="action-btn hover-up" onclick=" handleAddToWishList('{{pkProductId}}','{{pkUserId}}')"><i class="fi-rs-heart"></i></a>
                    <a aria-label="Add To Cart" class="action-btn hover-up" onclick="handleAddToCart('{{pkProductId}}','{{pkUserId}}')"><i class="fi-rs-shopping-bag-add"></i></a>
                                                 </div>
+                                                {{/eq}}
                                                 <div class="product-badges product-badges-position product-badges-mrg">
 
                                                  {{#if offer}}   <span class="hot">-{{{json offer}}}%</span> {{/if}}
@@ -186,9 +190,16 @@
                                                     
                                                 </div>
                                                 {{/if}}
+                                                    {{#eq intStock '0'}}
+                                                      <div class="product-action-1 show">
+                                                        <h5 style="color: red;">Out of stock</h5>
+                                                      </div>
+
+                                                    {{else}}
                                                 <div class="product-action-1 show">
                                                     <a aria-label="Add To Cart" class="action-btn hover-up" onclick="handleAddToCart('{{pkProductId}}','{{pkUserId}}')"><i class="fi-rs-shopping-bag-add"></i></a>
                                                 </div>
+                                                {{/eq}}
                                             </div>
                                         </div>
                                     </div>

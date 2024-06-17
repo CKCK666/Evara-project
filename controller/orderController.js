@@ -41,13 +41,14 @@ const {getWishListCount}=require("../utils/wishlist")
           strPaymentMethod:1,
           arrProductsDetails: 1,
           pkUserId:1,
+          strPaymentStatus:1,
           totalAmountAfterDiscount:1
         }
       }
     ]);
      
      if (result.modifiedCount>0) {
-      if(orderStatus=="Cancelled" || orderStatus=="Return Requested"){
+      if((orderStatus=="Cancelled" || orderStatus=="Returned") && orderArray[0].strPaymentStatus !="Pending"){
        
         orderArray[0].arrProductsDetails.map(async(product)=>{
         
@@ -60,7 +61,7 @@ const {getWishListCount}=require("../utils/wishlist")
         let updateWallent=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:totalAmt}})
          
       }
-      if( orderArray[0].strPaymentMethod==='COD' && orderStatus=="Return Requested"){
+      if( orderArray[0].strPaymentMethod==='COD' && orderStatus=="Returned"){
         let totalAmt=parseFloat(orderArray[0].totalAmountAfterDiscount)
       let updateWallent=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:totalAmt}})
        
@@ -266,16 +267,21 @@ const {getWishListCount}=require("../utils/wishlist")
       let walletAmt=parseFloat(req.body.walletAmt)
     
       let cartProducts=await Cart.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
-     
+      let subTotal=await cartTotalWithoutDiscount(cartProducts[0]._id)
+      console.log(subTotal)
+      let gst=parseFloat(subTotal[0].total_price*4/100)
       let dataToAdd=new Order({
         pkOrderId:new ObjectId(),
         pkUserId:new ObjectId(pkUserId),
         arrProductsDetails:cartProducts[0].arrProducts,
         arrDeliveryAddress:arrAddress,
-        intTotalOrderPrice:cartProducts[0].total_cart_price,
+        intTotalOrderPrice:parseFloat(subTotal[0].total_price),
         totalAmountAfterDiscount:parseFloat(req.body.totalAmountAfterDiscount),
         strPaymentStatus:"Success",
         strPaymentMethod:req.body.paymentMethod,
+        gst,
+        totalDiscount:parseFloat(req.body.totalDiscount) || 0,
+        couponDiscount:parseFloat(req.body.couponReduction),
         strOrderStatus:"Processing",
         walletCashUsed:walletAmt,
         createdDate:new Date(),
@@ -372,8 +378,8 @@ const {getWishListCount}=require("../utils/wishlist")
       
     
       let cartProducts=await Cart.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
-    
-      console.log(req.body.totalAmountAfterDiscount);
+      let subTotal=await cartTotalWithoutDiscount(cartProducts[0]._id)
+      let gst=parseFloat(subTotal[0].total_price*4/100)
 
 
      
@@ -382,8 +388,11 @@ const {getWishListCount}=require("../utils/wishlist")
         pkUserId:new ObjectId(pkUserId),
         arrProductsDetails:cartProducts[0].arrProducts,
         arrDeliveryAddress:arrAddress,
-        intTotalOrderPrice:cartProducts[0].total_cart_price,
+        intTotalOrderPrice:parseFloat(subTotal[0].total_price),
         totalAmountAfterDiscount:parseFloat(req.body.totalAmountAfterDiscount),
+        gst,
+        totalDiscount:parseFloat(req.body.totalDiscount) || 0,
+        couponDiscount:req.body.couponReduction?parseFloat(req.body.couponReduction):0,
         strPaymentStatus:"Pending",
         strPaymentMethod:"RAZORPAY",
         strOrderStatus:"Pending",
@@ -467,9 +476,9 @@ const {getWishListCount}=require("../utils/wishlist")
         let cartProducts=await Cart.updateMany({pkUserId:new ObjectId(pkUserId),strStatus:"Active"},{$set:{strStatus:"Deleted"}})
         let updateWallet=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:-walletAmt}})
         
-        if(cartProducts.modifiedCount==0 && updateWallet.modifiedCount==0){
-          return  res.json({success:false,message:"order failed"})
-           }
+        // if(cartProducts.modifiedCount==0 && updateWallet.modifiedCount==0){
+        //   return  res.json({success:false,message:"order failed"})
+        //    }
              
       let productArray = await Order.aggregate([
         {
@@ -582,34 +591,53 @@ const {getWishListCount}=require("../utils/wishlist")
   }
   
     //get order list
-    const getOrderListAdmin=async(req,res)=>{
+    const getOrderListAdmin = async (req, res) => {
       try {
-        let result = await Order.find({}).sort({createdDate: -1 });
-         if(result.length){
-         let usersOrders= result.map((order,index)=>{
-          const isoDate = order.createdDate;
-          const date = new Date(isoDate);
-          const formattedDate = date.toString().substring(0, 15) 
-          return {
-            ...order._doc,
-            index:index+1,
-            createdDate: formattedDate
-           }
-          
-          })
-          
-          res.render("admin/orderList",{layout:"admin_layout",admin:true,usersOrders})
-         }
-         else{
-          res.json({success:false,message:"Fail to fetch orders"})
-         }
-    
-        
+          const totalCount = await Order.countDocuments({ strOrderStatus: { $ne: "Pending" } });
+  
+          if (totalCount > 0) {
+              const page = parseInt(req.query.page) || 1;
+              const limit = parseInt(req.query.limit) || 5;
+              const skip = (page - 1) * limit;
+              const totalPages = Math.ceil(totalCount / limit);
+  
+              let result = await Order.find({ strOrderStatus: { $ne: "Pending" } })
+                  .sort({ createdDate: -1 })
+                  .skip(skip)
+                  .limit(limit);
+  
+              let usersOrders = result.map((order, index) => {
+                  const isoDate = order.createdDate;
+                  const date = new Date(isoDate);
+                  const formattedDate = date.toString().substring(0, 15);
+                  return {
+                      ...order._doc,
+                      index: skip + index + 1,
+                      createdDate: formattedDate,
+                  };
+              });
+  
+              res.render("admin/orderList", {
+                  layout: "admin_layout",
+                  admin: true,
+                  usersOrders,
+                  totalPages,
+                  currentPage: page
+              });
+          } else {
+              res.render("admin/orderList", {
+                  layout: "admin_layout",
+                  admin: true,
+                  usersOrders: [],
+                  totalPages: 0,
+                  currentPage: 1
+              });
+          }
       } catch (error) {
-        res.json({success:false,message:error.message})
+          res.json({ success: false, message: error.message });
       }
-    
-    }
+  };
+  
   
     const orderDismiss = async (req, res) => {
 

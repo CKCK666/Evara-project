@@ -52,24 +52,29 @@ const {findTotalCartPrice}=require("../utils/cart")
    const getCategoryPage=async(req,res)=>{
     try {
       let count=await Category.countDocuments()
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 6;
+         const skip = (page - 1) * limit;
+
       if(count>0){
         let result=await Category.find({strStatus:{$ne:"Deleted"}}).populate({
           path: 'offer',
           match: { status: true }
-      });
-       
+      })  .skip(skip)
+      .limit(limit);
+      const totalPages = Math.ceil((count ? count : 0) / limit);
       
         let categories= result.map((category,index)=>({
           offerPercentage:category.offer?category.offer.percentage:"",
           offerName:category.offer?category.offer.name:"",
           ...category._doc,
-          index:index+1}))
+          index:skip+index+1}))
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const availableOffers = await Offer.aggregate([{$match:{ status : true, expiryDate : { $gte : today }}}])
 
          
-        res.render("admin/categoryPage",{layout:"admin_layout",count,categories,admin:true,availableOffers})
+        res.render("admin/categoryPage",{layout:"admin_layout",count,categories,admin:true,availableOffers, totalPages: totalPages,currentPage: page})
       }
       else{
         res.render("admin/categoryPage",{layout:"admin_layout",count,admin:true})
