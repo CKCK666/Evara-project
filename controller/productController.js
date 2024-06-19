@@ -585,7 +585,7 @@ await Promise.all(updatePromises);
     try {
      
       const page = parseInt(req.query.page) || 1;
-   const limit = parseInt(req.query.limit) || 6;
+   const limit = parseInt(req.query.limit) || 2;
       const skip = (page - 1) * limit;
       let sort
       let sortDisplay

@@ -59,21 +59,21 @@ router.get("/userSettings",verifyLogin,getUserSetting)
 router.get("/getAddAddress",verifyLogin,getAddressPage)
 
 //add address
-router.post("/addAddress",addNewAddress)
+router.post("/addAddress",verifyLogin,addNewAddress)
 
 //delete address
-router.post("/deleteAddress",deleteAddress)
+router.post("/deleteAddress",verifyLogin,deleteAddress)
 
 //get edit address page
 router.get("/getEditAddress",verifyLogin,getEditAddressPage)
 // edit address
-router.post("/editAddress",editAddress)
+router.post("/editAddress",verifyLogin,editAddress)
 
-router.post("/setAsDefault",setAsDefaultAddress)
+router.post("/setAsDefault",verifyLogin,setAsDefaultAddress)
 
 //addToCart
 
-router.post("/addToCart",addToCart)
+router.post("/addToCart",verifyLogin,addToCart)
 
 
 //get Cart page
@@ -81,12 +81,12 @@ router.post("/addToCart",addToCart)
 router.get("/getCartPage",verifyLogin,getCartPage)
 
 //remove from cart
-router.post("/removeFromCart",removeFromCart)
+router.post("/removeFromCart",verifyLogin,removeFromCart)
 
 
 //addToWishList
 
-router.post("/addToWishList",addToWishList)
+router.post("/addToWishList",verifyLogin,addToWishList)
 
 
 
@@ -95,7 +95,7 @@ router.post("/addToWishList",addToWishList)
 router.get("/getWishListPage",verifyLogin,getWishListPage)
 
 //remove from wish list
-router.post("/removeFromWishList",removeFromWishList)
+router.post("/removeFromWishList",verifyLogin,removeFromWishList)
 
 
 
@@ -106,24 +106,24 @@ router.get("/getCheckoutPage",verifyLogin, getCheckoutPage)
 
 //checkout
 
-router.post("/checkOut",checkOut)
+router.post("/checkOut",verifyLogin,checkOut)
 
 //verify razorpay payment
-router.post("/payment/success",verifyPayment)
+router.post("/payment/success",verifyLogin,verifyPayment)
 
-router.post("/checkOutRazorPay",checkOutRazorPay)
+router.post("/checkOutRazorPay",verifyLogin,checkOutRazorPay)
 
 //change quantity
 
-router.post("/changeQuantity",changeQuantity)
+router.post("/changeQuantity",verifyLogin,changeQuantity)
 
 //edit user
 
-router.post("/userEdit",userEdit)
+router.post("/userEdit",verifyLogin,userEdit)
 
 //change order status
 
-router.post("/orderStatusChange",changeOrderStatus)
+router.post("/orderStatusChange",verifyLogin,changeOrderStatus)
 
 //get order details page
 router.get("/getOrderDetails",verifyLogin,getOrderDetailsPage)
@@ -144,8 +144,8 @@ router.post("/resetPassword",resetPassword)
 router.get('/logout',logout)
 
 //generate invoice
-router.get("/api/printInvoice",printInvoice);
+router.get("/api/printInvoice",verifyLogin,printInvoice);
 
-router.delete("/paymentDismiss",orderDismiss)
+router.delete("/paymentDismiss",verifyLogin,orderDismiss)
 
 module.exports=router

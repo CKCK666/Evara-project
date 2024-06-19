@@ -99,7 +99,7 @@
                                     Phone: {{deliveryAddress.[0].strPhoneNo}}
                                 </p>
                             </div>
-                           {{#each orderDetails}}
+                           {{!-- {{#each orderDetails}}
                            {{#eq strOrderStatus 'Processing' }}
                             <div class="h-25 pt-4">
                                  <a 
@@ -109,7 +109,7 @@
                                <h6 id='errorMessage' style='color: red; text-align: center' ></h6>
                             </div>
                             {{/eq}}
-                            {{/each}}
+                            {{/each}} --}}
                         </div>
                    <!-- row // -->
                    
@@ -150,20 +150,24 @@
                                                         <dd>{{orderDetails.[0].intTotalOrderPrice}}</dd>
                                                     </dl>
                                                     <dl class="dlist">
-                                                        <dt>Shipping cost:</dt>
-                                                        <dd>Free</dd>
+                                                        <dt>Discount Total:</dt>
+                                                        <dd>-{{orderDetails.[0].totalDiscount}}</dd>
                                                     </dl>
                                                     <dl class="dlist">
-                                                        <dt>Shipping cost:</dt>
-                                                        <dd>Free</dd>
+                                                        <dt>Coupon Reduction:</dt>
+                                                        <dd>-{{orderDetails.[0].couponDiscount}}</dd>
                                                     </dl>
                                                     <dl class="dlist">
-                                                        <dt>Shipping cost:</dt>
-                                                        <dd>Free</dd>
+                                                        <dt>Wallet cash:</dt>
+                                                        <dd>-{{orderDetails.[0].walletCashUsed}}</dd>
+                                                    </dl>
+                                                    <dl class="dlist">
+                                                        <dt>Gst:</dt>
+                                                        <dd>+{{orderDetails.[0].gst}}</dd>
                                                     </dl>
                                                     <dl class="dlist">
                                                         <dt>Grand total:</dt>
-                                                        <dd> <b class="h5">{{orderDetails.[0].intTotalOrderPrice}}</b> </dd>
+                                                        <dd> <b class="h5">{{orderDetails.[0].totalAmountAfterDiscount}}</b> </dd>
                                                     </dl>
                                                     <dl class="dlist">
                                                         <dt class="text-muted">Payment Status</dt>

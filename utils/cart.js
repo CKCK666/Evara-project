@@ -39,13 +39,14 @@ const  getCartCount= async(userId) =>{
   try {
     let aggregatePipeline = [
       {
-          $match: {
-            $or: [
-              { pkUserId: id }, // Match documents with the specified user ID
-              { _id: id } // or match documents with the specified _id
-            ],// Match documents with the specified user ID
-              strStatus: "Active"
-          }
+        $match: {
+          $or: [
+          { pkUserId: id }, // Match documents with the specified user ID
+          { _id: id } // or match documents with the specified _id
+          ],
+          strStatus: "Active" // Match documents with the specified user ID and active status
+          } 
+        
       },
       {
           $unwind: "$arrProducts" // Deconstruct the arrProducts array
@@ -87,11 +88,12 @@ const  getCartCount= async(userId) =>{
       {
         $match: {
           $or: [
-            { pkUserId: id }, // Match documents with the specified user ID
-            { _id: id } // or match documents with the specified _id
+          { pkUserId: id }, // Match documents with the specified user ID
+          { _id: id } // or match documents with the specified _id
           ],
           strStatus: "Active" // Match documents with the specified user ID and active status
-        }
+          } 
+        
       },
       {
         $unwind: "$arrProducts" // Deconstruct the arrProducts array
@@ -134,11 +136,12 @@ const cartTotalWithoutDiscount = async (id) => {
       {
         $match: {
           $or: [
-            { pkUserId: id }, // Match documents with the specified user ID
-            { _id: id } // or match documents with the specified _id
+          { pkUserId: id }, // Match documents with the specified user ID
+          { _id: id } // or match documents with the specified _id
           ],
           strStatus: "Active" // Match documents with the specified user ID and active status
-        }
+          } 
+        
       },
       {
         $unwind: "$arrProducts" // Deconstruct the arrProducts array

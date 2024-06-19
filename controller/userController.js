@@ -324,7 +324,8 @@ const getUserSetting=async(req,res)=>{
              strPaymentStatus:1,
              strPaymentMethod:1,
              strOrderStatus:1,
-             createdDate:1
+             createdDate:1,
+             totalAmountAfterDiscount:1
           }
         }
         

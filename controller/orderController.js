@@ -49,14 +49,15 @@ const {getWishListCount}=require("../utils/wishlist")
      
      if (result.modifiedCount>0) {
       if((orderStatus=="Cancelled" || orderStatus=="Returned") && orderArray[0].strPaymentStatus !="Pending"){
-       
+     
+      
         orderArray[0].arrProductsDetails.map(async(product)=>{
         
           let quantity=product.intQuantity
             let updateStock=await Product.updateOne({pkProductId:new ObjectId(product.pkProductId)},{$inc:{intStock:quantity}})
          
         })
-         if( orderArray[0].strPaymentMethod==='RAZORPAY' || orderArray[0].strPaymentMethod==='Wallet'){
+         if( orderArray[0].strPaymentMethod==='RAZORPAY' || orderArray[0].strPaymentMethod==='WALLET'){
           let totalAmt=parseFloat(orderArray[0].totalAmountAfterDiscount)
         let updateWallent=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:totalAmt}})
          
@@ -264,8 +265,15 @@ const {getWishListCount}=require("../utils/wishlist")
          arrAddress=[...userAddress]
       }
       
-      let walletAmt=parseFloat(req.body.walletAmt)
-    
+      let walletAmt=0
+      let totalWalletAmt=parseFloat(req.body.walletAmt)
+      let totalAmountAfterDiscount=parseFloat(req.body.totalAmountAfterDiscount)
+      if(totalWalletAmt>totalAmountAfterDiscount){
+        walletAmt=totalAmountAfterDiscount
+      }else{
+        walletAmt=totalWalletAmt
+      }
+   
       let cartProducts=await Cart.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
       let subTotal=await cartTotalWithoutDiscount(cartProducts[0]._id)
       console.log(subTotal)
@@ -273,6 +281,7 @@ const {getWishListCount}=require("../utils/wishlist")
       let dataToAdd=new Order({
         pkOrderId:new ObjectId(),
         pkUserId:new ObjectId(pkUserId),
+        pkCardId:new ObjectId(cartProducts[0].pkCartId),
         arrProductsDetails:cartProducts[0].arrProducts,
         arrDeliveryAddress:arrAddress,
         intTotalOrderPrice:parseFloat(subTotal[0].total_price),
@@ -387,6 +396,7 @@ const {getWishListCount}=require("../utils/wishlist")
         pkOrderId:new ObjectId(),
         pkUserId:new ObjectId(pkUserId),
         arrProductsDetails:cartProducts[0].arrProducts,
+        pkCardId:new ObjectId(cartProducts[0].pkCartId),
         arrDeliveryAddress:arrAddress,
         intTotalOrderPrice:parseFloat(subTotal[0].total_price),
         totalAmountAfterDiscount:parseFloat(req.body.totalAmountAfterDiscount),
@@ -654,6 +664,24 @@ const {getWishListCount}=require("../utils/wishlist")
         return res.json({ success: true });
       } catch (error) {}
     };
+
+    const orderRetry = async (req, res) => {
+
+      console.log(req.session);
+      console.log(req.body);
+      const orderId = req.body.orderId;
+    
+      try {
+    
+        await Order.findByIdAndDelete(
+          {_id:req.body.orderId },
+        
+        );
+        return res.json({ success: true });
+      } catch (error) {}
+    };
+
+
   module.exports = {
     getOrderDetailsPage,
     changeOrderStatus,

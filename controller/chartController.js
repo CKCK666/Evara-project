@@ -1,6 +1,7 @@
 const Order = require('../models/orderModel');
 const Product=require("../models/productModel")
-const Category =require("../models/categoryModel")
+const Category =require("../models/categoryModel");
+const { ObjectId } = require('mongodb');
 
 
 const monthlyChart = async (req, res) => {
@@ -8,7 +9,7 @@ const monthlyChart = async (req, res) => {
       const data = await Order.aggregate([
         {
           $match: {
-            strOrderStatus: { $nin: ["Pending", "Cancelled"] }
+            strPaymentStatus: 'Success'
           }
         },
       {
@@ -49,7 +50,7 @@ const monthlyChart = async (req, res) => {
       const data = await Order.aggregate([
         {
           $match: {
-            strOrderStatus: { $nin: ["Pending", "Cancelled"] },
+            strPaymentStatus: 'Success',
             createdDate: { $gte: new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000) }
           }
         },
@@ -95,7 +96,7 @@ const monthlyChart = async (req, res) => {
       const data = await Order.aggregate([
         {
           $match: {
-            strOrderStatus: { $nin: ["Pending", "Cancelled"] },
+      strPaymentStatus: 'Success'
           }
         },
        {
@@ -134,11 +135,11 @@ const monthlyChart = async (req, res) => {
      
       const { startDate, endDate } = req.query;
        
-      
+      console.log(startDate,endDate)
       const matchCriteria = {
         $match: {
             createdDate: {} ,
-          strOrderStatus: { $nin: ["Pending", "Cancelled"] },
+          strPaymentStatus: 'Success'
         }
       };
   
@@ -182,7 +183,7 @@ const monthlyChart = async (req, res) => {
         },
         { $sort: { date: 1 } }
       ]);
-  
+  console.log(data)
       res.json({ success: true, data });
     } catch (error) {
       console.error(error);
@@ -239,7 +240,7 @@ const monthlyChart = async (req, res) => {
               $lookup: {
                 from: Category.collection.name, // Assuming your category collection is named "categories"
                 localField: "_id",
-                foreignField: "pkCategoryId",
+                foreignField: "_id",
                 as: "category"
               }
             },
@@ -251,7 +252,7 @@ const monthlyChart = async (req, res) => {
               }
             }
           ])
-          
+       console.log(data)   
   
       res.json({ success: true, data });
     } catch (error) {

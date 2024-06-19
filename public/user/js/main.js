@@ -433,17 +433,23 @@ $("#place-order-btn").click(async function(e){
   e.preventDefault()
   let razorpayRadioButton = document.querySelector('#razorpayOption');
   const codOption = document.getElementById("codOption");
+  const walletCheckbox = document.getElementById("walletCheck");
   let walletAmt=parseFloat(document.getElementById('walletBalanceSpan').textContent)
   let  discountAmt =parseFloat( document.querySelector('td.product-subtotal.grandTotalAmt span').textContent.slice(1))
-  let totalAmountAfterDiscount=walletAmt<discountAmt?discountAmt-walletAmt:walletAmt-discountAmt
-  let totalDiscountText = document.getElementById('totalDiscountSpan').textContent;
- // Declare couponDiscount and set it to null initially
+  let totalAmountAfterDiscount=discountAmt
+  if( walletCheckbox.checked){
+    if(discountAmt>walletAmt){
+      totalAmountAfterDiscount=discountAmt-walletAmt
+    }
+  }
+  let totalDiscountText = document.getElementById('totalDiscountSpan')
+
 
 
   let totalDiscount=null
-  if (totalDiscountText.length > 0) {
+  if (totalDiscountText && totalDiscountText.textContent.length > 0) {
     // Remove the first character (assuming it's a currency symbol)
-    let totalDiscountNumber = totalDiscountText.slice(1);
+    let totalDiscountNumber = totalDiscountText.textContent.slice(1);
 
     // Parse the resulting string to a float
     totalDiscount = parseFloat(totalDiscountNumber);
@@ -506,6 +512,7 @@ $("#place-order-btn").click(async function(e){
     walletAmt,
     couponReduction
    }
+  
    if (totalDiscount !== null && !isNaN(totalDiscount)) {
     bodyData.totalDiscount = totalDiscount;
 }
@@ -520,17 +527,20 @@ $("#place-order-btn").click(async function(e){
       },
       success: function(response) {
           if (response.razorpay) {
+         
+            
             const order = response.message;
             const user = response.user;
             const orderId = response.orderId;
          const walletCashUsed=response.walletCashUsed
          const pkUserId=response.pkUserId
          let isProgrammaticClose = false;
+      
             var options = {
               key: "rzp_test_N10HdSb3UEKLbM",
               amount:order.amount, // Amount in paise (change to your desired amount)
               currency: 'INR',
-              name: 'Your Company Name',
+              name: 'Evara',
               description: 'Payment for Order',
               image: 'https://example.com/logo.png',
               order_id: order.id,
@@ -570,7 +580,7 @@ $("#place-order-btn").click(async function(e){
               });
               },
               modal: {
-                ondismiss: function(greet){
+                ondismiss: function(){
           
                   if (!isProgrammaticClose) {
                   $.ajax({
@@ -597,6 +607,7 @@ $("#place-order-btn").click(async function(e){
                     },
                   });
                   }else{
+                    isProgrammaticClose=false
                     rzp.open()
                    
                   }
@@ -643,7 +654,7 @@ $("#place-order-btn").click(async function(e){
       paymentMethod,
       couponReduction
     }
-    alert(totalDiscount)
+   
     if (totalDiscount !== null && !isNaN(totalDiscount)) {
       bodyData.totalDiscount = totalDiscount;
   }
@@ -1803,7 +1814,7 @@ const deleteAddress=(addressId,userId,render)=>{
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "sales-report.pdf";
+            a.download = "invoice.pdf";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

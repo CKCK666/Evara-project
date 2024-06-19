@@ -90,6 +90,10 @@
                                             <th>Coupon Discount</th>
                                             <td class="product-coupon-discount" colspan="2">-₹{{couponDiscount}}</td>
                                         </tr>
+                                        <tr>
+                                            <th>Wallet cash</th>
+                                            <td class="product-coupon-discount" colspan="2">-₹{{walletCashUsed}}</td>
+                                        </tr>
                                          <tr>
                                             <th>Gst-(4%)</th>
                                             <td class="product-gst" colspan="2">+₹{{gst}}</td>
@@ -127,9 +131,7 @@
  <a href='#' data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Cancelled" class='btn-small d-block cancel-order-btn'>
     <button class='btn btn-fill-out'>Cancel Order</button>
   </a>
-   <a href='#' data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Cancelled" class='btn-small d-block cancel-order-btn'>
-    <button class='btn btn-fill-out'>Retry</button>
-  </a>
+  
   {{else}}
   {{/eq}}
  {{/eq}}
@@ -148,6 +150,10 @@
                    
                                {{else}}
                                {{#eq orderDetails.[0].strOrderStatus 'Cancelled'}}
+                                 {{#eq orderDetails.[0].strPaymentStatus 'Success'}}
+                                 <a onclick="generateInvoice('{{orderDetails.[0].pkOrderId}}')" class="btn btn-md rounded font-sm hover-up "><i class="text-muted material-icons md-post_add"></i>Invoice download</a>
+                                 {{/eq}}
+
                                {{else}}
                                <a onclick="generateInvoice('{{orderDetails.[0].pkOrderId}}')" class="btn btn-md rounded font-sm hover-up "><i class="text-muted material-icons md-post_add"></i>Invoice download</a>
                                {{/eq}}

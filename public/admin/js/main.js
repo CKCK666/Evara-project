@@ -363,7 +363,7 @@ document.addEventListener('change', function (e) {
   const target = e.target;
   if (target && target.classList.contains('inputImage')) {
       const inputName = target.name;
-    
+     
       let form = document.getElementById("edit-product-image-form");
 
       if (window.location.pathname === "/admin/getAddProduct") {
@@ -1334,20 +1334,13 @@ const handleDelete=(id,name)=>{
 
         
 //pdf generater
-        async function pdfReport(){
-          const queryString = window.location.search;
-        const urlParams = new URLSearchParams(queryString);
-         let sort = urlParams.get('sort');
-         let start = urlParams.get('start');
-         let end = urlParams.get('end');
-         let fetchUrl='/admin/api/reports/pdf'
-         if(sort!=null && sort!=""){
-          fetchUrl=`/admin/api/reports/pdf?sort=${sort}`
-         }
-        if(start!=null && start!="" && end!=null && end!=""){
-          fetchUrl=`/admin/api/reports/pdf?start=${start}&end=${end}`
+        async function pdfReport(filterDate){
+         
+        let  fetchUrl=`/admin/api/reports/pdf?sort=${filterDate}`
+        if(typeof filterDate =="object"){
+          fetchUrl=`/admin/api/reports/pdf?start=${filterDate.startDate}&end=${filterDate.endDate}`
         }
-        
+    
           try {
             const response = await fetch(fetchUrl);
             if (response.ok) {
@@ -1370,19 +1363,12 @@ const handleDelete=(id,name)=>{
         }
         
 
-        async function excelReport() {
-          const queryString = window.location.search;
-          const urlParams = new URLSearchParams(queryString);
-           let sort = urlParams.get('sort');
-           let start = urlParams.get('start');
-           let end = urlParams.get('end');
-           let fetchUrl='/admin/api/reports/excel'
-           if(sort!=null && sort!=""){
-            fetchUrl=`/admin/api/reports/excel?sort=${sort}`
-           }
-          if(start!=null && start!="" && end!=null && end!=""){
-            fetchUrl=`/admin/api/reports/excel?start=${start}&end=${end}`
-          }
+        async function excelReport(filterDate) {
+          let  fetchUrl=`/admin/api/reports/excel?sort=${filterDate}`
+        if(typeof filterDate =="object"){
+          fetchUrl=`/admin/api/reports/excel?start=${filterDate.startDate}&end=${filterDate.endDate}`
+        }
+          
           
           try {
             const response = await fetch(fetchUrl);

@@ -369,12 +369,12 @@
 })
   }
 
-  
+  let myChartCustom;
   function customStat () {
     {
         const startDate = document.getElementById('startDateChart').value;
         const endDate = document.getElementById('endDateChart').value;
-      
+      console.log(startDate,endDate)
 
      $.ajax({
          url: `/admin/api/statistics/custom?startDate=${startDate}&endDate=${endDate}`,
@@ -384,21 +384,55 @@
        const data = response.data
        console.log(data);
    if(data.length==0){
-    Toast.fire({
+    if (myChartCustom) {
+        myChartCustom.destroy(); // Destroy the existing chart instance
+        myChartCustom = null; // Reset the chart instance variable
+    }
+    const button1 = document.getElementById('newButton1');
+    const button2 = document.getElementById('newButton2');
+
+    button1.style.display = 'none';
+    button2.style.display = 'none';
+    Swal.fire({
         icon: "info",
         title: "Sorry, no data.",
       });
+return
    }
          // Process data as needed
+               // Display the new buttons after the chart is rendered
+             
+        const button1 = document.getElementById('newButton1');
+        const button2 = document.getElementById('newButton2');
+
+        button1.style.display = 'inline-block';
+        button2.style.display = 'inline-block';
+
+        // Add onclick attribute with function and argument
+        button1.onclick = function() { pdfReport({startDate,endDate}); };
+        button2.onclick = function() { excelReport({startDate,endDate}); };
+
          const totalAmounts = data.map(order => order.totalAmount);
          const totalAmountsAfterDiscount = data.map(order => order.totalAmountAfterDiscount);
-         const orderIds = data.map(order => new Date(order.date).toLocaleDateString());
+         
+            // const stDate = new Date(startDate);
+            // const stday = stDate.getDate().toString().padStart(2, '0');
+            // const stmonth = (stDate.getMonth() + 1).toString().padStart(2, '0');
+            // const styear = stDate.getFullYear();
 
+            // const edDate = new Date(endDate);
+            // const edday = edDate.getDate().toString().padStart(2, '0');
+            // const edmonth = (edDate.getMonth() + 1).toString().padStart(2, '0');
+            // const edyear = edDate.getFullYear();
+           
+            // const orderIds =[`${stday}/${stmonth}/${styear}--${edday}/${edmonth}/${edyear}`]
+    
+            const orderIds = data.map(order => new Date(order.date).toLocaleDateString());
         
         
         
          // Render the chart
-         renderChartCustom(orderIds, totalAmounts,totalAmountsAfterDiscount);
+         renderChartCustom(orderIds, totalAmounts,totalAmountsAfterDiscount,startDate,endDate);
         
      },
      error: function(xhr, status, error) {
@@ -410,8 +444,9 @@
   
   
  
-  let myChartCustom;
-  function renderChartCustom(labels, values,values2) {
+  
+  function renderChartCustom(labels, values,values2,startDate,endDate) {
+   
     try {
         const ctx = document.getElementById('myChartCustom').getContext('2d');
 
@@ -446,6 +481,20 @@
                     }
                 }
             });
+                // Process data as needed
+               // Display the new buttons after the chart is rendered
+             
+        const button1 = document.getElementById('newButton1');
+        const button2 = document.getElementById('newButton2');
+
+        button1.style.display = 'inline-block';
+        button2.style.display = 'inline-block';
+
+        // Add onclick attribute with function and argument
+        button1.onclick = function() { pdfReport({startDate,endDate}); };
+        button2.onclick = function() { excelReport({startDate,endDate}); };
+      
+
         } else {
             // If the chart instance already exists, update the data
             myChartCustom.data.labels = labels;

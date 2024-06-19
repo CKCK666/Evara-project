@@ -72,12 +72,13 @@ async function generatePDFReports(reportData, startDate, endDate) {
 
             // Total Summary
             pdfDoc.moveDown(2);
-            pdfDoc.font('Helvetica-Bold').text("Total Amount:", 400, startY);
-            pdfDoc.text(totalAmountAfterDiscount.toFixed(2), 500, startY);
+            pdfDoc.font('Helvetica-Bold').text("Total Amount:", 390, startY);
+            pdfDoc.text(totalAmountBeforeDiscount.toFixed(2), 480, startY);
+           
 
             pdfDoc.moveDown(2);
-            pdfDoc.font('Helvetica-Bold').text("Total Revenue:", 400, startY+40);
-            pdfDoc.text(totalAmountBeforeDiscount.toFixed(2), 495, startY+40);
+            pdfDoc.font('Helvetica-Bold').text("Total Revenue:", 390, startY+40);
+            pdfDoc.text(totalAmountAfterDiscount.toFixed(2), 480, startY+40);
             
             // Generate the PDF and resolve the promise when done
             const chunks = [];

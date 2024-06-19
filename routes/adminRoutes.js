@@ -62,67 +62,67 @@ router.post("/login",adminLogin)
 router.get('/logout',logout)
 
 //delete user
-router.patch("/deleteUser",deleteUser)
+router.patch("/deleteUser",isAdmin,deleteUser)
     
 //unblock/block user   
-router.patch("/blockUser",blockUser)
+router.patch("/blockUser",isAdmin,blockUser)
 
 //get user list  page
 router.get("/listUsers",isAdmin,getUserList)
 
 //add category
 
-router.post("/addCategory",addCategory)
+router.post("/addCategory",isAdmin,addCategory)
 
 //get category page
 
-router.get("/getCategoryPage",getCategoryPage)
+router.get("/getCategoryPage",isAdmin,getCategoryPage)
 
 //delete category
-router.patch("/deleteCategory",deleteCategory)
+router.patch("/deleteCategory",isAdmin,deleteCategory)
 
 //block category
-router.patch("/blockCategory",blockCategory)
+router.patch("/blockCategory",isAdmin,blockCategory)
 
 //get edit category page
 router.get("/getCategoryEdit",isAdmin,getEditCategory)
 
 //update category
 
-router.patch("/editCategory",editCategory)
+router.patch("/editCategory",isAdmin,editCategory)
 
 //get product list page
-router.get("/listProducts",getProductList)
+router.get("/listProducts",isAdmin,getProductList)
 
 //get product create page
 router.get("/getAddProduct",isAdmin,getProductAdd)
 
 //create add product
 
-router.post("/addProduct",uploads.any(),addProduct)
+router.post("/addProduct",isAdmin,uploads.any(),addProduct)
 
 
 //get edit product page
 router.get("/getProductEdit",isAdmin,getProductEdit)
 
 //edit product
-router.post("/editProduct",uploads.any(),editProduct)
+router.post("/editProduct",isAdmin,uploads.any(),editProduct)
 
 //edit product images
-router.post("/editProductImages",uploads.any(),editProductImages)
+router.post("/editProductImages",isAdmin,uploads.any(),editProductImages)
 
 //delete product image
-router.patch("/deleteProductImage",deleteProductImages)
+router.patch("/deleteProductImage",isAdmin,deleteProductImages)
 
 //add more images
-router.post("/addMoreImages",uploads.any(), addMoreProductImages)
+router.post("/addMoreImages",isAdmin,uploads.any(), addMoreProductImages)
 
 
 //delete product
-router.patch("/deleteProduct",deleteProduct)
+router.patch("/deleteProduct",isAdmin,deleteProduct)
 
 //block product
-router.patch("/blockProduct",blockProduct)
+router.patch("/blockProduct",isAdmin,blockProduct)
 
 //order list page
 router.get("/orderList",isAdmin,getOrderListAdmin)
@@ -131,79 +131,79 @@ router.get("/orderList",isAdmin,getOrderListAdmin)
 router.get("/orderDetailsPage",isAdmin,getOrderDetailsPageAdmin)
 
 //change order status
-router.post("/orderStatusChange",changeOrderStatus)
+router.post("/orderStatusChange",isAdmin,changeOrderStatus)
 
 //edit image page
-router.get("/getProductImageEdit",getProductImageEditPage)
+router.get("/getProductImageEdit",isAdmin,getProductImageEditPage)
 
 //get list coupons
-router.get("/listCoupons",listCoupons)
+router.get("/listCoupons",isAdmin,listCoupons)
 
 //get Create coupon page
 
-router.get("/getCreateCoupon",getCreateCoupons)
+router.get("/getCreateCoupon",isAdmin,getCreateCoupons)
 
 //create coupon
-router.post("/createCoupon",createCoupon)
+router.post("/createCoupon",isAdmin,createCoupon)
 
 //block/active coupon
-router.patch("/blockCoupon",blockCoupon)
+router.patch("/blockCoupon",isAdmin,blockCoupon)
 
 //get Edit coupon page
 
-router.get("/getCouponEdit",getEditCoupon)
+router.get("/getCouponEdit",isAdmin,getEditCoupon)
 
-router.post("/couponEdit",couponEdit)
+router.post("/couponEdit",isAdmin,couponEdit)
 
 //generate pdf 
-router.get('/api/reports/pdf',generatePDFReport);
+router.get('/api/reports/pdf',isAdmin,generatePDFReport);
 
-router.get('/api/reports/excel',generateExcelReport);
+router.get('/api/reports/excel',isAdmin,generateExcelReport);
 
 //list offer page
-router.get("/listOffer",listOffer)
+router.get("/listOffer",isAdmin,listOffer)
 
 //get create offer page
-router.get("/getCreateOffer",getCreateOffer)
+router.get("/getCreateOffer",isAdmin,getCreateOffer)
 
 //create offer
-router.post("/createOffer",createOffer)
+router.post("/createOffer",isAdmin,createOffer)
 
 
 //get Edit offer page
 
-router.get("/getofferEdit",getEditOffer)
+router.get("/getofferEdit",isAdmin,getEditOffer)
 
 //edit offer
-router.post("/offerEdit",offerEdit)
+router.post("/offerEdit",isAdmin,offerEdit)
 
 //block offer
-router.patch("/blockOffer",blockOffer)
+router.patch("/blockOffer",isAdmin,blockOffer)
 
 //monthly chart
-router.get("/api/statistics/monthly",monthlyChart)
+router.get("/api/statistics/monthly",isAdmin,monthlyChart)
 
 //last 30 days
-router.get("/api/statistics",dailyChart)
+router.get("/api/statistics",isAdmin,dailyChart)
 
 // yearly chart
-router.get("/api/statistics/yearly",yearlyChart)
+router.get("/api/statistics/yearly",isAdmin,yearlyChart)
 
 //custom chart
-router.get("/api/statistics/custom",customChart)
+router.get("/api/statistics/custom",isAdmin,customChart)
 
 //top products
-router.get("/api/topProducts",topProducts)
+router.get("/api/topProducts",isAdmin,topProducts)
 
 // top Categories
-router.get("/api/topCategories",topCategories)
+router.get("/api/topCategories",isAdmin,topCategories)
 
-router.patch("/apply_offer",applyProductOffer)
+router.patch("/apply_offer",isAdmin,applyProductOffer)
 
-router.patch("/remove_offer",removeProductOffer)
+router.patch("/remove_offer",isAdmin,removeProductOffer)
 
-router.patch("/apply_offer-category",applyCategoryOffer)
+router.patch("/apply_offer-category",isAdmin,applyCategoryOffer)
 
-router.patch("/remove_offer-category",removeCategoryOffer)
+router.patch("/remove_offer-category",isAdmin,removeCategoryOffer)
 
 module.exports=router

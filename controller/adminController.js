@@ -49,12 +49,16 @@ const adminLogin=async(req,res)=>{
 //get admin home page
 const getAdminHome=async(req,res)=>{
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 6;
+    const skip = (page - 1) * limit;
    
     const currentDate = new Date();
-    let matchQuery={}
+    let matchQuery={  strPaymentStatus:"Success"}
      let orderSort="all"
     if(req.query.sort=='daily'){
         matchQuery={
+          strPaymentStatus: "Success",
           createdDate: {
             $gte: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()),
             $lt: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + 1)
@@ -66,6 +70,7 @@ const getAdminHome=async(req,res)=>{
       const sevenDaysAgo = new Date(currentDate);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
       matchQuery={
+        strPaymentStatus: "Success",
          createdDate: { $gte: sevenDaysAgo, $lt: new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()) } 
       }
       orderSort="weekly"
@@ -73,12 +78,14 @@ const getAdminHome=async(req,res)=>{
 
     if(req.query.sort=='yearly'){
       matchQuery={
+        strPaymentStatus: "Success",
       createdDate: {
         $gte: new Date(currentDate.getFullYear(), 0, 1), // Start of the current year
         $lt: new Date(currentDate.getFullYear() + 1, 0, 1) // Start of the next year
     }}
     orderSort="yearly"
     }
+
     if(req.query.start && req.query.end ){
       const startDateString = req.query.start
 const endDateString = req.query.end
@@ -89,6 +96,7 @@ const endDate = new Date(endDateString);
 endDate.setHours(23, 59, 59, 999); 
 
 matchQuery={
+  strPaymentStatus: "Success",
   createdDate: {
     $gte:startDate,
     $lte: endDate
@@ -97,11 +105,13 @@ orderSort="custom"
 
     }
 
-     
-    
-    let findOrder=await Order.find({
-    ...matchQuery
-    }).sort({createdDate:-1})
+    const totalCount = await Order.countDocuments(matchQuery);
+    const totalPages = Math.ceil(totalCount / limit);
+
+    let findOrder = await Order.find(matchQuery)
+    .sort({ createdDate: -1 })
+    .skip(skip)
+    .limit(limit);
 
    let salesOrder=findOrder.map((order)=>{
         return{
@@ -112,7 +122,7 @@ orderSort="custom"
     {
       $match: {
       
-        "strOrderStatus": { $nin: ["Pending","Cancelled" ]} ,
+       strPaymentStatus:"Success"
        
       }
     },
@@ -129,7 +139,7 @@ orderSort="custom"
   
   
 
-  res.render("admin/homePage",{layout:"admin_layout",admin:true,salesOrder,orderSort,orderSalesDetails})
+  res.render("admin/homePage",{layout:"admin_layout",admin:true,salesOrder,orderSort,orderSalesDetails,totalPages, currentPage: page})
     
   } catch (error) {
     console.log(error.message);
