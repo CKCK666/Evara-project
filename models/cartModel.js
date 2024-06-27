@@ -33,7 +33,7 @@ const cartSchema = new Schema({
     arrProducts: [productSchema],
     strStatus: {
         type: String,
-        enum: ['Active','Deleted'],
+        enum: ['Active','Deleted','Pending'],
         default: 'Active'
     },
     total_cart_price:Number,

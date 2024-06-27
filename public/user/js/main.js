@@ -436,6 +436,8 @@ $("#place-order-btn").click(async function(e){
   const walletCheckbox = document.getElementById("walletCheck");
   let walletAmt=parseFloat(document.getElementById('walletBalanceSpan').textContent)
   let  discountAmt =parseFloat( document.querySelector('td.product-subtotal.grandTotalAmt span').textContent.slice(1))
+  let  pkCartId= document.getElementById("checkout-cartId").value
+
   let totalAmountAfterDiscount=discountAmt
   if( walletCheckbox.checked){
     if(discountAmt>walletAmt){
@@ -510,7 +512,8 @@ $("#place-order-btn").click(async function(e){
     pkAddressId,
     totalAmountAfterDiscount,
     walletAmt,
-    couponReduction
+    couponReduction,
+    pkCartId
    }
   
    if (totalDiscount !== null && !isNaN(totalDiscount)) {
@@ -607,7 +610,7 @@ $("#place-order-btn").click(async function(e){
                     },
                   });
                   }else{
-                    isProgrammaticClose=false
+                  
                     rzp.open()
                    
                   }
@@ -652,7 +655,8 @@ $("#place-order-btn").click(async function(e){
       totalAmountAfterDiscount,
       walletAmt,
       paymentMethod,
-      couponReduction
+      couponReduction,
+      pkCartId
     }
    
     if (totalDiscount !== null && !isNaN(totalDiscount)) {
@@ -1583,14 +1587,15 @@ if(window.location.pathname.startsWith("/search")){
   });
 
  
-  var pageLinks = document.querySelectorAll('.page-link');
+  var pageLinks = document.querySelectorAll('.page-link.others');
   if (pageLinks.length > 0) {
  
   pageLinks.forEach(function(link) {
-      
+     
       link.addEventListener('click', function(event) {
+        event.preventDefault();
         const url = new URL(window.location.href);
-          event.preventDefault();
+         
         var page = link.getAttribute('data-page')
        
       url.searchParams.set('page', page);
@@ -1837,3 +1842,32 @@ function sortProducts(order) {
 }
 
 
+document.addEventListener("DOMContentLoaded", function () {
+  const tabLinks = document.querySelectorAll('.nav-link[data-bs-toggle="tab"]');
+  const tabContent = document.querySelectorAll('.tab-pane');
+
+  // Function to show a tab by ID
+  function showTabById(tabId) {
+    tabLinks.forEach(link => {
+      link.classList.toggle('active', link.getAttribute('href') === `#${tabId}`);
+    });
+    tabContent.forEach(content => {
+      content.classList.toggle('active', content.id === tabId);
+      content.classList.toggle('show', content.id === tabId);
+    });
+  }
+
+  // Get the stored active tab from localStorage
+  const activeTabId = localStorage.getItem('activeTabId') || 'account-detail';
+  showTabById(activeTabId);
+
+  // Event listener to update the active tab on click
+  tabLinks.forEach(link => {
+    link.addEventListener('click', function (event) {
+      event.preventDefault();
+      const tabId = link.getAttribute('href').substring(1);
+      localStorage.setItem('activeTabId', tabId);
+      showTabById(tabId);
+    });
+  });
+});

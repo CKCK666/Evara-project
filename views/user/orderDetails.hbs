@@ -128,8 +128,9 @@
   </a>
   {{else}}
    {{#eq orderDetails.[0].strOrderStatus 'Pending'}}
+ <a href="/getCheckoutPage?pkCartId={{orderDetails.[0].pkCartId}}&pkOrderId={{orderDetails.[0].pkOrderId}}" class="btn "> <i class="fi-rs-box-alt mr-10"></i>Retry Payment</a>
  <a href='#' data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Cancelled" class='btn-small d-block cancel-order-btn'>
-    <button class='btn btn-fill-out'>Cancel Order</button>
+    <button class='btn btn-fill-out mt-5'>Cancel Order</button>
   </a>
   
   {{else}}
@@ -143,22 +144,10 @@
                                </div>
 
                                <div class="bt-1 border-color-1 mt-30 mb-30">
-                                 {{#eq orderDetails.[0].strOrderStatus 'Pending'}}
-                           
-                               {{else}}
-                               {{#eq orderDetails.[0].strOrderStatus 'Processing'}}
-                   
-                               {{else}}
-                               {{#eq orderDetails.[0].strOrderStatus 'Cancelled'}}
+                                
                                  {{#eq orderDetails.[0].strPaymentStatus 'Success'}}
                                  <a onclick="generateInvoice('{{orderDetails.[0].pkOrderId}}')" class="btn btn-md rounded font-sm hover-up "><i class="text-muted material-icons md-post_add"></i>Invoice download</a>
                                  {{/eq}}
-
-                               {{else}}
-                               <a onclick="generateInvoice('{{orderDetails.[0].pkOrderId}}')" class="btn btn-md rounded font-sm hover-up "><i class="text-muted material-icons md-post_add"></i>Invoice download</a>
-                               {{/eq}}
-                               {{/eq}}
-                               {{/eq}}
                                
                                  {{#eq orderDetails.[0].strOrderStatus 'Delivered'}}
                                <button  class="btn btn-md rounded font-sm hover-up return-order-btn" data-pk-order-id="{{orderDetails.[0].pkOrderId}}" data-pk-user-id="{{orderDetails.[0].pkUserId}}" data-order-status-change="Return Requested"><i class="text-muted material-icons md-post_add"></i>Return order</button>

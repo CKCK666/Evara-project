@@ -12,7 +12,7 @@ const OrderSchema = new Schema({
     intTotalOrderPrice: Number,
     strPaymentStatus: {
         type: String,
-        enum: ['Success','Failed',"Pending"],
+        enum: ['Success','Failed',"Pending","Payment pending"],
        
     },
     strPaymentMethod:{

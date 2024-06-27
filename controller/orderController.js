@@ -62,7 +62,8 @@ const {getWishListCount}=require("../utils/wishlist")
         let updateWallent=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:totalAmt}})
          
       }
-      if( orderArray[0].strPaymentMethod==='COD' && orderStatus=="Returned"){
+      if( orderArray[0].strPaymentMethod==='COD' && orderStatus=="Returned" && orderArray[0].strPaymentStatus=="Success"){
+        
         let totalAmt=parseFloat(orderArray[0].totalAmountAfterDiscount)
       let updateWallent=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:totalAmt}})
        
@@ -71,6 +72,9 @@ const {getWishListCount}=require("../utils/wishlist")
 
 
 
+      }
+      if(orderStatus=="Delivered" &&orderArray[0].strPaymentMethod =="COD"  ){
+        Order.updateOne({pkUserId,pkOrderId,strStatus:"Active"},{$set:{strPaymentStatus:"Success",updatedDate:new Date()}})
       }
      
        
@@ -133,6 +137,7 @@ const {getWishListCount}=require("../utils/wishlist")
     try {
       let userId=req.session.user.pkUserId
       let pkUserId =new ObjectId(userId)
+      let pkCartId=new ObjectId(req.query.pkCartId)
 
       let match={
         $match:{
@@ -166,7 +171,9 @@ const {getWishListCount}=require("../utils/wishlist")
       // let userAddress=await Address.aggregate([{ $match:{ pkUserId:pkUserId,strStatus:"Active" }}])
     
      
-      let cartDetailsFind=await Cart.find({ pkUserId:pkUserId,strStatus:"Active" }).populate('arrProducts.offer');
+      let cartDetailsFind=await Cart.find({ pkUserId:pkUserId,pkCartId:pkCartId }).populate('arrProducts.offer');
+
+  
       
       
       if (cartDetailsFind && cartDetailsFind.length) {
@@ -205,7 +212,7 @@ const {getWishListCount}=require("../utils/wishlist")
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const coupons = await Coupon.aggregate([{$match:{ status : "Active", expireDate : { $gte : today }}}])
-        console.log(coupons);
+       
 
          let walletBalance=0
         let wallet=await Wallet.aggregate([{$match:{userId:pkUserId}}])
@@ -250,6 +257,11 @@ const {getWishListCount}=require("../utils/wishlist")
     try {
     
       let pkUserId=req.session.user.pkUserId
+      let findOrder=await Order.aggregate([{$match:{pkCartId}}])
+      if(findOrder && findOrder.length>0){
+         await Order.findByIdAndDelete({pkCartId})
+         console.log('Document deleted:');
+      }
       if(!req.body.pkAddressId){
        return res.json({success:false,message:"Required address id"})
       }
@@ -274,19 +286,20 @@ const {getWishListCount}=require("../utils/wishlist")
         walletAmt=totalWalletAmt
       }
    
-      let cartProducts=await Cart.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
+      let cartProducts=await Cart.find({pkUserId:new ObjectId(pkUserId),pkCartId})
+      
       let subTotal=await cartTotalWithoutDiscount(cartProducts[0]._id)
       console.log(subTotal)
       let gst=parseFloat(subTotal[0].total_price*4/100)
       let dataToAdd=new Order({
         pkOrderId:new ObjectId(),
         pkUserId:new ObjectId(pkUserId),
-        pkCardId:new ObjectId(cartProducts[0].pkCartId),
+        pkCartId:new ObjectId(cartProducts[0].pkCartId),
         arrProductsDetails:cartProducts[0].arrProducts,
         arrDeliveryAddress:arrAddress,
         intTotalOrderPrice:parseFloat(subTotal[0].total_price),
         totalAmountAfterDiscount:parseFloat(req.body.totalAmountAfterDiscount),
-        strPaymentStatus:"Success",
+        strPaymentStatus:req.body.paymentMethod=="COD"?"Payment pending":"Success",
         strPaymentMethod:req.body.paymentMethod,
         gst,
         totalDiscount:parseFloat(req.body.totalDiscount) || 0,
@@ -369,6 +382,14 @@ const {getWishListCount}=require("../utils/wishlist")
     try {
     
       let pkUserId=req.session.user.pkUserId
+      let pkCartId=new ObjectId(req.body.pkCartId)
+
+      let findOrder=await Order.aggregate([{$match:{pkCartId}}])
+      if(findOrder && findOrder.length>0){
+         await Order.findByIdAndDelete({pkCartId})
+         console.log('Document deleted:');
+      }
+
       if(!req.body.pkAddressId){
        return res.json({success:false,message:"Required address id"})
       }
@@ -386,7 +407,7 @@ const {getWishListCount}=require("../utils/wishlist")
       
       
     
-      let cartProducts=await Cart.find({pkUserId:new ObjectId(pkUserId),strStatus:"Active"})
+      let cartProducts=await Cart.find({pkUserId:new ObjectId(pkUserId),pkCartId})
       let subTotal=await cartTotalWithoutDiscount(cartProducts[0]._id)
       let gst=parseFloat(subTotal[0].total_price*4/100)
 
@@ -396,7 +417,7 @@ const {getWishListCount}=require("../utils/wishlist")
         pkOrderId:new ObjectId(),
         pkUserId:new ObjectId(pkUserId),
         arrProductsDetails:cartProducts[0].arrProducts,
-        pkCardId:new ObjectId(cartProducts[0].pkCartId),
+        pkCartId:new ObjectId(cartProducts[0].pkCartId),
         arrDeliveryAddress:arrAddress,
         intTotalOrderPrice:parseFloat(subTotal[0].total_price),
         totalAmountAfterDiscount:parseFloat(req.body.totalAmountAfterDiscount),
@@ -443,7 +464,7 @@ const {getWishListCount}=require("../utils/wishlist")
           }
         });
       });
-
+      let cartProducts=await Cart.updateMany({pkUserId:new ObjectId(pkUserId),strStatus:"Active"},{$set:{strStatus:"Pending"}})
     
 
       return res.json({
@@ -483,7 +504,7 @@ const {getWishListCount}=require("../utils/wishlist")
       );
   
       if (generated_signature === signature) {
-        let cartProducts=await Cart.updateMany({pkUserId:new ObjectId(pkUserId),strStatus:"Active"},{$set:{strStatus:"Deleted"}})
+        let cartProducts=await Cart.updateMany({pkUserId:new ObjectId(pkUserId),strStatus:"Pending"},{$set:{strStatus:"Deleted"}})
         let updateWallet=await Wallet.updateOne({userId:new ObjectId(pkUserId)},{$inc:{balance:-walletAmt}})
         
         // if(cartProducts.modifiedCount==0 && updateWallet.modifiedCount==0){

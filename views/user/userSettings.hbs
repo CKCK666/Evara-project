@@ -82,6 +82,7 @@
                       <table class='table'>
                         <thead>
                           <tr>
+                            <th>No</th>
                             <th>Order</th>
                             <th>Date</th>
                             <th>Status</th>
@@ -93,6 +94,7 @@
                           {{#if userOrders}}
                           {{#each userOrders}}
                           <tr>
+                            <td>{{index}}</td>
                             <td>{{pkOrderId}}</td>
                             <td>{{createdDate}}</td>
                             <td {{#eq strOrderStatus 'Processing'}}style="color: orange"
@@ -128,8 +130,18 @@
                         </tbody>
                       </table>
                     </div>
+                    
                   </div>
+                   
                 </div>
+                <div class="pagination-area mt-15 mb-sm-5 mb-lg-0">
+                            <nav aria-label="Page navigation example">
+                                <ul class="pagination justify-content-start">
+                                {{paginate-order currentPage totalPages}}
+                                </ul>
+                            </nav>
+                        </div>
+                
               </div>
               <div
                 class='tab-pane fade'
@@ -341,6 +353,7 @@
                       <table class='table'>
                         <thead>
                           <tr>
+                            <th>No</th>
                             <th>Order</th>
                             <th>Date</th>
                             {{!-- <th>Status</th> --}}
@@ -352,6 +365,7 @@
                           {{#if walletHistory}}
                           {{#each walletHistory}}
                           <tr>
+                            <td>{{index}}</td>
                             <td>{{pkOrderId}}</td>
                             <td>{{createdDate}}</td>
                             {{!-- <td {{#eq strOrderStatus 'Processing'}}style="color: orange"
@@ -407,8 +421,16 @@
                         </tbody>
                       </table>
                     </div>
+                  
                   </div>
                 </div>
+                <div class="pagination-area mt-15 mb-sm-5 mb-lg-0">
+                            <nav aria-label="Page navigation example">
+                                <ul class="pagination justify-content-start">
+                                {{paginate-wallet walletCurrentPage walletTotalPage}}
+                                </ul>
+                            </nav>
+                        </div>
               </div>
 
 
@@ -438,16 +460,20 @@
 </style>
 
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-  
-    let activeTab = localStorage.getItem("activeTab") || "account-detail";
-    document.getElementById(activeTab).classList.add("active", "show");
+ 
 
-    document.querySelectorAll("[data-toggle='tab']").forEach(function(tab) {
-      tab.addEventListener("click", function(event) {
-        let activeTabId = event.target.getAttribute("href").substring(1);
-        localStorage.setItem("activeTab", activeTabId);
-      });
-    });
-  });
+  function changeOrder(page){
+    const url = new URL(window.location.href);
+     url.searchParams.delete('walletPage');
+     url.searchParams.set('page', page);
+     window.location.href = url.toString();
+  }
+
+    function changeWallet(walletPage){
+    const url = new URL(window.location.href);
+     url.searchParams.delete('page');
+     url.searchParams.set('walletPage', walletPage);
+    window.location.href = url.toString();
+  }
+  
 </script>

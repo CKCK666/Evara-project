@@ -1613,21 +1613,23 @@ const handleDelete=(id,name)=>{
            })
          }
 
-         var pageLinks = document.querySelectorAll('.page-link');
-         if (pageLinks.length > 0) {
-        
-         pageLinks.forEach(function(link) {
-             
-             link.addEventListener('click', function(event) {
-               const url = new URL(window.location.href);
-                 event.preventDefault();
-               var page = link.getAttribute('data-page')
-              
-             url.searchParams.set('page', page);
-             window.location.href = url.toString();
-                
-                
-             });
-         });
+         var pageLinks = document.querySelectorAll('.page-link.others');
        
-         }
+        
+         if (pageLinks.length > 0) {
+          pageLinks.forEach(function(link) {
+     
+            link.addEventListener('click', function(event) {
+              // Check if the clicked element has only the class 'page-link' and no additional classes
+             
+                event.preventDefault();  // Prevent the default link behavior
+      
+                const page = link.getAttribute('data-page');  // Get the page number from the data-page attribute
+                const url = new URL(window.location.href);
+                url.searchParams.set('page', page);  // Set the page query parameter
+      
+                window.location.href = url.toString();  // Redirect to the new URL
+              
+            });
+          });
+        }

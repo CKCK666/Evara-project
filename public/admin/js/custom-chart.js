@@ -1,19 +1,35 @@
+
 (function ($) {
     "use strict";
  
   
      if ($('#myChart').length>0) {
         $.ajax({
-            url: '/admin/api/statistics',
+            url: `/admin/api/statistics`,
       method: 'GET',
       success: function(response) {
           const data = response.data
-  
+         
             // Process data as needed
             const totalAmounts = data.map(order => order.totalAmount);
             const totalAmountsAfterDiscount = data.map(order => order.totalAmountAfterDiscount);
             const totalOrders = data.map(order => order.totalOrders);
-            const orderIds = data.map(order => new Date(order.date).toLocaleDateString());
+            const orderIds = data.map(order => {
+                const date = new Date(order.date);
+                const day = ('0' + date.getDate()).slice(-2);
+                const month = ('0' + (date.getMonth() + 1)).slice(-2); // Months are zero-based
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            });
+
+            let num=1
+            const orders=response.orders
+            const currentPage=response.currentPage
+            const totalPages=response.totalPages
+            const skip=response.skip
+        //render table
+            generateSaleTable(orders,num,currentPage,totalPages,skip)
+
 
             // Render the chart
             renderChart(orderIds, totalAmounts,totalAmountsAfterDiscount,totalOrders);
@@ -179,18 +195,48 @@
     
 })(jQuery);
 
+Handlebars.registerHelper('paginate', function(currentPage, totalPages ,num) {
+    let result = '';
+    let status=''
+   
+   if(num==1){
+    status='dailyStat'
+   }
+   else if(num==2){
+    status='monthlyStat'
+   }
+   else if(num==3){
+    status='yearlyStat'
+   }else{
+    status='customStat'
+   }
+    // Generate page links
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === currentPage) {
+        result += `<li onclick=${status}(${i}) class='page-item active'><span class='page-link'>${i}</span></li>`;
+      } else {
+        result += `<li onclick=${status}(${i}) class='page-item'><a class='page-link'>${i}</a></li>`;
+      }
+    }
+  
 
+  
+    return new Handlebars.SafeString(result);
+  });
+
+  
 
 
 
 
 
     //monthly
-  function monthlyStat () {
-
+  function monthlyStat (obj) {
+    let page=typeof obj==Object?obj.page :obj
+ 
     {
      $.ajax({
-         url: '/admin/api/statistics/monthly',
+         url: `/admin/api/statistics/monthly?page=${page}`,
    method: 'GET',
    success: function(response) {
        console.log(response);
@@ -206,8 +252,16 @@
             const year = order.year;
             return `${monthName} ${year}`;
         });
-        
-        
+        let num=2
+        const orders=response.orders
+        const currentPage=response.currentPage
+        const totalPages=response.totalPages
+        const skip=response.skip
+    //render table
+        generateSaleTable(orders,num,currentPage,totalPages,skip)
+
+     
+           
          // Render the chart
          renderChartMonthly(orderIds, totalAmounts,totalAmountsAfterDiscount);
         
@@ -276,19 +330,29 @@
   
 
 
-  function yearlyStat () {
+  function yearlyStat (obj) {
+    let page=typeof obj==Object?obj.page :obj
     {
      $.ajax({
-         url: '/admin/api/statistics/yearly',
+         url: `/admin/api/statistics/yearly?page=${page}`,
    method: 'GET',
    success: function(response) {
-       console.log(response);
+     
        const data = response.data
    
          // Process data as needed
          const totalAmounts = data.map(order => order.totalAmount);
          const totalAmountsAfterDiscount = data.map(order => order.totalAmountAfterDiscount);
          const orderIds = data.map(order => order.year);
+
+         let num=3
+         const orders=response.orders
+         const currentPage=response.currentPage
+         const totalPages=response.totalPages
+         const skip=response.skip
+     //render table
+         generateSaleTable(orders,num,currentPage,totalPages,skip)
+
          // Render the chart
          renderChartYearly(orderIds, totalAmounts,totalAmountsAfterDiscount);
        
@@ -347,9 +411,10 @@
         console.error('Error rendering chart:', error);
     }
   }
-  function dailyStat(){
+  function dailyStat(page){
+
     $.ajax({
-        url: '/admin/api/statistics',
+        url: `/admin/api/statistics?page=${page}`,
   method: 'GET',
   success: function(response) {
       const data = response.data
@@ -358,9 +423,26 @@
         const totalAmounts = data.map(order => order.totalAmount);
         const totalAmountsAfterDiscount = data.map(order => order.totalAmountAfterDiscount);
         const totalOrders = data.map(order => order.totalOrders);
-        const orderIds = data.map(order => new Date(order.date).toLocaleDateString());
+        const orderIds = data.map(order => {
+            const date = new Date(order.date);
+            const day = ('0' + date.getDate()).slice(-2);
+            const month = ('0' + (date.getMonth() + 1)).slice(-2); // Months are zero-based
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        });
         
-        renderChartCustom(orderIds, totalAmounts,totalAmountsAfterDiscount);
+    
+        let num=1
+        const orders=response.orders
+        const currentPage=response.currentPage
+        const totalPages=response.totalPages
+        const skip=response.skip
+    //render table
+        generateSaleTable(orders,num,currentPage,totalPages,skip)
+
+
+        // Render the chart
+        // renderChart(orderIds, totalAmounts,totalAmountsAfterDiscount,totalOrders);
       
     },
     error: function(xhr, status, error) {
@@ -370,14 +452,15 @@
   }
 
   let myChartCustom;
-  function customStat () {
+  function customStat (obj) {
+    let page=typeof obj==Object?obj.page :obj
     {
         const startDate = document.getElementById('startDateChart').value;
         const endDate = document.getElementById('endDateChart').value;
-      console.log(startDate,endDate)
+     
 
      $.ajax({
-         url: `/admin/api/statistics/custom?startDate=${startDate}&endDate=${endDate}`,
+         url: `/admin/api/statistics/custom?startDate=${startDate}&endDate=${endDate}&page=${page}`,
    method: 'GET',
    success: function(response) {
        console.log(response);
@@ -415,19 +498,24 @@ return
          const totalAmounts = data.map(order => order.totalAmount);
          const totalAmountsAfterDiscount = data.map(order => order.totalAmountAfterDiscount);
          
-            // const stDate = new Date(startDate);
-            // const stday = stDate.getDate().toString().padStart(2, '0');
-            // const stmonth = (stDate.getMonth() + 1).toString().padStart(2, '0');
-            // const styear = stDate.getFullYear();
-
-            // const edDate = new Date(endDate);
-            // const edday = edDate.getDate().toString().padStart(2, '0');
-            // const edmonth = (edDate.getMonth() + 1).toString().padStart(2, '0');
-            // const edyear = edDate.getFullYear();
-           
-            // const orderIds =[`${stday}/${stmonth}/${styear}--${edday}/${edmonth}/${edyear}`]
+        
     
-            const orderIds = data.map(order => new Date(order.date).toLocaleDateString());
+            // const orderIds = data.map(order => new Date(order.date).toLocaleDateString());
+            const orderIds = data.map(order => {
+                const date = new Date(order.date);
+                const day = ('0' + date.getDate()).slice(-2);
+                const month = ('0' + (date.getMonth() + 1)).slice(-2); // Months are zero-based
+                const year = date.getFullYear();
+                return `${day}/${month}/${year}`;
+            });
+        
+            let num=4
+            const orders=response.orders
+            const currentPage=response.currentPage
+            const totalPages=response.totalPages
+            const skip=response.skip
+        //render table
+            generateSaleTable(orders,num,currentPage,totalPages,skip)
         
         
         
@@ -506,3 +594,91 @@ return
         console.error('Error rendering custom chart:', error);
     }
   }
+
+  function formatDateToDDMMYYYY(isoDateString) {
+    const date = new Date(isoDateString);
+    const day = ('0' + date.getDate()).slice(-2);
+    const month = ('0' + (date.getMonth() + 1)).slice(-2); // Months are zero-based
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+}
+
+
+   
+
+
+
+function generateSaleTable(data,num,currentPage,totalPages,skip){
+
+        // Populate the table headers
+        const table = $(`.statisticsTable-${num}`);
+        const tableHead = table.find('thead');
+        const headRow = `
+            <tr>
+                 <th class="align-middle" scope="col">Sl.no</th>
+                <th class="align-middle" scope="col">Order ID</th>
+                <th class="align-middle" scope="col">Order Date</th>
+                <th class="align-middle" scope="col">Total</th>
+                <th class="align-middle" scope="col">Discount Price</th>
+                <th class="align-middle" scope="col">Payment Status</th>
+                <th class="align-middle" scope="col">Payment Method</th>
+            </tr>
+        `;
+        tableHead.empty().append(headRow);
+
+        // Populate the table body
+        const tableBody = table.find('tbody');
+        tableBody.empty(); // Clear any existing rows
+        
+        if (data.length === 0) {
+            const noDataRow = `
+                <tr>
+                    <td colspan="6" class="text-center">No data found</td>
+                </tr>
+            `;
+            tableBody.append(noDataRow);
+        } else {
+            data.forEach((order, index)  => {
+                const formattedDate = formatDateToDDMMYYYY(order.createdDate);
+                const row = `
+                    <tr>
+                         <td>${(skip+index+1)}</td>
+                        <td><a href="#" class="fw-bold">${order.pkOrderId}</a></td>
+                         <td>${formattedDate}</td>
+                        <td>${order.intTotalOrderPrice}</td>
+                        <td>${order.totalAmountAfterDiscount}</td>
+                        <td><span class="badge badge-pill badge-soft-success">${order.strPaymentStatus}</span></td>
+                        <td><i class="material-icons md-payment font-xxl text-muted mr-5"></i> ${order.strPaymentMethod}</td>
+                    </tr>
+                `;
+                tableBody.append(row);
+            });
+
+            
+        }
+        generatePagination(currentPage,totalPages,num)
+}
+
+
+
+
+
+function generatePagination(currentPage, totalPages,num) {
+   
+    const paginationArea = $(`#pagination-area-${num}`);
+    paginationArea.empty(); // Clear any existing pagination
+
+    const source = `
+        <nav aria-label='Page navigation example'>
+            <ul class='pagination justify-content-start'>
+                {{paginate currentPage totalPages num}}
+            </ul>
+        </nav>
+    `;
+
+    const template = Handlebars.compile(source);
+    const context = { currentPage: currentPage, totalPages: totalPages,num:num };
+    const paginationHtml = template(context);
+
+    paginationArea.append(paginationHtml);
+}

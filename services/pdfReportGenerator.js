@@ -25,7 +25,7 @@ async function generatePDFReports(reportData, startDate, endDate) {
 
             // Table settings
             const headers = ["No", "Order Id", "Order Date", "Amount", "After Discount", "Payment Status"];
-            const columnWidths = [25, 100, 100, 75, 100, 100]
+            const columnWidths = [25, 180, 75, 75, 100, 100]
             let startX = 40;
             let startY = pdfDoc.y+20;
             let rowHeight = 25;
@@ -54,7 +54,7 @@ async function generatePDFReports(reportData, startDate, endDate) {
 
                 const row = [
                     index + 1,
-                    orderInfo.orderId || "N/A",
+                    orderInfo._id || "N/A",
                     createdDate,
                     orderInfo.intTotalOrderPrice.toFixed(2),
                     orderInfo.totalAmountAfterDiscount.toFixed(2),

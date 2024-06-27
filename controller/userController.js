@@ -271,6 +271,21 @@ const getUserSetting=async(req,res)=>{
    
     if(req.query.pkUserId){
     
+     const page = parseInt(req.query.page) || 1;
+     const walletPage=parseInt(req.query.walletPage)||1
+     const walletLimit=10
+     const walletCurrentPage=walletPage
+     function paginate(array, pageSize, pageNumber) {
+      // Calculate the start index of the current page
+      const startIndex = (pageNumber - 1) * pageSize;
+      // Return the sliced array for the current page
+      return array.slice(startIndex, startIndex + pageSize);
+    }
+
+     const orderLimit = parseInt(req.query.limit) || 10;
+     let  orderSkip = (page - 1) * orderLimit;
+      
+    
       let match={
         $match:{
           pkUserId:new ObjectId(req.query.pkUserId),
@@ -293,6 +308,7 @@ const getUserSetting=async(req,res)=>{
 
     
        if(userDetails.length){
+       
         let addField={
           $addFields: {
             isDefaultAddressInt: { $cond: { if: "$isDefaultAddress", then: 1, else: 0 } }
@@ -315,6 +331,13 @@ const getUserSetting=async(req,res)=>{
             createdDate:-1
           }
         }
+        let skip={
+          $skip:orderSkip
+        }
+
+        let limit={
+          $limit:orderLimit
+        }
 
         let orderProject={
           $project:{
@@ -336,8 +359,14 @@ const getUserSetting=async(req,res)=>{
         let cartCount= await getCartCount(req.query.pkUserId)
         
         let wishListCount=await getWishListCount(req.query.pkUserId)
+
         let  arrAddress=await Address.aggregate([match,addField,sort,projectAddress])
-         let findOrders=await Order.aggregate([match,orderSort,orderProject])
+
+         let findOrders=await Order.aggregate([match,orderSort,skip,limit,orderProject])
+         let orderCount=await Order.countDocuments(match.$match)
+         const totalPages = Math.ceil((orderCount ? orderCount : 0) / orderLimit);
+         let currentPage=page
+
          let walletHistory1=await Order.aggregate([  {
           $match: {
             pkUserId:new ObjectId(req.query.pkUserId),
@@ -359,21 +388,32 @@ const getUserSetting=async(req,res)=>{
     ]
 
       let walletHistory2=await Order.aggregate(pipeline)
-      let walletHistory = [...walletHistory1, ...walletHistory2];
-
+      let combinedWallet = [...walletHistory1, ...walletHistory2];
+     let walletHistory=combinedWallet.map((order,index)=>{
+      const isoDate = order.createdDate;
+      const date = new Date(isoDate);
+      const formattedDate = date.toString().substring(0, 15)
+      return {
+        ...order,
+        index:index+1,
+        createdDate: formattedDate
+       }
+     })
+     let walletTotalPage= Math.ceil((walletHistory.length ? walletHistory.length : 0) / walletLimit);
+     walletHistory = paginate(walletHistory, walletLimit, walletPage);
          let userOrders= findOrders.map((order,index)=>{
           const isoDate = order.createdDate;
           const date = new Date(isoDate);
           const formattedDate = date.toString().substring(0, 15)
           return {
             ...order,
-            index:index+1,
+            index: orderSkip+index+1,
             createdDate: formattedDate
            }
           
           })
       
-          res.render("user/userSettings",{layout:"user_layout",user:true,arrAddress,pkUserId:req.query.pkUserId,cartCount,wishListCount,userDetails,userOrders,wallet,walletHistory})
+          res.render("user/userSettings",{layout:"user_layout",user:true,arrAddress,pkUserId:req.query.pkUserId,cartCount,wishListCount,userDetails,userOrders,wallet,walletHistory,currentPage,totalPages,walletCurrentPage,walletTotalPage})
        }else{
         return res.json({success:false,message:"Failed to fetch user data"})
        }
@@ -384,6 +424,7 @@ const getUserSetting=async(req,res)=>{
       res.json({success:false,message:"User id not found"})
     }
   } catch (error) {
+    console.log(error)
     res.json({success:false,message:error.message})
   }
 
