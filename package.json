@@ -2,10 +2,11 @@
   "name": "evara-project",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "start": "node app.js",
+    "dev":"nodemon app.js"
   },
   "keywords": [],
   "author": "",
@@ -35,6 +36,7 @@
     "pdfkit": "^0.15.0",
     "razorpay": "^2.9.2",
     "sweetalert2": "^11.10.5",
-    "twilio": "^4.22.0"
+    "twilio": "^4.22.0",
+    "uuid": "^10.0.0"
   }
 }

@@ -12,6 +12,8 @@ const handlebars = require('./utils/handleBar-helper');
 var logger = require('morgan');
 const passport = require('./middlewares/passport-setup');
 const moment = require('moment');
+const { v4: uuidv4 } = require('uuid');
+const secret = uuidv4();
 connectDB();
 
 app.set('views', path.join(__dirname, 'views'));
@@ -25,7 +27,7 @@ const hbs = exphbs.create({
 app.use(
   session({
     name: 'ckCookie',
-    secret: 'key',
+    secret: secret,
     resave: false,
     saveUninitialized: true,
     cookie: {
