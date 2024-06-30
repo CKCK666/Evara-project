@@ -1398,12 +1398,22 @@ var spanElementCod = labelElementCod.querySelector('span');
       }
     
     }else{
+     
       razorpayOption.disabled=false
       codOption.disabled=false
        if(razorpayOption.checked){
+        
         razorpayOption.checked=true
+        if(totalAmountAfterDiscount>1000){
+          codOption.disabled=true
+        }
        }else{
         codOption.checked=true
+        if(totalAmountAfterDiscount>1000){
+          codOption.checked=false
+          codOption.disabled=true
+          razorpayOption.checked=true
+        }
        }
         
     }

@@ -132,7 +132,7 @@
                         data: {quantity:1,pkProductId },
                         success: function(response) {
                             if(response.success){
-                             console.log("successfully update quantity");
+                             console.log(response);
                              $('#cart_totalDiscount').text(response.totalDiscount)
                              $('#cart_subtotal').text(response.subTotalCart)
                              $('#totalPrice').text(response.totalPriceResult)

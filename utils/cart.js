@@ -91,7 +91,7 @@ const  getCartCount= async(userId) =>{
           { pkUserId: id }, // Match documents with the specified user ID
           { _id: id } // or match documents with the specified _id
           ],
-           // Match documents with the specified user ID and active status
+          strStatus: "Active" // Match documents with the specified user ID and active status
           } 
         
       },
@@ -139,7 +139,7 @@ const cartTotalWithoutDiscount = async (id) => {
           { pkUserId: id }, // Match documents with the specified user ID
           { _id: id } // or match documents with the specified _id
           ],
-       
+          strStatus: "Active" 
           } 
         
       },

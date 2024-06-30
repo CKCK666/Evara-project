@@ -131,9 +131,12 @@ const login = async(req,res) => {
   try {
     let { email, password } = req.body;
 
-    let user = await User.findOne({ strEmail:email ,strStatus:"Active"});
+    let user = await User.findOne({ strEmail:email ,strStatus:{$ne:"Deleted"} });
     
     if (user) {
+      if(user.strStatus=='Blocked'){
+       return res.json({ success: false, message: 'Your account is blocked!!!!!' });
+      }
       let result = await bcrypt.compare(password, user.strPassword);
       if (result) {
         req.session.otpVerified = true;
