@@ -5,6 +5,10 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },
+    googleId: {
+        type: String,
+        
+    },
     strUserName: {
         type: String,
         required: true

@@ -9,6 +9,7 @@ const {changeOrderStatus, getCheckoutPage, checkOut, getOrderDetailsPage, checkO
 const router =express.Router()
 const passport = require('passport');
 const { printInvoice } = require('../controller/reportController');
+const { log } = require('../utils/handleBar-helper');
 //get signup page
 router.get("/signUp",getSignUp)
 
@@ -18,10 +19,6 @@ router.post("/signUp",signUp)
 //get home page
 router.get("/",verifyLogin,getHome)
 
-// router.get("/",(req,res)=>{
-//     console.log("homeeeeee");
-//  res.render("user/homePage",{layout:"user_layout"})
-// })
 
 //post login
 router.post("/login",login)
@@ -31,16 +28,19 @@ router.get("/getForgotPassword",forgotPasswordPage)
 
 // Google authentication route
 
-router.get('/auth/google', passport.authenticate('google', { scope: ['profile'] }));
+router.get('/auth/google', passport.authenticate('google', { scope: ['profile','email'] }));
 
 // Google authentication callback
 router.get('/auth/google/callback',
     passport.authenticate('google', { failureRedirect: '/' }),
     (req, res) => {
-        
-        res.redirect('/');
+        req.session.user=req.user
+        req.session.otpVerified=true
+        res.redirect("/")
     }
 );
+
+
 
 //generate otp
 router.post("/generateOTP",generateOtp)

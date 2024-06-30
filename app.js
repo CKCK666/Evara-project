@@ -48,9 +48,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(passport.initialize());
 app.use(passport.session());
+const disableBackButton = (req, res, next) => {
+  res.setHeader("Cache-Control", "no-cache, no-store,must-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  next();
+}; 
 
-app.use('/', userRoutes);
-app.use('/admin', adminRoutes);
+app.use('/', disableBackButton,userRoutes);
+app.use('/admin',disableBackButton, adminRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

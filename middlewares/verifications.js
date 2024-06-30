@@ -3,20 +3,33 @@ const {ADMIN_COLLECTION}=require("../config/collections")
 const jwt =require("jsonwebtoken")
 const { ObjectId } = require('mongodb');
 const { required } = require("nodemon/lib/config");
+const User =require("../models/userModel")
 const verifyLogin=async(req,res,next)=>{
-    
-    if( req.session.otpVerified || req.session.passport){
-      
+  
+    if( req.session.user && req.session.otpVerified ){
+     let user=await User.aggregate([{$match:{pkUserId:new ObjectId(req.session.user.pkUserId),strStatus:"Active"}}])
      
-     next()
+     if(user && user.length>0){
+       
+        next()
+     }else{
+       
+        res.clearCookie('ckCookie', { domain: 'localhost', path: '/' })
+        req.session.destroy();
+  
+        res.clearCookie('passport')
+      
+             res.render("user/loginPage",{layout:"user_layout"})
+
+     }
+     
       }
       else{
-      
+        
         req.session.otpVerified=false;
+        res.clearCookie('ckCookie', { domain: 'localhost', path: '/' })
+     res.clearCookie('passport')
   
-    res.clearCookie('passport')
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
          res.render("user/loginPage",{layout:"user_layout"})
      
       }

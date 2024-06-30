@@ -27,9 +27,7 @@ const getSignUp =(req, res) => {
       res.redirect('/');
    
   } else {
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+   
     req.session.otpVerified=false
     res.render('user/signupPage',{layout:"user_layout"});
   }
@@ -85,12 +83,7 @@ const signUp = async (req, res) => {
 //get home page
 const getHome = async (req, res) => {
   
-  if(req.session.passport){
-    
-    console.log("passporttt");
-    let products =await User.find({strStatus:"Active"})
-   return  res.render('user/homePage', {layout:"user_layout",user:true,products});
-  }
+ 
   
  const objectIdToFind = new ObjectId(req.session.user.pkUserId);
   console.log(req.session.user.pkUserId);
@@ -125,11 +118,8 @@ const getHome = async (req, res) => {
   } else {
      console.log("not userExist");
     req.session.otpVerified=false;
-    console.log(req,session);
+   
     res.clearCookie('passport')
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
     res.render('user/loginPage',{layout:"user_layout"});
   }
 };
@@ -208,20 +198,10 @@ const getOtpPage=(req,res)=>{
       res.redirect("/")
       
      }else if((req.session.user && !req.session.otpVerified) || req.session.accessOtpPage ){
-        // Prevent caching of the OTP page
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-
-    
+   
       res.render("user/otpPage",{layout:"otp_layout"})
      }else{
-           // Prevent caching of the OTP page
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-
-    
+   
     res.redirect("/")
      }
       
@@ -588,8 +568,15 @@ const userEdit = async (req, res) => {
 //logout
 const logout = (req, res) => {
   res.clearCookie('ckCookie', { domain: 'localhost', path: '/' })
-req.session.destroy();
-  res.redirect('/');
+
+req.session.destroy((err) => {
+  if (err) {
+    console.log('Error destroying session:', err);
+    res.redirect('/error'); // Redirect to an error page if session destruction fails
+  } else {
+    res.redirect('/');
+  }
+});
 };
 
 //get forgot password page
@@ -598,9 +585,7 @@ const forgotPasswordPage=(req,res)=>{
     if(req.session.user){
       res.redirect('/')
     }else{
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    
       req.session.accessOtpPage =false
       res.render("user/forgotPasswordPage",{layout:"user_layout"})
     }
@@ -636,9 +621,7 @@ const verfiyUser=async(req,res)=>{
 const getResetPassword=(req,res)=>{
   try {
     if( req.session.resetPageAccess){
-      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+     
     req.session.accessOtpPage =false
       req.session.resetPageAccess=false
       res.render("user/resetPasswordPage",{layout:"user_layout"})

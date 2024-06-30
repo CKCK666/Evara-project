@@ -585,7 +585,7 @@ await Promise.all(updatePromises);
     try {
      
       const page = parseInt(req.query.page) || 1;
-   const limit = parseInt(req.query.limit) || 2;
+   const limit = parseInt(req.query.limit) || 6;
       const skip = (page - 1) * limit;
       let sort
       let sortDisplay
@@ -732,7 +732,7 @@ const totalPages = Math.ceil((totalCount[0] ? totalCount[0].totalCount : 0) / li
       let cartCount= await getCartCount(pkUserId)
         
       let wishListCount=await getWishListCount(pkUserId)
-      res.render("user/filterProducts",{layout:"user_layout",user:true,result,categories,cartCount,wishListCount,sortDisplay, currentPage: page,
+      res.render("user/filterProducts",{layout:"user_layout",user:true,result,categories,cartCount,wishListCount,sortDisplay, currentPage: page,pkUserId,
         totalPages: totalPages,queries:req.query})
     } catch (error) {
       console.log(error)

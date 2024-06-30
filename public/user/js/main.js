@@ -1841,7 +1841,7 @@ function sortProducts(order) {
    window.location.href = url.toString();
 }
 
-
+if(window.location.pathname.startsWith("/userSettings")){
 document.addEventListener("DOMContentLoaded", function () {
   const tabLinks = document.querySelectorAll('.nav-link[data-bs-toggle="tab"]');
   const tabContent = document.querySelectorAll('.tab-pane');
@@ -1871,3 +1871,4 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 });
+}

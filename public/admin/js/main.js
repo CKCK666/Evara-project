@@ -373,7 +373,7 @@ document.addEventListener('change', function (e) {
       }
 
       if (!form) {
-          alert("Form element not found.");
+        
           return;
       }
 
@@ -381,9 +381,22 @@ document.addEventListener('change', function (e) {
       var imageType = /^image\//;
 
       if (!imageType.test(imageFile.type)) {
-          console.error('Please select an image file');
+        target.value = ''
+          Swal.fire({
+            icon: "info",
+            title: `Please select an image file`,
+          });
+          
           return;
       }
+      if (imageFile.size > 5 * 1024 * 1024) { 
+       target.value = ''
+       Swal.fire({
+        icon: "info",
+        title: `File size exceeds 5 MB`,
+      });
+        return;
+    }
 
       var reader = new FileReader();
       reader.onload = function (event) {
