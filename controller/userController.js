@@ -383,6 +383,7 @@ const getUserSetting=async(req,res)=>{
        }
      })
      let walletTotalPage= Math.ceil((walletHistory.length ? walletHistory.length : 0) / walletLimit);
+     walletHistory.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
      walletHistory = paginate(walletHistory, walletLimit, walletPage);
          let userOrders= findOrders.map((order,index)=>{
           const isoDate = order.createdDate;

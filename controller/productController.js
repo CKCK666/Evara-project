@@ -102,24 +102,16 @@ const getProductList=async(req,res)=>{
   console.log("add to product router");
      try {
        let files=req.files
-       console.log(files);
+       
        if(!files.length || files.length!=3){
-        return   res.json({success:false,message:"Crop Images properly"})
+        console.log("no images");
+        return   res.json({success:false,message:"Please select images"})
        }
      
 
        let mainProductUrl
        let arrayOtherImages=[]
 
-      //  files.map((file)=>{
-      //   if (file.fieldname === 'Main-Image') {
-      //     mainProductUrl = file.filename;
-      // } else if (file.fieldname === 'Image-1') {
-      //     arrayOtherImages.push({ imageUrl1: file.filename });
-      // } else if (file.fieldname === 'Image-2') {
-      //     arrayOtherImages.push({ imageUrl2: file.filename });
-      // }
-      //  })
        files.map((file)=>{
        arrayOtherImages.push(file.filename)
        })
@@ -160,6 +152,7 @@ const getProductList=async(req,res)=>{
       }
     
      } catch (error) {
+      console.log(error.message)
       return res.json({success:false,message: error.message})
      }
      
@@ -347,61 +340,59 @@ if (carts.length === 0) {
   return   res.json({success:true,message:"Successfully edited product"})
 }
 
-// Update documents with the calculated total_cart_price and updated intStock
 const updatePromises = carts.map(async cart => {
-  const updatedProducts = cart.arrProducts.map(product => {
+  const updatedProducts = cart.arrProducts.filter(product => {
     if (product.pkProductId.equals(pkProductId)) {
-      product.intStock = stock,
-      product.strProductName= productObj.strProductName,
-      product.strDescription= productObj.strDescription,
-      product.fkcategoryId =productObj.fkcategoryId,
-      product.intPrice=productObj.intPrice
-      if(product.offer){
-        let discount=parseFloat(req.body.intPrice)*parseFloat(productOffer[0].offer.percentage)/100
-        let offerPrice=parseFloat(req.body.intPrice)-discount
-        product.offerPrice=offerPrice
+      product.intStock = stock;
+      product.strProductName = productObj.strProductName;
+      product.strDescription = productObj.strDescription;
+      product.fkcategoryId = productObj.fkcategoryId;
+      product.intPrice = productObj.intPrice;
+      if (product.offer) {
+        let discount = parseFloat(req.body.intPrice) * parseFloat(productOffer[0].offer.percentage) / 100;
+        let offerPrice = parseFloat(req.body.intPrice) - discount;
+        product.offerPrice = offerPrice;
       }
-    
-     
-     }
-    return product;
+      
+      // Remove product if stock is zero
+      if (stock === 0) {
+        return false;
+      }
+    }
+    return true;
   });
 
+  if (updatedProducts.length === 0) {
+    // Remove the cart if no products remain
+    await Cart.deleteOne({ _id: cart._id });
+  }
+else{
   await Cart.updateOne(
     { _id: cart._id },
     {
       $set: {
         arrProducts: updatedProducts,
-       
       }
     }
   );
-  let totalPriceResult = await findTotalCartPrice(cart._id)
 
+  let totalPriceResult = await findTotalCartPrice(cart._id);
 
   await Cart.updateOne(
     { _id: cart._id },
     {
       $set: {
-        
-        total_cart_price:  totalPriceResult[0].total_cart_price
+        total_cart_price: totalPriceResult[0].total_cart_price,
       }
     }
   );
 
-
+}
 
 });
 
-// Execute all update operations
+// Wait for all update operations to complete
 await Promise.all(updatePromises);
-
-
-
-
-      
-
-
 
 
        res.json({success:true,message:"Successfully edited product"})

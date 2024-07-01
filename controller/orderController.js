@@ -383,10 +383,12 @@ const {getWishListCount}=require("../utils/wishlist")
     
       let pkUserId=req.session.user.pkUserId
       let pkCartId=new ObjectId(req.body.pkCartId)
-
+     
       let findOrder=await Order.aggregate([{$match:{pkCartId}}])
+   
+      
       if(findOrder && findOrder.length>0){
-         await Order.findByIdAndDelete({pkCartId})
+         await Order.deleteMany({pkCartId})
          console.log('Document deleted:');
       }
 
@@ -410,7 +412,7 @@ const {getWishListCount}=require("../utils/wishlist")
       let cartProducts=await Cart.find({pkUserId:new ObjectId(pkUserId),pkCartId})
       let subTotal=await cartTotalWithoutDiscount(cartProducts[0]._id)
       let gst=parseFloat(subTotal[0].total_price*4/100)
-
+      
 
      
       let dataToAdd=new Order({
@@ -482,6 +484,7 @@ const {getWishListCount}=require("../utils/wishlist")
      }
   
     } catch (error) {
+      console.log(error)
       res.json({success:t=false,message:error.message})
     }
   }

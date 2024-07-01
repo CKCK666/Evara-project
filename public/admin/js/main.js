@@ -181,8 +181,7 @@ $('#product-edit-submit').click(function (e) {
   let intStock=data.get("intStock")
   
 
-   console.log(pkProductId,strDescription,strProductName,intPrice,intStock);
-
+   console.log(typeof intPrice,typeof intStock);
 
     if (strProductName === ''|| strDescription=='' || !intPrice || !intStock) {
   
@@ -204,7 +203,7 @@ $('#product-edit-submit').click(function (e) {
     $("input[name='intPrice']").addClass('error')   
     return false;
    }
-   if (intStock.includes('.') || intStock <= 0){
+   if (intStock.includes('.') || intStock < 0){
     $('#errorMessage').text('Invaild product stock');
     $("input[name='intStock']").addClass('error')   
     return false;
@@ -467,15 +466,15 @@ document.addEventListener('change', function (e) {
     let nameRegex = /[a-zA-Z].*[a-zA-Z].*[a-zA-Z].*/;
     let data = new FormData($('#product-form')[0]);
     let imageForm=new FormData($("#add-product-image-form")[0])
+   
+  
     imageForm.forEach((value, key) => {
       data.append(key, value);
   });
 
-    // imageData.map((img)=>{
-    //   data.append(`Image_${img.index}`,img.croppedImageData)
-    // })
 
-    console.log(data);
+
+  
     
     for (let pair of data.entries()) {
       let [key, value] = pair;
@@ -491,7 +490,8 @@ document.addEventListener('change', function (e) {
     let strProductName=data.get("strProductName")
     let strDescription=data.get("strDescription")
     let intPrice=parseInt(data.get("intPrice"))
-    let intStock=parseInt(data.get("intStock"))
+    let intStock = data.get("intStock");
+let floatStock = parseFloat(intStock);
   
    
    
@@ -507,11 +507,11 @@ document.addEventListener('change', function (e) {
       $("input[name='intPrice']").addClass('error')   
       return false;
      }
-     if ( intStock <= 0){
-      $('#errorMessage').text('Invaild product stock');
-      $("input[name='intStock']").addClass('error')   
+     if (!Number.isInteger(floatStock) || floatStock <= 0) {
+      $('#errorMessage').text('Invalid product stock');
+      $("input[name='intStock']").addClass('error');
       return false;
-     }
+  }
     
     if(strProductName.length<4){
         $('#errorMessage').text('Product name must be at least 4 characters long.');
@@ -554,7 +554,9 @@ type: "POST",
 processData: false,
 contentType: false,
 success: function(response) {
+  console.log(response)
     if (response.success) {
+      
       swalLoader.close()
         Swal.fire({
             position: 'top-end',
