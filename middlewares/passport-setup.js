@@ -6,7 +6,7 @@ const { ObjectId } = require('mongodb');
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENTID,
     clientSecret: process.env.GOOGLE_SECRET,
-    callbackURL: 'http://localhost:5000/auth/google/callback',
+    callbackURL: 'http://www.evara-ecommerce.online/auth/google/callback',
     scope: ['profile', 'email'] 
 }, async (accessToken, refreshToken, profile, done) => {
     try {
