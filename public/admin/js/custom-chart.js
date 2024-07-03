@@ -106,7 +106,7 @@
                     
                     },
                     {
-                        label: 'Total Amount After Discount',
+                        label: 'Total Amount After Discount & taxes',
                         data: values2,
                         tension: 0.3,
                             fill: true,
@@ -298,7 +298,7 @@ Handlebars.registerHelper('paginate', function(currentPage, totalPages ,num) {
                           categoryPercentage: 0.5 // Set the width of the bars
                         },
                         {
-                            label: 'Total Amount After Discount',
+                            label: 'Total Amount After Discount & taxes',
                             data: values2,
                             backgroundColor: 'rgba(54, 162, 235, 0.2)',
                             borderColor: 'rgba(54, 162, 235, 1)',
@@ -384,7 +384,7 @@ Handlebars.registerHelper('paginate', function(currentPage, totalPages ,num) {
                             borderWidth: 1
                         },
                         {
-                            label: 'Total Amount After Discount',
+                            label: 'Total Amount After Discount & taxes',
                             data: values2,
                             backgroundColor: 'rgba(54, 162, 235, 0.2)',
                             borderColor: 'rgba(54, 162, 235, 1)',
@@ -553,7 +553,7 @@ return
                             borderWidth: 1
                         },
                         {
-                            label: 'Total Amount After Discount',
+                            label: 'Total Amount After Discount & taxes',
                             data: values2,
                             backgroundColor: 'rgba(54, 162, 235, 0.2)',
                             borderColor: 'rgba(54, 162, 235, 1)',

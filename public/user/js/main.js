@@ -511,9 +511,13 @@ $("#place-order-btn").click(async function(e){
    let bodyData={
     pkAddressId,
     totalAmountAfterDiscount,
-    walletAmt,
     couponReduction,
     pkCartId
+   }
+   if(walletCheckbox.checked){
+   bodyData={ ...bodyData,
+    walletAmt
+   }
    }
   
    if (totalDiscount !== null && !isNaN(totalDiscount)) {
@@ -653,11 +657,15 @@ $("#place-order-btn").click(async function(e){
     let bodyData={
       pkAddressId,
       totalAmountAfterDiscount,
-      walletAmt,
       paymentMethod,
       couponReduction,
       pkCartId
     }
+    if(walletCheckbox.checked){
+      bodyData={ ...bodyData,
+       walletAmt
+      }
+      }
    
     if (totalDiscount !== null && !isNaN(totalDiscount)) {
       bodyData.totalDiscount = totalDiscount;

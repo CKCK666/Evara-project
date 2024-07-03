@@ -258,6 +258,7 @@ const getUserSetting=async(req,res)=>{
      const walletPage=parseInt(req.query.walletPage)||1
      const walletLimit=10
      const walletCurrentPage=walletPage
+     const walletSkip=(walletPage-1)*walletLimit
      function paginate(array, pageSize, pageNumber) {
       // Calculate the start index of the current page
       const startIndex = (pageNumber - 1) * pageSize;
@@ -372,19 +373,22 @@ const getUserSetting=async(req,res)=>{
 
       let walletHistory2=await Order.aggregate(pipeline)
       let combinedWallet = [...walletHistory1, ...walletHistory2];
+
+      let walletTotalPage= Math.ceil((combinedWallet.length ? combinedWallet.length : 0) / walletLimit);
+     combinedWallet.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
+     combinedWallet = paginate(combinedWallet, walletLimit, walletPage);
+
      let walletHistory=combinedWallet.map((order,index)=>{
       const isoDate = order.createdDate;
       const date = new Date(isoDate);
       const formattedDate = date.toString().substring(0, 15)
       return {
         ...order,
-        index:index+1,
+        index:walletSkip+index+1,
         createdDate: formattedDate
        }
      })
-     let walletTotalPage= Math.ceil((walletHistory.length ? walletHistory.length : 0) / walletLimit);
-     walletHistory.sort((a, b) => new Date(b.createdDate) - new Date(a.createdDate));
-     walletHistory = paginate(walletHistory, walletLimit, walletPage);
+     
          let userOrders= findOrders.map((order,index)=>{
           const isoDate = order.createdDate;
           const date = new Date(isoDate);
@@ -396,7 +400,7 @@ const getUserSetting=async(req,res)=>{
            }
           
           })
-      
+          
           res.render("user/userSettings",{layout:"user_layout",user:true,arrAddress,pkUserId:req.query.pkUserId,cartCount,wishListCount,userDetails,userOrders,wallet,walletHistory,currentPage,totalPages,walletCurrentPage,walletTotalPage})
        }else{
         return res.json({success:false,message:"Failed to fetch user data"})

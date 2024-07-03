@@ -278,6 +278,7 @@ const {getWishListCount}=require("../utils/wishlist")
       }
       
       let walletAmt=0
+      if(req.body.walletAmt){
       let totalWalletAmt=parseFloat(req.body.walletAmt)
       let totalAmountAfterDiscount=parseFloat(req.body.totalAmountAfterDiscount)
       if(totalWalletAmt>totalAmountAfterDiscount){
@@ -285,6 +286,7 @@ const {getWishListCount}=require("../utils/wishlist")
       }else{
         walletAmt=totalWalletAmt
       }
+    }
    
       let cartProducts=await Cart.find({pkUserId:new ObjectId(pkUserId),pkCartId})
       
@@ -474,7 +476,7 @@ const {getWishListCount}=require("../utils/wishlist")
         message: razorpayOrder,
         orderId: result._id,
         razorpay: true,
-        walletCashUsed:req.body.walletAmt,
+        walletCashUsed:req.body.walletAmt?req.body.walletAmt:0,
         pkUserId:result.pkUserId
       });
       
